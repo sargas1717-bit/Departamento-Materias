@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrónica I - Menú de Ingeniería</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dashboard-body">
+    <div class="app-container no-sidebar"> <!-- Simplified for dashboard -->
+        <main class="main-content full-width">
+            <header class="dashboard-header">
+                <div class="logo-large">
+                    <i data-lucide="cpu"></i>
+                    <h1>Hub de Electrónica I</h1>
+                </div>
+                <p>Plataforma interactiva para el aprendizaje de semiconductores y circuitos de potencia.</p>
+            </header>
+
+            <div class="dash-grid">
+                <!-- Tarjeta: Teoría -->
+                <a href="pages/Teoria.html" class="dash-card">
+                    <i data-lucide="book-open"></i>
+                    <h3>Fundamentos Teóricos</h3>
+                    <p>Guía maestra con fórmulas, diagramas y procedimientos paso a paso para Electrónica I.</p>
+                </a>
+
+                <a href="pages/rectificador.html" class="dash-card">
+                    <i data-lucide="activity"></i>
+                    <h3>Simulador de Rectificación</h3>
+                    <p>Simulador interactivo con gráficas en tiempo real de filtrado capacitivo y rizado.</p>
+                </a>
+
+                <a href="pages/Simulador_BJT.html" class="dash-card">
+                    <i data-lucide="zap"></i>
+                    <h3>Simulador BJT</h3>
+                    <p>Análisis de punto Q para polarización fija, emisor común y divisor de voltaje.</p>
+                </a>
+
+                <a href="pages/Simulador_Amplificadores_Avanzados.html" class="dash-card">
+                    <i data-lucide="layers"></i>
+                    <h3>Amplificadores Avanzados</h3>
+                    <p>Multietapa, diferenciales, cascodo y etapas de potencia. Análisis de Miller y CMRR.</p>
+                </a>
+
+                <a href="pages/Formulas.html" class="dash-card">
+                    <i data-lucide="function-square"></i>
+                    <h3>Hoja de Fórmulas</h3>
+                    <p>Compendio total de ecuaciones, parámetros AC/DC y constantes físicas de semiconductores.</p>
+                </a>
+
+                <a href="pages/Analogias.html" class="dash-card">
+                    <i data-lucide="lightbulb"></i>
+                    <h3>Analogías y Trucos Mentales</h3>
+                    <p>Desarrolla tu intuición física con la analogía del agua y hacks de superposición AC/DC.</p>
+                </a>
+
+                <a href="pages/datos_curricular.html" class="dash-card">
+                    <i data-lucide="graduation-cap"></i>
+                    <h3>Programa Académico</h3>
+                    <p>Ficha técnica de la asignatura, objetivos curriculares y autoría institucional (UDO).</p>
+                </a>
+
+                <a href="pages/Instrucciones.html" class="dash-card border-blue-500/30 bg-blue-500/5">
+                    <i data-lucide="help-circle" class="text-blue-400"></i>
+                    <h3 class="text-blue-400">Guía de Uso</h3>
+                    <p>Manual interactivo: cómo operar los simuladores y ruta de aprendizaje recomendada.</p>
+                </a>
+            </div>
+
+            <footer class="bg-[#0b1121]/50 text-gray-400 py-12 text-center mt-12 border-t border-white/5 rounded-t-3xl backdrop-blur-md">
+                <div class="max-w-7xl mx-auto px-4">
+                    <p class="font-bold text-blue-400 mb-2 underline tracking-widest uppercase text-[10px]">Universidad de Oriente - Núcleo de Anzoátegui</p>
+                    <p class="text-sm italic">Propuesta Curricular: <span class="text-gray-200">Prof. Eulogio Hernández</span></p>
+                    <p class="text-sm italic">Profesor Actual: <span class="text-gray-200">Prof. Jose Bernardo Peña</span></p>
+                    <p class="text-sm italic mb-6">Desarrollo Interactivo: <span class="text-gray-200">Jose Rojas Dagger</span></p>
+                    <div class="flex justify-center gap-6 text-[10px] font-medium uppercase tracking-tighter">
+                        <a href="index.html" class="hover:text-blue-400 transition text-blue-400">Inicio</a>
+                        <a href="pages/datos_curricular.html" class="hover:text-blue-400 transition">Programa</a>
+                        <a href="pages/Teoria.html" class="hover:text-blue-400 transition">Teoría</a>
+                        <a href="pages/Formulas.html" class="hover:text-blue-400 transition">Fórmulas</a>
+                        <a href="pages/Analogias.html" class="hover:text-blue-400 transition">Analogías</a>
+                    </div>
+                    <p class="text-[10px] mt-8 opacity-40">&copy; 2026 Laboratorio Virtual de Electrónica Analógica</p>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

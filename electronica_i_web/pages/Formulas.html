@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Maestra y Formulario: Electrónica Analógica</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Smooth scrolling para anclas */
+        html { scroll-behavior: smooth; }
+        .math-card { background-color: #151b2b; border: 1px solid #1f2937; border-radius: 0.75rem; padding: 1.25rem; height: 100%; }
+        .math-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; }
+        .math-sub { color: #9ca3af; font-size: 0.8rem; margin-top: 0.5rem; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+    <!-- Navegación Sticky -->
+    <nav class="bg-[#0b1121] text-white sticky top-0 z-50 shadow-lg border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="font-bold text-xl tracking-wider text-blue-400">⚡ Guía y Formulario Máster</div>
+                <div class="hidden md:flex space-x-4">
+                    <a href="#rectificadores" class="hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition">1. Diodos/Rectificadores</a>
+                    <a href="#transistores" class="hover:text-red-400 px-3 py-2 rounded-md text-sm font-medium transition">2. Transistores (BJT/FET)</a>
+                    <a href="#amplificadores" class="hover:text-emerald-400 px-3 py-2 rounded-md text-sm font-medium transition">3. Amplificadores Avanzados</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-12">
+        
+        <!-- Botón Volver -->
+        <div class="mb-2">
+            <a href="../index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Volver al Menú Principal
+            </a>
+        </div>
+
+        <!-- Header Principal -->
+        <header class="text-center py-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Compendio Total de Fórmulas y Metodología</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">Esta guía definitiva condensa absolutamente todas las fórmulas matemáticas, parámetros AC/DC y trucos lógicos necesarios para la resolución de circuitos en la electrónica analógica.</p>
+        </header>
+
+        <!-- SECCIÓN 1: RECTIFICADORES Y DIODOS -->
+        <section id="rectificadores" class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+            <div class="bg-blue-600 px-6 py-4 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <span class="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-lg mr-2">1</span>
+                    Diodos, Rectificación y Filtrado
+                </h2>
+            </div>
+            
+            <div class="p-6 lg:p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Metodología Rápida:</h3>
+                <p class="text-gray-700 mb-6">Convierte valores RMS a Pico ($V_p = V_{RMS} \sqrt{2}$). Identifica topología (Media Onda = -0.7V, Onda Completa = -1.4V). Si hay Zener, verifica primero si el voltaje sin Zener supera el voltaje de ruptura $V_Z$.</p>
+
+                <h3 class="text-lg font-bold text-blue-600 mb-4 uppercase tracking-wider">Formulario Completo</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-100">
+                    
+                    <div class="math-card border-blue-900/50">
+                        <p class="math-title text-blue-400">Media Onda</p>
+                        $$ V_{p(out)} = V_{p(in)} - V_D $$
+                        $$ V_{dc} = \frac{V_{p(out)}}{\pi} \approx 0.318 V_{p(out)} $$
+                        $$ V_{rms} = \frac{V_{p(out)}}{2} $$
+                        <p class="math-sub">PIV (Voltaje Inverso Pico) = $V_{p(in)}$</p>
+                        <p class="math-sub">Frecuencia de salida: $f_{out} = f_{in}$</p>
+                    </div>
+
+                    <div class="math-card border-blue-900/50">
+                        <p class="math-title text-blue-400">Onda Completa (Puente)</p>
+                        $$ V_{p(out)} = V_{p(in)} - 2V_D $$
+                        $$ V_{dc} = \frac{2 V_{p(out)}}{\pi} \approx 0.636 V_{p(out)} $$
+                        $$ V_{rms} = \frac{V_{p(out)}}{\sqrt{2}} $$
+                        <p class="math-sub">PIV (por diodo) = $V_{p(out)} + V_D$</p>
+                        <p class="math-sub">Frecuencia de salida: $f_{out} = 2 f_{in}$</p>
+                    </div>
+
+                    <div class="math-card border-blue-900/50">
+                        <p class="math-title text-blue-400">Filtrado Capacitivo</p>
+                        $$ V_{r(pp)} = \frac{V_{p(out)}}{f_{out} R_L C} = \frac{I_{dc}}{f_{out} C} $$
+                        $$ V_{dc(filt)} = V_{p(out)} - \frac{V_{r(pp)}}{2} $$
+                        $$ r = \frac{V_{r(rms)}}{V_{dc}} \times 100\% $$
+                        <p class="math-sub">Factor de Rizado ($r$). Idealmente $\approx 0\%$</p>
+                    </div>
+
+                    <div class="math-card border-cyan-900/50 lg:col-span-1 md:col-span-2">
+                        <p class="math-title text-cyan-400">Regulador Zener</p>
+                        $$ V_L = V_Z \quad \text{(Si } V_{th} > V_Z \text{)} $$
+                        $$ I_S = \frac{V_{in} - V_Z}{R_S} $$
+                        $$ I_Z = I_S - I_L $$
+                        $$ P_Z = V_Z \cdot I_Z \leq P_{Z(max)} $$
+                        <p class="math-sub">$V_{th}$ es el voltaje en la carga si quitamos el Zener.</p>
+                    </div>
+                    
+                    <div class="math-card border-cyan-900/50 lg:col-span-2 md:col-span-2">
+                        <p class="math-title text-cyan-400">Diodo Semiconductor (Física Básica)</p>
+                        $$ I_D = I_S \left( e^{\frac{V_D}{n V_T}} - 1 \right) \quad \text{(Ec. de Shockley)} $$
+                        $$ V_T = \frac{k T}{q} \approx 26 \text{ mV a 300K} $$
+                        $$ R_D \text{ (estática)} = \frac{V_D}{I_D}, \quad r_d \text{ (dinámica)} = \frac{n V_T}{I_D} \approx \frac{26 \text{mV}}{I_D} $$
+                        <p class="math-sub">$I_S$: Corriente de saturación inversa. $n$: Factor de idealidad (1 o 2).</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: TRANSISTORES BJT Y FET -->
+        <section id="transistores" class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+            <div class="bg-red-600 px-6 py-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <span class="bg-white text-red-600 rounded-full w-8 h-8 flex items-center justify-center text-lg mr-2">2</span>
+                    Transistores (BJT y FET) - DC y AC
+                </h2>
+            </div>
+            
+            <div class="p-6 lg:p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 border-red-200">BJT: Transistor Bipolar de Unión</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-100 mb-10">
+                    <div class="math-card border-red-900/50">
+                        <p class="math-title text-red-400">Relaciones Fundamentales (DC)</p>
+                        $$ I_E = I_B + I_C $$
+                        $$ I_C = \beta I_B \quad (\text{Activa}) $$
+                        $$ I_C = \alpha I_E $$
+                        $$ \alpha = \frac{\beta}{\beta + 1}, \quad \beta = \frac{\alpha}{1 - \alpha} $$
+                        <p class="math-sub">$V_{BE} \approx 0.7V$. En Saturación $V_{CE} \approx 0.2V$.</p>
+                    </div>
+
+                    <div class="math-card border-red-900/50 lg:col-span-2">
+                        <p class="math-title text-red-400">Polarización (Análisis de Mallas DC)</p>
+                        <p class="text-sm text-gray-300"><strong>Polarización Fija:</strong> $I_B = \frac{V_{CC} - V_{BE}}{R_B}$</p>
+                        <p class="text-sm text-gray-300 mt-2"><strong>Estabilizado en Emisor:</strong> $I_B = \frac{V_{CC} - V_{BE}}{R_B + (\beta + 1)R_E}$</p>
+                        <p class="text-sm text-gray-300 mt-2"><strong>Divisor de Voltaje (Exacto - Thevenin):</strong></p>
+                        $$ R_{TH} = R_1 || R_2, \quad V_{TH} = V_{CC} \frac{R_2}{R_1 + R_2} $$
+                        $$ I_B = \frac{V_{TH} - V_{BE}}{R_{TH} + (\beta + 1)R_E} $$
+                    </div>
+
+                    <div class="math-card border-orange-900/50">
+                        <p class="math-title text-orange-400">Modelo AC ($r_e$ y Híbrido $\pi$)</p>
+                        $$ r_e = \frac{26 \text{ mV}}{I_{E(DC)}} $$
+                        $$ r_\pi = \beta r_e = \frac{\beta \cdot 26\text{mV}}{I_C} $$
+                        $$ g_m = \frac{I_C}{V_T} \approx \frac{1}{r_e} $$
+                        <p class="math-sub">Paso crítico: Siempre calcular DC primero para hallar $I_E$ y $r_e$.</p>
+                    </div>
+
+                    <div class="math-card border-orange-900/50 lg:col-span-2">
+                        <p class="math-title text-orange-400">Ganancias AC BJT (Configuraciones)</p>
+                        <p class="text-sm text-gray-300 mt-2"><strong>Emisor Común (Bypass en RE):</strong></p>
+                        $$ A_v = -\frac{R_C || R_L}{r_e}, \quad Z_{in} = R_1 || R_2 || \beta r_e $$
+                        <p class="text-sm text-gray-300 mt-2"><strong>Emisor Común (Sin Bypass):</strong></p>
+                        $$ A_v = -\frac{R_C || R_L}{r_e + R_E} \approx -\frac{R_C}{R_E}, \quad Z_{in} \approx R_B || \beta R_E $$
+                        <p class="text-sm text-gray-300 mt-2"><strong>Colector Común (Seguidor):</strong></p>
+                        $$ A_v = \frac{R_E || R_L}{r_e + (R_E || R_L)} \approx 1, \quad Z_{in} \approx \beta(R_E || R_L) $$
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 border-green-200">FET: Transistores de Efecto de Campo</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-100">
+                    <div class="math-card border-green-900/50">
+                        <p class="math-title text-green-400">JFET y D-MOSFET (DC)</p>
+                        $$ I_D = I_{DSS} \left( 1 - \frac{V_{GS}}{V_P} \right)^2 $$
+                        <p class="math-sub">Ecuación de Shockley. Zona activa: $V_{DS} > V_{GS} - V_P$.</p>
+                    </div>
+
+                    <div class="math-card border-green-900/50">
+                        <p class="math-title text-green-400">E-MOSFET (Enriquecimiento DC)</p>
+                        $$ V_{OV} = V_{GS} - V_{TH} $$
+                        $$ I_D = k_n (V_{OV})^2 \quad \text{(Saturación)} $$
+                        $$ k_n = \frac{I_{D(on)}}{(V_{GS(on)} - V_{TH})^2} $$
+                        <p class="math-sub">Zona lineal/triodo: $I_D = k_n [2(V_{OV})V_{DS} - V_{DS}^2]$</p>
+                    </div>
+
+                    <div class="math-card border-teal-900/50">
+                        <p class="math-title text-teal-400">Análisis AC (FET)</p>
+                        <p class="text-sm text-gray-300"><strong>Transconductancia ($g_m$):</strong></p>
+                        <p class="text-xs text-gray-400">Para JFET:</p>
+                        $$ g_{m0} = \frac{2 I_{DSS}}{|V_P|}, \quad g_m = g_{m0} \left( 1 - \frac{V_{GS}}{V_P} \right) $$
+                        <p class="text-xs text-gray-400">Para E-MOSFET:</p>
+                        $$ g_m = 2 k_n (V_{GS} - V_{TH}) = 2\sqrt{k_n I_D} $$
+                    </div>
+
+                    <div class="math-card border-teal-900/50 lg:col-span-3">
+                        <p class="math-title text-teal-400">Ganancias AC FET (Configuraciones)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-300"><strong>Source Común:</strong></p>
+                                $$ A_v = -g_m (R_D || R_L || r_d) $$
+                                $$ Z_{in} = R_G \quad (\text{Suele ser en } M\Omega) $$
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-300"><strong>Drain Común (Seguidor Source):</strong></p>
+                                $$ A_v = \frac{g_m R_S}{1 + g_m R_S} \approx 1 $$
+                                $$ Z_{out} = R_S || \frac{1}{g_m} $$
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: AMPLIFICADORES AVANZADOS -->
+        <section id="amplificadores" class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+            <div class="bg-emerald-600 px-6 py-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <span class="bg-white text-emerald-600 rounded-full w-8 h-8 flex items-center justify-center text-lg mr-2">3</span>
+                    Amplificadores Avanzados, Frecuencia y Potencia
+                </h2>
+            </div>
+            
+            <div class="p-6 lg:p-8">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 text-gray-100">
+                    
+                    <!-- Multietapa y Frecuencia -->
+                    <div class="math-card border-emerald-900/50">
+                        <p class="math-title text-emerald-400">Respuesta en Frecuencia (Bode) y Miller</p>
+                        <p class="text-sm text-gray-300 mb-2"><strong>Frecuencia de Corte (Filtro RC):</strong></p>
+                        $$ f_c = \frac{1}{2\pi R C} $$
+                        <p class="text-sm text-gray-300 mb-2 mt-4"><strong>Teorema de Capacitancia de Miller:</strong></p>
+                        <p class="text-xs text-gray-400">Si un capacitor $C_f$ conecta la entrada y salida de un amplificador inversor con ganancia $A_v$:</p>
+                        $$ C_{M(in)} = C_f(1 - A_v) \quad \text{ (Dado que } A_v \text{ es negativo, se suma)} $$
+                        $$ C_{M(out)} = C_f\left(1 - \frac{1}{A_v}\right) \approx C_f $$
+                        <p class="text-sm text-gray-300 mb-2 mt-4"><strong>Decibelios y Potencia:</strong></p>
+                        $$ A_{p(dB)} = 10 \log_{10}\left(\frac{P_{out}}{P_{in}}\right) $$
+                        $$ A_{v(dB)} = 20 \log_{10}\left(\frac{V_{out}}{V_{in}}\right) $$
+                    </div>
+
+                    <!-- Diferencial -->
+                    <div class="math-card border-purple-900/50">
+                        <p class="math-title text-purple-400">Amplificador Diferencial</p>
+                        <p class="text-sm text-gray-300 mb-2"><strong>Ganancias y Salida:</strong></p>
+                        $$ v_d = v_1 - v_2, \quad v_c = \frac{v_1 + v_2}{2} $$
+                        $$ V_{out} = A_d v_d + A_c v_c $$
+                        $$ CMRR = \frac{|A_d|}{|A_c|} \quad \rightarrow \quad CMRR_{(dB)} = 20 \log_{10}(CMRR) $$
+                        <p class="text-sm text-gray-300 mb-2 mt-4"><strong>Modelado BJT (Salida Simple):</strong></p>
+                        $$ A_d = \frac{R_C}{2 r_e}, \quad A_c \approx -\frac{R_C}{2 R_E} $$
+                        <p class="text-xs text-gray-400 mt-1">Una fuente de corriente de cola ideal hace que $R_E \to \infty$, por lo que $A_c \to 0$ y $CMRR \to \infty$.</p>
+                    </div>
+
+                    <!-- Potencia -->
+                    <div class="math-card border-orange-900/50 lg:col-span-2">
+                        <p class="math-title text-orange-400">Amplificadores de Potencia (Clases A, B, AB)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-sm text-gray-300 font-bold mb-2">Conceptos Generales</p>
+                                $$ P_{in(DC)} = V_{CC} \cdot I_{CC} $$
+                                $$ P_{out(AC)} = \frac{V_{p(out)} \cdot I_{p(out)}}{2} = \frac{V_{rms}^2}{R_L} $$
+                                $$ P_{D(transistor)} = P_{in} - P_{out} $$
+                                $$ \text{Eficiencia } \eta = \frac{P_{out(AC)}}{P_{in(DC)}} \times 100\% $$
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-300 font-bold mb-2">Límites Teóricos de Eficiencia</p>
+                                <ul class="text-sm space-y-2 text-gray-300">
+                                    <li><strong>Clase A (Resistiva):</strong> $\eta_{max} = 25\%$</li>
+                                    <li><strong>Clase A (Acoplado a Transformador):</strong> $\eta_{max} = 50\%$</li>
+                                    <li><strong>Clase B (Push-Pull Ideal):</strong></li>
+                                </ul>
+                                $$ \eta_{max} = \frac{\pi}{4} \approx 78.5\% $$
+                                $$ P_{D(max \ por \ transistor)} = \frac{2 V_{CC}^2}{\pi^2 R_L} $$
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Op-Amp Extra -->
+                    <div class="math-card border-blue-900/50 lg:col-span-2">
+                        <p class="math-title text-blue-400">Bonus: Amplificadores Operacionales (Ideales)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-300 font-bold">Inversor</p>
+                                $$ V_{out} = -\frac{R_f}{R_{in}} V_{in} $$
+                                $$ Z_{in} = R_{in} $$
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-300 font-bold">No Inversor</p>
+                                $$ V_{out} = \left( 1 + \frac{R_f}{R_1} \right) V_{in} $$
+                                $$ Z_{in} = \infty $$
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-300 font-bold">Sumador Inversor</p>
+                                $$ V_{out} = - \left( \frac{R_f}{R_1}V_1 + \frac{R_f}{R_2}V_2 \right) $$
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-4 text-center">Asunciones de Op-Amp ideal: $V_+ = V_-$ (Cortocircuito virtual), $I_{in} = 0A$ (Impedancia infinita).</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="bg-[#0b1121] text-gray-400 py-12 text-center mt-12 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-bold text-blue-400 mb-2 underline tracking-widest uppercase text-xs">Universidad de Oriente - Núcleo de Anzoátegui</p>
+            <p class="text-sm italic">Propuesta Curricular: <span class="text-gray-200">Prof. Eulogio Hernández</span></p>
+            <p class="text-sm italic">Profesor Actual: <span class="text-gray-200">Prof. Jose Bernardo Peña</span></p>
+            <p class="text-sm italic mb-6">Desarrollo Interactivo: <span class="text-gray-200">Jose Rojas Dagger</span></p>
+            <div class="flex justify-center gap-6 text-xs font-medium uppercase tracking-tighter">
+                <a href="../index.html" class="hover:text-blue-400 transition">Inicio</a>
+                <a href="datos_curricular.html" class="hover:text-blue-400 transition">Programa</a>
+                <a href="Teoria.html" class="hover:text-blue-400 transition">Teoría</a>
+                <a href="Formulas.html" class="hover:text-blue-400 transition text-blue-400">Fórmulas</a>
+                <a href="Analogias.html" class="hover:text-blue-400 transition">Analogías</a>
+            </div>
+            <p class="text-[10px] mt-8 opacity-40">&copy; 2026 Laboratorio Virtual de Electrónica Analógica</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+</body>
+</html>

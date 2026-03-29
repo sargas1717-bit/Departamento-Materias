@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Rectificación y Filtrado</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para las gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax para renderizar fórmulas matemáticas -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Estilos personalizados para los sliders (rango) */
+        input[type=range] {
+            accent-color: #3b82f6; /* Azul de Tailwind */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+    <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Botón Volver -->
+        <div class="mb-6">
+            <a href="../index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Volver al Menú Principal
+            </a>
+        </div>
+
+        <!-- Encabezado -->
+        <header class="mb-8 text-center sm:text-left">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Simulador de Rectificación de Corriente</h1>
+            <p class="text-gray-600">Visualiza interactivamente cómo se convierte la corriente alterna (AC) en corriente continua (DC) utilizando diodos y capacitores.</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+            
+            <!-- Panel de Controles -->
+            <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h2 class="text-xl font-semibold mb-6 border-b pb-2">Panel de Control</h2>
+                
+                <!-- Tipo de Rectificación -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Tipo de Rectificación</label>
+                    <div class="flex items-center mb-2">
+                        <input id="radio-media" type="radio" name="rect-type" value="half" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" checked>
+                        <label for="radio-media" class="ml-2 block text-sm text-gray-800">Media Onda (1 Diodo)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="radio-completa" type="radio" name="rect-type" value="full" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                        <label for="radio-completa" class="ml-2 block text-sm text-gray-800">Onda Completa (Puente)</label>
+                    </div>
+                </div>
+
+                <!-- Sliders -->
+                <!-- Voltaje -->
+                <div class="mb-6">
+                    <div class="flex justify-between mb-1">
+                        <label for="slider-voltaje" class="text-sm font-medium text-gray-700">Voltaje Pico (Entrada)</label>
+                        <span id="val-voltaje" class="text-sm font-bold text-blue-600">12 V</span>
+                    </div>
+                    <input id="slider-voltaje" type="range" min="1" max="50" value="12" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Frecuencia -->
+                <div class="mb-6">
+                    <div class="flex justify-between mb-1">
+                        <label for="slider-frecuencia" class="text-sm font-medium text-gray-700">Frecuencia</label>
+                        <span id="val-frecuencia" class="text-sm font-bold text-blue-600">50 Hz</span>
+                    </div>
+                    <input id="slider-frecuencia" type="range" min="10" max="100" value="50" step="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Capacitor -->
+                <div class="mb-6">
+                    <div class="flex justify-between mb-1">
+                        <label for="slider-capacitor" class="text-sm font-medium text-gray-700">Filtro Capacitivo</label>
+                        <span id="val-capacitor" class="text-sm font-bold text-blue-600">0 µF</span>
+                    </div>
+                    <input id="slider-capacitor" type="range" min="0" max="1000" value="0" step="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-xs text-gray-500 mt-2">Aumenta este valor para reducir el rizado y acercarte a una corriente continua pura.</p>
+                </div>
+            </div>
+
+            <!-- Panel del Gráfico -->
+            <div class="w-full lg:w-2/3 bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center">
+                <div class="w-full relative h-[400px]">
+                    <canvas id="ondaCanvas"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECCIÓN NUEVA: Diagrama y Fórmulas -->
+        <div class="mt-8 flex flex-col lg:flex-row gap-6">
+            
+            <!-- Diagrama Eléctrico -->
+            <div class="w-full lg:w-1/2 bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2">Diagrama Eléctrico</h2>
+                
+                <!-- SVG Circuito de Media Onda -->
+                <div id="diagrama-media" class="flex justify-center items-center h-48 w-full">
+                    <svg width="350" height="150" viewBox="0 0 350 150" xmlns="http://www.w3.org/2000/svg" stroke="#1f2937" stroke-width="2.5" fill="none">
+                        <circle cx="50" cy="75" r="20" fill="#f3f4f6" />
+                        <path d="M 40 75 Q 45 65 50 75 T 60 75" />
+                        <line x1="50" y1="55" x2="50" y2="20" />
+                        <line x1="50" y1="20" x2="120" y2="20" />
+                        <!-- Diodo -->
+                        <polygon points="120,10 120,30 140,20" fill="#1f2937" />
+                        <line x1="140" y1="10" x2="140" y2="30" />
+                        <line x1="140" y1="20" x2="280" y2="20" />
+                        <line x1="280" y1="20" x2="280" y2="50" />
+                        <!-- Resistencia -->
+                        <polyline points="280,50 270,55 290,65 270,75 290,85 270,95 280,100" />
+                        <line x1="280" y1="100" x2="280" y2="130" />
+                        <line x1="280" y1="130" x2="50" y2="130" />
+                        <line x1="50" y1="130" x2="50" y2="95" />
+                        <!-- Capacitor -->
+                        <g id="cap-media" class="transition-opacity duration-300">
+                            <line x1="200" y1="20" x2="200" y2="65" />
+                            <line x1="185" y1="65" x2="215" y2="65" stroke-width="3"/>
+                            <line x1="185" y1="85" x2="215" y2="85" stroke-width="3"/>
+                            <line x1="200" y1="85" x2="200" y2="130" />
+                            <text x="220" y="80" stroke="none" fill="#3b82f6" font-size="14" font-weight="bold">C</text>
+                        </g>
+                        <text x="35" y="40" stroke="none" fill="#1f2937" font-size="12">AC</text>
+                        <text x="125" y="45" stroke="none" fill="#1f2937" font-size="12">D1</text>
+                        <text x="295" y="80" stroke="none" fill="#1f2937" font-size="12">R (Carga)</text>
+                    </svg>
+                </div>
+
+                <!-- SVG Circuito de Onda Completa -->
+                <div id="diagrama-completa" class="hidden justify-center items-center h-48 w-full">
+                    <svg width="350" height="150" viewBox="0 0 350 150" xmlns="http://www.w3.org/2000/svg" stroke="#1f2937" stroke-width="2" fill="none">
+                        <circle cx="40" cy="75" r="20" fill="#f3f4f6" />
+                        <path d="M 30 75 Q 35 65 40 75 T 50 75" />
+                        <line x1="40" y1="55" x2="40" y2="40" />
+                        <line x1="40" y1="40" x2="80" y2="40" />
+                        <line x1="40" y1="95" x2="40" y2="110" />
+                        <line x1="40" y1="110" x2="80" y2="110" />
+                        <!-- Puente -->
+                        <polygon points="110,40 140,75 110,110 80,75" stroke="#1f2937" fill="none" />
+                        <!-- Diodos simplificados en puente -->
+                        <polygon points="85,69 104,47 100,60" fill="#1f2937" stroke="none" />
+                        <line x1="102" y1="45" x2="110" y2="52" stroke="#1f2937" />
+                        <polygon points="116,47 135,69 120,60" fill="#1f2937" stroke="none" />
+                        <line x1="130" y1="72" x2="138" y2="65" stroke="#1f2937" />
+                        <polygon points="85,81 104,103 100,90" fill="#1f2937" stroke="none" />
+                        <line x1="102" y1="105" x2="110" y2="98" stroke="#1f2937" />
+                        <polygon points="116,103 135,81 120,90" fill="#1f2937" stroke="none" />
+                        <line x1="130" y1="78" x2="138" y2="85" stroke="#1f2937" />
+
+                        <line x1="110" y1="40" x2="110" y2="20" />
+                        <line x1="110" y1="20" x2="280" y2="20" />
+                        <line x1="110" y1="110" x2="110" y2="130" />
+                        <line x1="110" y1="130" x2="280" y2="130" />
+                        <!-- Resistencia -->
+                        <line x1="280" y1="20" x2="280" y2="50" />
+                        <polyline points="280,50 270,55 290,65 270,75 290,85 270,95 280,100" />
+                        <line x1="280" y1="100" x2="280" y2="130" />
+                        <!-- Capacitor -->
+                        <g id="cap-completa" class="transition-opacity duration-300">
+                            <line x1="200" y1="20" x2="200" y2="65" />
+                            <line x1="185" y1="65" x2="215" y2="65" stroke-width="3"/>
+                            <line x1="185" y1="85" x2="215" y2="85" stroke-width="3"/>
+                            <line x1="200" y1="85" x2="200" y2="130" />
+                            <text x="220" y="80" stroke="none" fill="#3b82f6" font-size="14" font-weight="bold">C</text>
+                        </g>
+                        <text x="295" y="80" stroke="none" fill="#1f2937" font-size="12">R (Carga)</text>
+                        <text x="150" y="79" stroke="none" fill="#1f2937" font-size="10">Puente</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Fórmulas Matemáticas -->
+            <div class="w-full lg:w-1/2 bg-[#0b1121] p-6 rounded-xl shadow-lg border border-gray-800 text-gray-100">
+                <h2 class="text-xl font-bold mb-6 border-b border-gray-700 pb-3 text-white tracking-wide">Procedimiento de Cálculo</h2>
+                <div id="formulas-container" class="space-y-4">
+                    <!-- Fórmulas inyectadas vía JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Referencias a los elementos del DOM
+        const radioMedia = document.getElementById('radio-media');
+        const radioCompleta = document.getElementById('radio-completa');
+        const sliderVoltaje = document.getElementById('slider-voltaje');
+        const sliderFrecuencia = document.getElementById('slider-frecuencia');
+        const sliderCapacitor = document.getElementById('slider-capacitor');
+        
+        const valVoltaje = document.getElementById('val-voltaje');
+        const valFrecuencia = document.getElementById('val-frecuencia');
+        const valCapacitor = document.getElementById('val-capacitor');
+
+        const ctx = document.getElementById('ondaCanvas').getContext('2d');
+
+        // Variables de configuración de la simulación
+        let chartInstance = null;
+        const R = 1000; // Resistencia de carga asumida en Ohmios (para calcular la descarga RC)
+        const tMax = 0.1; // 100 milisegundos de tiempo de simulación (ventana fija)
+        const numPuntos = 600; // Resolución gráfica
+        const dt = tMax / numPuntos; // Diferencial de tiempo
+
+        // Función para generar los datos y actualizar el gráfico
+        function actualizarSimulacion() {
+            // Leer valores actuales de la interfaz
+            const tipo = radioMedia.checked ? 'half' : 'full';
+            const voltajePico = parseFloat(sliderVoltaje.value);
+            const frecuencia = parseFloat(sliderFrecuencia.value);
+            const capacitanciaUf = parseFloat(sliderCapacitor.value);
+            const C = capacitanciaUf * 1e-6; // Convertir microfaradios a Faradios
+
+            // Actualizar etiquetas visuales
+            valVoltaje.textContent = voltajePico + ' V';
+            valFrecuencia.textContent = frecuencia + ' Hz';
+            valCapacitor.textContent = capacitanciaUf + ' µF';
+
+            // Arrays para Chart.js
+            const tiempos = [];
+            const datosEntrada = [];
+            const datosSalida = [];
+
+            let voltajeCapacitor = 0;
+
+            // Bucle principal de simulación matemática
+            for (let i = 0; i <= numPuntos; i++) {
+                const t = i * dt;
+                tiempos.push((t * 1000).toFixed(1)); // Convertir a ms para la etiqueta
+
+                // 1. Onda Alterna Original (Senoide)
+                const vAc = voltajePico * Math.sin(2 * Math.PI * frecuencia * t);
+                datosEntrada.push(vAc);
+
+                // 2. Lógica de Rectificación (Con caída de voltaje real de diodo 0.7V)
+                let vRect = 0;
+                const VD = 0.7; // Caída de tensión típica del silicio
+                
+                if (tipo === 'half') {
+                    // Si supera 0.7V, conduce (restamos 1 diodo)
+                    vRect = vAc > VD ? vAc - VD : 0;
+                } else {
+                    // Valor absoluto y restamos 2 diodos (1.4V) para el puente
+                    let vAbs = Math.abs(vAc);
+                    vRect = vAbs > (2 * VD) ? vAbs - (2 * VD) : 0;
+                }
+
+                // 3. Simulación del Filtro Capacitivo
+                if (C === 0) {
+                    // Si no hay capacitor, la salida es la onda rectificada pura
+                    datosSalida.push(vRect);
+                } else {
+                    // Calcular el decaimiento exponencial desde el punto anterior
+                    // Formula: V = Vo * e^(-t/RC)
+                    const decaimiento = voltajeCapacitor * Math.exp(-dt / (R * C));
+                    
+                    // Si el voltaje del diodo (rectificado) es mayor, carga el capacitor
+                    if (vRect >= decaimiento) {
+                        voltajeCapacitor = vRect;
+                    } else {
+                        // De lo contrario, el capacitor se descarga alimentando la carga
+                        voltajeCapacitor = decaimiento;
+                    }
+                    datosSalida.push(voltajeCapacitor);
+                }
+            }
+
+            // Dibujar o actualizar gráfico
+            if (chartInstance) {
+                chartInstance.data.labels = tiempos;
+                chartInstance.data.datasets[0].data = datosEntrada;
+                chartInstance.data.datasets[1].data = datosSalida;
+                chartInstance.update();
+            } else {
+                crearGrafico(tiempos, datosEntrada, datosSalida);
+            }
+
+            // Llamar a la actualización interactiva de la teoría
+            actualizarSeccionTeoria(tipo, voltajePico, frecuencia, C);
+        }
+
+        // Función para actualizar dinámicamente Fórmulas y Diagramas
+        function actualizarSeccionTeoria(tipo, vp, f, C) {
+            // Mostrar/Ocultar diagramas SVG
+            const diagMedia = document.getElementById('diagrama-media');
+            const diagCompleta = document.getElementById('diagrama-completa');
+            
+            if(tipo === 'half') {
+                diagMedia.classList.replace('hidden', 'flex');
+                diagCompleta.classList.replace('flex', 'hidden');
+            } else {
+                diagMedia.classList.replace('flex', 'hidden');
+                diagCompleta.classList.replace('hidden', 'flex');
+            }
+
+            // Cambiar opacidad del capacitor en el dibujo si está apagado (C = 0)
+            const opacidadCap = C > 0 ? '1' : '0.15';
+            document.getElementById('cap-media').style.opacity = opacidadCap;
+            document.getElementById('cap-completa').style.opacity = opacidadCap;
+
+            // Construir procedimiento matemático dinámico
+            const VD = 0.7; // Voltaje de Diodo Silicio
+            let vpOut, vdc, piv, vpOutFormula, vdcFormula, pivFormula;
+
+            if (tipo === 'half') {
+                vpOut = Math.max(0, vp - VD);
+                vdc = vpOut / Math.PI;
+                piv = vp;
+
+                vpOutFormula = `V_{p(out)} = V_p - V_D = ${vp}V - 0.7V = ${vpOut.toFixed(2)}V`;
+                vdcFormula = `V_{dc} = \\frac{V_{p(out)}}{\\pi} = \\frac{${vpOut.toFixed(2)}V}{\\pi} = ${vdc.toFixed(2)}V`;
+                pivFormula = `PIV = V_p = ${vp.toFixed(2)}V`;
+            } else {
+                vpOut = Math.max(0, vp - 2 * VD);
+                vdc = (2 * vpOut) / Math.PI;
+                piv = vpOut + VD; // Para puente rectificador de onda completa
+
+                vpOutFormula = `V_{p(out)} = V_p - 2V_D = ${vp}V - 2(0.7V) = ${vpOut.toFixed(2)}V`;
+                vdcFormula = `V_{dc} = \\frac{2V_{p(out)}}{\\pi} = \\frac{2(${vpOut.toFixed(2)}V)}{\\pi} = ${vdc.toFixed(2)}V`;
+                pivFormula = `PIV = V_{p(out)} + V_D = ${vpOut.toFixed(2)}V + 0.7V = ${piv.toFixed(2)}V`;
+            }
+
+            // Generar HTML de las tarjetas de pasos (Diseño Oscuro)
+            let htmlProcedimiento = `
+                <!-- Paso 1 -->
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#8b5cf6] text-white font-bold mr-6 shadow-[0_0_12px_rgba(139,92,246,0.5)]">1</div>
+                    <div class="flex-grow text-center overflow-x-auto text-[1.1rem]">
+                        $$ ${vpOutFormula} $$
+                    </div>
+                </div>
+
+                <!-- Paso 2 -->
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#8b5cf6] text-white font-bold mr-6 shadow-[0_0_12px_rgba(139,92,246,0.5)]">2</div>
+                    <div class="flex-grow text-center overflow-x-auto text-[1.1rem]">
+                        $$ ${vdcFormula} $$
+                    </div>
+                </div>
+
+                <!-- Paso 3 -->
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#8b5cf6] text-white font-bold mr-6 shadow-[0_0_12px_rgba(139,92,246,0.5)]">3</div>
+                    <div class="flex-grow text-center overflow-x-auto text-[1.1rem]">
+                        $$ ${pivFormula} $$
+                    </div>
+                </div>
+            `;
+
+            // Paso 4: Filtrado (Si hay capacitor)
+            if (C > 0) {
+                let freqRect = tipo === 'half' ? f : 2 * f;
+                let vrpp = vpOut / (freqRect * R * C);
+                if (vrpp > vpOut) vrpp = vpOut; // El rizado no puede ser mayor al pico
+
+                let vdcFilt = vpOut - (vrpp / 2);
+                
+                let vrppFormula = `V_{r(pp)} = \\frac{V_{p(out)}}{f_{rect} R C} = \\frac{${vpOut.toFixed(2)}V}{(${freqRect}Hz)(${R}\\Omega)(${C * 1e6}\\mu F)} = ${vrpp.toFixed(2)}V`;
+                let vdcFiltFormula = `V_{dc(filt)} = V_{p(out)} - \\frac{V_{r(pp)}}{2} = ${vpOut.toFixed(2)}V - \\frac{${vrpp.toFixed(2)}V}{2} = ${vdcFilt.toFixed(2)}V`;
+
+                htmlProcedimiento += `
+                    <!-- Paso 4 (Filtro) -->
+                    <div class="flex items-start bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800 mt-6 relative">
+                        <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-bold mr-6 shadow-[0_0_12px_rgba(59,130,246,0.5)] mt-1">4</div>
+                        <div class="flex-grow text-center overflow-x-auto text-[1.1rem] flex flex-col gap-4">
+                            <p class="text-sm text-gray-400 text-left border-b border-gray-700 pb-2">Se calcula el voltaje de rizado (con filtro) y el nuevo voltaje DC en la carga:</p>
+                            $$ ${vrppFormula} $$
+                            $$ ${vdcFiltFormula} $$
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('formulas-container').innerHTML = htmlProcedimiento;
+
+            // Le indicamos a MathJax que procese las nuevas fórmulas inyectadas
+            if (window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('formulas-container')]).catch(function (err) {
+                    console.error('Error procesando MathJax: ', err.message);
+                });
+            }
+        }
+
+        // Configuración inicial de Chart.js
+        function crearGrafico(tiempos, datosEntrada, datosSalida) {
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: tiempos,
+                    datasets: [
+                        {
+                            label: 'Señal de Entrada (AC)',
+                            data: datosEntrada,
+                            borderColor: 'rgba(156, 163, 175, 0.6)', // Gris
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Señal de Salida (DC)',
+                            data: datosSalida,
+                            borderColor: 'rgba(239, 68, 68, 1)', // Rojo
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 0 // Desactivar animación para respuesta rápida de sliders
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo (ms)'
+                            },
+                            ticks: {
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Voltaje (V)'
+                            },
+                            suggestedMin: -55,
+                            suggestedMax: 55
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' V';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Asignar listeners a los controles para actualizar en tiempo real
+        [radioMedia, radioCompleta, sliderVoltaje, sliderFrecuencia, sliderCapacitor].forEach(el => {
+            el.addEventListener('input', actualizarSimulacion);
+        });
+
+        // Iniciar simulación al cargar
+        actualizarSimulacion();
+    </script>
+    <footer class="bg-gray-100 text-gray-500 py-12 text-center mt-12 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-bold text-blue-600 mb-2 underline tracking-widest uppercase text-xs">Universidad de Oriente - Núcleo de Anzoátegui</p>
+            <p class="text-sm italic">Propuesta Curricular: <span class="text-gray-800">Prof. Eulogio Hernández</span></p>
+            <p class="text-sm italic">Profesor Actual: <span class="text-gray-800">Prof. Jose Bernardo Peña</span></p>
+            <p class="text-sm italic mb-6">Desarrollo Interactivo: <span class="text-gray-800">Jose Rojas Dagger</span></p>
+            <div class="flex justify-center gap-6 text-xs font-medium uppercase tracking-tighter">
+                <a href="../index.html" class="hover:text-blue-600 transition">Inicio</a>
+                <a href="datos_curricular.html" class="hover:text-blue-600 transition">Programa</a>
+                <a href="Teoria.html" class="hover:text-blue-600 transition">Teoría</a>
+                <a href="Formulas.html" class="hover:text-blue-600 transition">Fórmulas</a>
+                <a href="Analogias.html" class="hover:text-blue-600 transition">Analogías</a>
+            </div>
+            <p class="text-[10px] mt-8 opacity-40">&copy; 2026 Laboratorio Virtual de Electrónica Analógica</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>

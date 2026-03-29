@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Uso - Hub de Ingeniería</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Botón Volver -->
+        <div class="mb-6">
+            <a href="../index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Volver al Menú Principal
+            </a>
+        </div>
+
+        <header class="mb-12 text-center">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Guía de Uso del Sistema</h1>
+            <p class="text-xl text-gray-600">Sigue estos pasos para maximizar tu aprendizaje en Electrónica I.</p>
+        </header>
+
+        <div class="space-y-8">
+            <!-- Paso 1: Teoría -->
+            <section class="glass-card rounded-2xl p-8 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="bg-blue-100 p-3 rounded-xl text-blue-600">
+                        <i data-lucide="book-open" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">1. Fundamentos Teóricos</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed mb-4">
+                    Comienza siempre por la <strong>Teoría</strong>. Entiende la física de los semiconductores, el funcionamiento de las uniones P-N y cómo se comportan los portadores de carga antes de intentar simular.
+                </p>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li>Revisa los diagramas de bandas de energía.</li>
+                    <li>Entiende la diferencia entre polarización directa e inversa.</li>
+                </ul>
+            </section>
+
+            <!-- Paso 2: Fórmulas -->
+            <section class="glass-card rounded-2xl p-8 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="bg-purple-100 p-3 rounded-xl text-purple-600">
+                        <i data-lucide="function-square" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">2. Dominio de Ecuaciones</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed mb-4">
+                    Utiliza la <strong>Hoja de Fórmulas</strong> como tu guía matemática. No intentes memorizarlas; entiende de dónde viene cada término (Shockley, mallas de Kirchhoff, etc.).
+                </p>
+            </section>
+
+            <!-- Paso 3: Simuladores -->
+            <section class="glass-card rounded-2xl p-8 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="bg-red-100 p-3 rounded-xl text-red-600">
+                        <i data-lucide="activity" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">3. Experimentación Visual</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed mb-4">
+                    ¡Hora de la práctica! En los simuladores (Rectificadores, BJT, Amplificadores):
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <span class="font-bold block mb-1">Uso de Sliders:</span>
+                        Desliza para cambiar valores en tiempo real. La gráfica se actualizará instantáneamente (sin refrescar la página).
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <span class="font-bold block mb-1">Análisis de Curvas:</span>
+                        Observa cómo el punto Q se mueve sobre la recta de carga al variar las resistencias.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recomendaciones Técnicas -->
+            <section class="bg-[#0b1121] text-white rounded-2xl p-8 shadow-xl">
+                <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="info" class="w-6 h-6 text-blue-400"></i>
+                    Tips de Ingeniería
+                </h2>
+                <div class="space-y-4 opacity-90 text-sm">
+                    <p>• <strong>Conexión:</strong> El sistema usa CDNs para Lucide, Tailwind y Chart.js. Asegúrate de tener conexión a Internet para que todo se vea correctamente.</p>
+                    <p>• <strong>Navegación:</strong> Usa el botón de "Volver al Menú" en la parte superior para saltar rápidamente entre módulos.</p>
+                    <p>• <strong>Interacción:</strong> En los simuladores de amplificadores, usa las pestañas superiores para cambiar entre topologías (Cascodo, Diferencial, etc.).</p>
+                </div>
+            </section>
+        </div>
+
+    </div>
+
+    <footer class="bg-gray-100 text-gray-500 py-12 text-center mt-12 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-bold text-blue-600 mb-2 underline tracking-widest uppercase text-xs">Universidad de Oriente - Núcleo de Anzoátegui</p>
+            <p class="text-sm italic">Propuesta Curricular: <span class="text-gray-800">Prof. Eulogio Hernández</span></p>
+            <p class="text-sm italic">Profesor Actual: <span class="text-gray-800">Prof. Jose Bernardo Peña</span></p>
+            <p class="text-sm italic mb-6">Desarrollo Interactivo: <span class="text-gray-800">Jose Rojas Dagger</span></p>
+            <div class="flex justify-center gap-6 text-xs font-medium uppercase tracking-tighter">
+                <a href="../index.html" class="hover:text-blue-600 transition">Inicio</a>
+                <a href="datos_curricular.html" class="hover:text-blue-600 transition">Programa</a>
+                <a href="Teoria.html" class="hover:text-blue-600 transition">Teoría</a>
+                <a href="Formulas.html" class="hover:text-blue-600 transition">Fórmulas</a>
+                <a href="Analogias.html" class="hover:text-blue-600 transition">Analogías</a>
+            </div>
+            <p class="text-[10px] mt-8 opacity-40">&copy; 2026 Laboratorio Virtual de Electrónica Analógica</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

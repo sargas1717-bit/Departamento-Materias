@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Amplificadores Avanzados</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        input[type=range] { accent-color: #3b82f6; }
+        .slider-diff { accent-color: #8b5cf6; } /* Morado */
+        .slider-casc { accent-color: #10b981; } /* Verde */
+        .slider-pow { accent-color: #ef4444; }  /* Rojo */
+        
+        /* Transiciones suaves para pestañas */
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Botón Volver -->
+        <div class="mb-6">
+            <a href="../index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Volver al Menú Principal
+            </a>
+        </div>
+
+        <!-- Encabezado y Navegación -->
+        <header class="mb-6 border-b border-gray-300 pb-4">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Laboratorio de Amplificadores Avanzados</h1>
+            <p class="text-gray-600 mb-4">Explora el comportamiento de topologías complejas: ganancia en cascada, rechazo de ruido, efecto Miller y eficiencia de potencia.</p>
+            
+            <!-- Pestañas de Navegación -->
+            <div class="flex flex-wrap gap-2 bg-gray-200 p-1 rounded-xl">
+                <button onclick="cambiarTab('multi')" id="btn-multi" class="flex-1 py-2 px-4 rounded-lg font-bold text-sm sm:text-base transition-all bg-white text-blue-600 shadow">Multietapas</button>
+                <button onclick="cambiarTab('diff')" id="btn-diff" class="flex-1 py-2 px-4 rounded-lg font-bold text-sm sm:text-base transition-all text-gray-600 hover:bg-gray-300">Diferenciales</button>
+                <button onclick="cambiarTab('casc')" id="btn-casc" class="flex-1 py-2 px-4 rounded-lg font-bold text-sm sm:text-base transition-all text-gray-600 hover:bg-gray-300">Cascodo</button>
+                <button onclick="cambiarTab('pow')" id="btn-pow" class="flex-1 py-2 px-4 rounded-lg font-bold text-sm sm:text-base transition-all text-gray-600 hover:bg-gray-300">Potencia (Push-Pull)</button>
+            </div>
+        </header>
+
+        <!-- CONTENEDOR PRINCIPAL SUPERIOR (Controles y Gráfica) -->
+        <div class="flex flex-col lg:flex-row gap-6 mb-8">
+            
+            <!-- Panel de Controles (Dinámico) -->
+            <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col gap-4" id="panel-controles">
+                <!-- Se inyecta vía JS según la pestaña -->
+            </div>
+
+            <!-- Panel del Gráfico -->
+            <div class="w-full lg:w-2/3 bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200 flex flex-col">
+                <h3 class="text-lg font-semibold text-center mb-2" id="chart-title">Visualizador de Señal</h3>
+                <div class="w-full relative h-[350px]">
+                    <canvas id="mainCanvas"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECCIÓN DE TEORÍA Y MATEMÁTICAS (Dinámica) -->
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Diagrama SVG Dinámico -->
+            <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center min-h-[250px]" id="panel-diagrama">
+                <!-- SVG inyectado vía JS -->
+            </div>
+
+            <!-- Panel de Fórmulas Oscuro -->
+            <div class="w-full lg:w-2/3 bg-[#0b1121] p-6 rounded-xl shadow-lg border border-gray-800 text-gray-100 flex flex-col">
+                <h3 id="math-title" class="text-xl font-bold mb-4 border-b border-gray-700 pb-2 text-white tracking-wide">Análisis Matemático</h3>
+                <div id="math-container" class="space-y-4 flex-grow">
+                    <!-- Fórmulas inyectadas vía JS -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="bg-gray-50 text-gray-500 py-12 text-center mt-12 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-bold text-blue-600 mb-2 underline tracking-widest uppercase text-xs">Universidad de Oriente - Núcleo de Anzoátegui</p>
+            <p class="text-sm italic">Propuesta Curricular: <span class="text-gray-800">Prof. Eulogio Hernández</span></p>
+            <p class="text-sm italic">Profesor Actual: <span class="text-gray-800">Prof. Jose Bernardo Peña</span></p>
+            <p class="text-sm italic mb-6">Desarrollo Interactivo: <span class="text-gray-800">Jose Rojas Dagger</span></p>
+            <div class="flex justify-center gap-6 text-xs font-medium uppercase tracking-tighter">
+                <a href="../index.html" class="hover:text-blue-600 transition">Inicio</a>
+                <a href="datos_curricular.html" class="hover:text-blue-600 transition">Programa</a>
+                <a href="Teoria.html" class="hover:text-blue-600 transition">Teoría</a>
+                <a href="Formulas.html" class="hover:text-blue-600 transition">Fórmulas</a>
+                <a href="Analogias.html" class="hover:text-blue-600 transition">Analogías</a>
+            </div>
+            <p class="text-[10px] mt-8 opacity-40">&copy; 2026 Laboratorio Virtual de Electrónica Analógica</p>
+        </div>
+    </footer>
+
+    <!-- SCRIPT PRINCIPAL -->
+    <script>
+        // Utilidad global: Renderizar MathJax de forma segura
+        function renderMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise([document.getElementById('math-container')]).catch(err => console.error(err));
+            }
+        }
+
+        // Configuración Global de Chart.js
+        const ctx = document.getElementById('mainCanvas').getContext('2d');
+        let chartInstance = null;
+
+        // Estado Global
+        let currentTab = 'multi';
+
+        // --- SISTEMA DE PESTAÑAS ---
+        const tabs = ['multi', 'diff', 'casc', 'pow'];
+        const colors = { multi: 'blue', diff: 'purple', casc: 'emerald', pow: 'red' };
+
+        function cambiarTab(tabId) {
+            currentTab = tabId;
+            // Actualizar botones
+            tabs.forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if (t === tabId) {
+                    btn.className = `flex-1 py-2 px-4 rounded-lg font-bold text-sm sm:text-base transition-all bg-white text-${colors[t]}-600 shadow border-b-2 border-${colors[t]}-600`;
+                } else {
+                    btn.className = "flex-1 py-2 px-4 rounded-lg font-bold text-sm sm:text-base transition-all text-gray-600 hover:bg-gray-300";
+                }
+            });
+
+            // Cargar Módulos
+            if (tabId === 'multi') initMultietapa();
+            if (tabId === 'diff') initDiferencial();
+            if (tabId === 'casc') initCascodo();
+            if (tabId === 'pow') initPotencia();
+        }
+
+        // ==========================================
+        // MÓDULO 1: MULTIETAPAS
+        // ==========================================
+        function initMultietapa() {
+            document.getElementById('chart-title').textContent = "Amplificación en Cascada (Dominio del Tiempo)";
+            
+            // UI Controles
+            document.getElementById('panel-controles').innerHTML = `
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-blue-600">Parámetros Multietapa</h2>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">Voltaje Entrada ($V_{in}$)</label><span id="val-m-vin" class="text-sm font-bold text-blue-600">10 mV</span></div>
+                    <input id="sl-m-vin" type="range" min="1" max="50" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">Ganancia Etapa 1 ($A_{v1}$)</label><span id="val-m-av1" class="text-sm font-bold text-blue-600">10 V/V</span></div>
+                    <input id="sl-m-av1" type="range" min="2" max="50" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">Ganancia Etapa 2 ($A_{v2}$)</label><span id="val-m-av2" class="text-sm font-bold text-blue-600">20 V/V</span></div>
+                    <input id="sl-m-av2" type="range" min="2" max="50" value="20" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+            `;
+
+            // SVG Diagrama
+            document.getElementById('panel-diagrama').innerHTML = `
+                <h3 class="font-bold text-gray-700 mb-4">Diagrama de Bloques</h3>
+                <svg width="250" height="100" viewBox="0 0 300 100" fill="none" stroke="#1f2937" stroke-width="2">
+                    <line x1="10" y1="50" x2="40" y2="50" /> <text x="10" y="40" stroke="none" fill="#3b82f6" font-size="14">V_in</text>
+                    <polygon points="40,20 120,50 40,80" fill="#f3f4f6" /> <text x="55" y="55" stroke="none" fill="#1f2937" font-weight="bold">Av1</text>
+                    <line x1="120" y1="50" x2="160" y2="50" /> <text x="130" y="40" stroke="none" fill="#6b7280" font-size="12">V_out1</text>
+                    <polygon points="160,20 240,50 160,80" fill="#bfdbfe" /> <text x="175" y="55" stroke="none" fill="#1f2937" font-weight="bold">Av2</text>
+                    <line x1="240" y1="50" x2="290" y2="50" stroke-width="3" stroke="#3b82f6"/> <text x="250" y="40" stroke="none" fill="#3b82f6" font-weight="bold">V_out</text>
+                </svg>
+            `;
+
+            // Listeners
+            const inputs = ['sl-m-vin', 'sl-m-av1', 'sl-m-av2'].map(id => document.getElementById(id));
+            inputs.forEach(el => el.addEventListener('input', updateMultietapa));
+            updateMultietapa();
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise([document.getElementById('panel-controles')]).catch(err => console.error(err));
+            }
+        }
+
+        function updateMultietapa() {
+            if (currentTab !== 'multi') return;
+            const vin_mV = parseFloat(document.getElementById('sl-m-vin').value);
+            const av1 = parseFloat(document.getElementById('sl-m-av1').value);
+            const av2 = parseFloat(document.getElementById('sl-m-av2').value);
+
+            document.getElementById('val-m-vin').textContent = vin_mV + ' mV';
+            document.getElementById('val-m-av1').textContent = av1 + ' V/V';
+            document.getElementById('val-m-av2').textContent = av2 + ' V/V';
+
+            const vin_V = vin_mV / 1000;
+            const vout1 = vin_V * av1;
+            const vout2 = vout1 * av2;
+            const av_total = av1 * av2;
+            const av_total_db = 20 * Math.log10(av_total);
+
+            // Gráfico
+            const labels = []; const dIn = []; const dOut1 = []; const dOut2 = [];
+            for (let t = 0; t <= 2 * Math.PI; t += 0.1) {
+                labels.push(t.toFixed(1));
+                const sig = Math.sin(t);
+                dIn.push(vin_V * sig);
+                dOut1.push(vout1 * sig);
+                dOut2.push(vout2 * sig); // Inversión asumida para EC ya manejada en magnitud
+            }
+
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line', data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Vin (V)', data: dIn, borderColor: '#9ca3af', borderDash: [5,5], tension: 0.4, pointRadius: 0 },
+                        { label: 'Vout Etapa 1 (V)', data: dOut1, borderColor: '#60a5fa', tension: 0.4, pointRadius: 0 },
+                        { label: 'Vout Total (V)', data: dOut2, borderColor: '#2563eb', borderWidth: 3, tension: 0.4, pointRadius: 0 }
+                    ]
+                }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, scales: { y: { title: { display: true, text: 'Voltaje (V)' } } } }
+            });
+
+            // Matemáticas
+            document.getElementById('math-title').textContent = "Ganancia Total e Intermedia";
+            document.getElementById('math-container').innerHTML = `
+                <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                    <p class="text-sm text-blue-400 font-semibold mb-2">1. Salida Etapa 1</p>
+                    <div class="text-[1.1rem]">$$ V_{out1} = V_{in} \\cdot A_{v1} = (${vin_mV}\\text{mV})(${av1}) = ${(vout1*1000).toFixed(1)}\\text{ mV} $$</div>
+                </div>
+                <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                    <p class="text-sm text-blue-400 font-semibold mb-2">2. Ganancia Total en Cascada ($A_{v(total)}$)</p>
+                    <p class="text-sm text-gray-400 mb-1">Las ganancias lineales se multiplican:</p>
+                    <div class="text-[1.1rem]">$$ A_{v(total)} = A_{v1} \\cdot A_{v2} = (${av1}) \\cdot (${av2}) = ${av_total}\\text{ V/V} $$</div>
+                    <div class="text-[1.1rem] mt-2">$$ V_{out(total)} = V_{in} \\cdot A_{v(total)} = ${(vout2).toFixed(2)}\\text{ V} $$</div>
+                </div>
+                <div class="bg-[#151b2b] rounded-xl p-4 border border-blue-900/50">
+                    <p class="text-sm text-blue-400 font-semibold mb-2">3. Ganancia en Decibelios (dB)</p>
+                    <p class="text-sm text-gray-400 mb-1">En escala logarítmica, las ganancias se suman:</p>
+                    <div class="text-[1.1rem]">
+                        $$ A_{v1(dB)} = 20\\log_{10}(${av1}) = ${(20*Math.log10(av1)).toFixed(1)}\\text{ dB} $$
+                        $$ A_{v2(dB)} = 20\\log_{10}(${av2}) = ${(20*Math.log10(av2)).toFixed(1)}\\text{ dB} $$
+                        $$ A_{total(dB)} = A_{v1(dB)} + A_{v2(dB)} = ${av_total_db.toFixed(1)}\\text{ dB} $$
+                    </div>
+                </div>
+            `;
+            renderMathJax();
+        }
+
+        // ==========================================
+        // MÓDULO 2: DIFERENCIALES
+        // ==========================================
+        function initDiferencial() {
+            document.getElementById('chart-title').textContent = "Rechazo de Ruido en Modo Común";
+            document.getElementById('panel-controles').innerHTML = `
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-purple-600">Parámetros Diferenciales</h2>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">Señal Diferencial ($v_d$)</label><span id="val-d-vd" class="text-sm font-bold text-purple-600">10 mV</span></div>
+                    <input id="sl-d-vd" type="range" min="1" max="50" value="10" class="slider-diff w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">Ruido Modo Común ($v_c$)</label><span id="val-d-vc" class="text-sm font-bold text-purple-600">100 mV</span></div>
+                    <input id="sl-d-vc" type="range" min="0" max="500" value="100" step="10" class="slider-diff w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">CMRR (Relación de Rechazo)</label><span id="val-d-cmrr" class="text-sm font-bold text-purple-600">60 dB</span></div>
+                    <input id="sl-d-cmrr" type="range" min="20" max="100" value="60" step="5" class="slider-diff w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                    <p class="text-xs text-gray-500 mt-1">A mayor CMRR, mejor se elimina el ruido rojo.</p>
+                </div>
+            `;
+
+            document.getElementById('panel-diagrama').innerHTML = `
+                <h3 class="font-bold text-gray-700 mb-2">Par Diferencial (Long Tail)</h3>
+                <svg width="200" height="150" viewBox="0 0 200 150" fill="none" stroke="#1f2937" stroke-width="2">
+                    <line x1="100" y1="10" x2="100" y2="30" /> <text x="110" y="20" fill="#1f2937" font-size="10">VCC</text>
+                    <line x1="40" y1="30" x2="160" y2="30" />
+                    <!-- RC1, RC2 -->
+                    <polyline points="40,30 35,40 45,50 40,60" /> <polyline points="160,30 155,40 165,50 160,60" />
+                    <!-- Q1 -->
+                    <circle cx="55" cy="80" r="15" /> <line x1="40" y1="60" x2="40" y2="80" /> <line x1="40" y1="80" x2="20" y2="80" /> <text x="5" y="85" fill="#8b5cf6" font-size="12" font-weight="bold">v1</text>
+                    <line x1="40" y1="80" x2="55" y2="95" /> <polygon points="50,95 55,95 52,90" fill="#1f2937" />
+                    <!-- Q2 -->
+                    <circle cx="145" cy="80" r="15" /> <line x1="160" y1="60" x2="160" y2="80" /> <line x1="160" y1="80" x2="180" y2="80" /> <text x="185" y="85" fill="#8b5cf6" font-size="12" font-weight="bold">v2</text>
+                    <line x1="160" y1="80" x2="145" y2="95" /> <polygon points="148,90 145,95 150,95" fill="#1f2937" />
+                    <!-- Salida -->
+                    <circle cx="160" cy="70" r="3" fill="#8b5cf6" /> <line x1="160" y1="70" x2="180" y2="70" stroke="#8b5cf6" stroke-width="3" /> <text x="185" y="65" fill="#8b5cf6" font-size="12" font-weight="bold">vout</text>
+                    <!-- Tail -->
+                    <line x1="55" y1="95" x2="100" y2="105" /> <line x1="145" y1="95" x2="100" y2="105" />
+                    <line x1="100" y1="105" x2="100" y2="115" /> <polyline points="100,115 95,125 105,135 100,145" /> <text x="110" y="130" font-size="10">RE</text>
+                </svg>
+            `;
+
+            const inputs = ['sl-d-vd', 'sl-d-vc', 'sl-d-cmrr'].map(id => document.getElementById(id));
+            inputs.forEach(el => el.addEventListener('input', updateDiferencial));
+            updateDiferencial();
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise([document.getElementById('panel-controles')]).catch(err => console.error(err));
+            }
+        }
+
+        function updateDiferencial() {
+            if (currentTab !== 'diff') return;
+            const vd_mV = parseFloat(document.getElementById('sl-d-vd').value);
+            const vc_mV = parseFloat(document.getElementById('sl-d-vc').value);
+            const cmrr_db = parseFloat(document.getElementById('sl-d-cmrr').value);
+
+            document.getElementById('val-d-vd').textContent = vd_mV + ' mV';
+            document.getElementById('val-d-vc').textContent = vc_mV + ' mV';
+            document.getElementById('val-d-cmrr').textContent = cmrr_db + ' dB';
+
+            const Ad = 100; // Ganancia diferencial fija para la simulación (100 V/V)
+            
+            // Cálculo de ganancia en modo común basada en CMRR: CMRR = 20log(Ad/Ac) -> Ac = Ad / 10^(CMRR/20)
+            const Ac = Ad / Math.pow(10, cmrr_db / 20);
+
+            // Gráfico: Señal limpia (f=1) + Ruido (f=10)
+            const labels = []; const dInLimpia = []; const dRuido = []; const dOut = [];
+            for (let t = 0; t <= 4 * Math.PI; t += 0.05) {
+                labels.push(t.toFixed(1));
+                const sig = (vd_mV/1000) * Math.sin(t);
+                const ruido = (vc_mV/1000) * Math.sin(10*t); // Ruido alta frecuencia
+                
+                dInLimpia.push(sig);
+                dRuido.push(ruido);
+                
+                // Vout = Ad * Vd + Ac * Vc
+                dOut.push((Ad * sig) + (Ac * ruido));
+            }
+
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line', data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Señal Útil (Vd)', data: dInLimpia, borderColor: '#8b5cf6', borderDash: [2,2], tension: 0.4, pointRadius: 0 },
+                        { label: 'Ruido Inducido (Vc)', data: dRuido, borderColor: 'rgba(239, 68, 68, 0.4)', tension: 0.4, pointRadius: 0, borderWidth: 1 },
+                        { label: 'Salida Amplificada (Vout)', data: dOut, borderColor: '#6d28d9', borderWidth: 3, tension: 0.4, pointRadius: 0 }
+                    ]
+                }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, scales: { y: { title: { display: true, text: 'Voltaje (V)' } } } }
+            });
+
+            document.getElementById('math-title').textContent = "Ecuación de Salida Diferencial";
+            document.getElementById('math-container').innerHTML = `
+                <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                    <p class="text-sm text-purple-400 font-semibold mb-2">1. Ganancias Asignadas</p>
+                    <div class="text-[1.1rem]">
+                        $$ A_d = ${Ad}\\text{ V/V} \\quad \\text{(Asumida fija)} $$
+                        $$ A_c = \\frac{A_d}{10^{\\frac{CMRR}{20}}} = \\frac{${Ad}}{10^{\\frac{${cmrr_db}}{20}}} = ${Ac.toFixed(4)}\\text{ V/V} $$
+                    </div>
+                </div>
+                <div class="bg-[#151b2b] rounded-xl p-4 border border-purple-900/50 relative">
+                    <p class="text-sm text-purple-400 font-semibold mb-2">2. Supresión de Ruido</p>
+                    <p class="text-sm text-gray-400 mb-2">La salida total es la suma de la señal útil amplificada y el residuo del ruido:</p>
+                    <div class="text-[1.1rem]">
+                        $$ v_{out} = A_d v_d + A_c v_c $$
+                        $$ V_{out(ruido)} = (${Ac.toFixed(4)})(${vc_mV}\\text{mV}) = ${(Ac * vc_mV).toFixed(2)}\\text{ mV} $$
+                    </div>
+                    <p class="text-sm text-gray-400 mt-2">Nota cómo el ruido de entrada de <strong class="text-red-400">${vc_mV}mV</strong> queda reducido a casi nada gracias al CMRR.</p>
+                </div>
+            `;
+            renderMathJax();
+        }
+
+        // ==========================================
+        // MÓDULO 3: CASCODO Y EFECTO MILLER
+        // ==========================================
+        function initCascodo() {
+            document.getElementById('chart-title').textContent = "Diagrama de Bode: Respuesta en Frecuencia (Efecto Miller)";
+            document.getElementById('panel-controles').innerHTML = `
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-emerald-600">Parámetros Cascodo vs EC</h2>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">Ganancia Transistor ($g_m R_L$)</label><span id="val-c-gmrl" class="text-sm font-bold text-emerald-600">50 V/V</span></div>
+                    <input id="sl-c-gmrl" type="range" min="10" max="200" value="50" step="10" class="slider-casc w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">Capacitancia Parásita ($C_{gd}$)</label><span id="val-c-cgd" class="text-sm font-bold text-emerald-600">5 pF</span></div>
+                    <input id="sl-c-cgd" type="range" min="1" max="20" value="5" class="slider-casc w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+                <div class="mt-4 p-3 bg-emerald-50 rounded border border-emerald-200 text-sm text-emerald-800">
+                    <strong>¿Qué sucede?</strong> Al subir la ganancia, el <em>Efecto Miller</em> multiplica la capacitancia parásita en un Emisor Común (curva gris), destruyendo el ancho de banda. El Cascodo (curva verde) aísla esta capacitancia.
+                </div>
+            `;
+
+            document.getElementById('panel-diagrama').innerHTML = `
+                <h3 class="font-bold text-gray-700 mb-2">Topología Cascodo</h3>
+                <svg width="150" height="180" viewBox="0 0 150 180" fill="none" stroke="#1f2937" stroke-width="2">
+                    <line x1="75" y1="10" x2="75" y2="30" /> <text x="80" y="20" font-size="10">VCC</text>
+                    <polyline points="75,30 70,40 80,50 75,60" /> <text x="85" y="45" font-size="10">RL</text>
+                    <!-- Q2 (Base Común - Arriba) -->
+                    <circle cx="75" cy="80" r="15" /> <line x1="75" y1="60" x2="75" y2="65" /> <text x="85" y="65" fill="#10b981" font-size="10" font-weight="bold">Q2 (BC)</text>
+                    <line x1="75" y1="65" x2="65" y2="80" /> <polygon points="72,90 75,95 78,90" fill="#1f2937" />
+                    <line x1="65" y1="80" x2="40" y2="80" /> <line x1="40" y1="80" x2="40" y2="90" /> <line x1="35" y1="90" x2="45" y2="90" /> <!-- Vbias / GND AC -->
+                    <!-- Conexión -->
+                    <line x1="75" y1="95" x2="75" y2="105" />
+                    <!-- Q1 (Emisor Común - Abajo) -->
+                    <circle cx="75" cy="120" r="15" /> <text x="85" y="115" fill="#10b981" font-size="10" font-weight="bold">Q1 (EC)</text>
+                    <line x1="75" y1="105" x2="65" y2="120" /> <polygon points="72,130 75,135 78,130" fill="#1f2937" />
+                    <line x1="65" y1="120" x2="30" y2="120" /> <text x="10" y="125" fill="#3b82f6" font-size="12">Vin</text>
+                    <line x1="75" y1="135" x2="75" y2="155" /> <line x1="65" y1="155" x2="85" y2="155" /> <line x1="70" y1="160" x2="80" y2="160" /> <!-- GND -->
+                    <!-- Salida -->
+                    <circle cx="75" cy="65" r="3" fill="#10b981" /> <line x1="75" y1="65" x2="120" y2="65" stroke="#10b981"/> <text x="125" y="68" fill="#10b981" font-size="12">Vout</text>
+                </svg>
+            `;
+
+            const inputs = ['sl-c-gmrl', 'sl-c-cgd'].map(id => document.getElementById(id));
+            inputs.forEach(el => el.addEventListener('input', updateCascodo));
+            updateCascodo();
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise([document.getElementById('panel-controles')]).catch(err => console.error(err));
+            }
+        }
+
+        function updateCascodo() {
+            if (currentTab !== 'casc') return;
+            const gmrl = parseFloat(document.getElementById('sl-c-gmrl').value);
+            const cgd = parseFloat(document.getElementById('sl-c-cgd').value); // pF
+
+            document.getElementById('val-c-gmrl').textContent = gmrl + ' V/V';
+            document.getElementById('val-c-cgd').textContent = cgd + ' pF';
+
+            const rs = 1000; // Resistencia de fuente fija 1kOhm
+            const cgs = 2; // Cgs fijo 2pF
+
+            // Capacitancia de Entrada (Efecto Miller)
+            // EC Normal: CM = Cgd * (1 + Av) = Cgd * (1 + gmRl)
+            const cin_ec = cgs + cgd * (1 + gmrl);
+            const fp_ec = 1 / (2 * Math.PI * rs * cin_ec * 1e-12); // Frecuencia de corte EC
+
+            // Cascodo: El Q1 tiene ganancia Av1 = -1 porque su carga es 1/gm de Q2. CM = Cgd(1 - (-1)) = 2Cgd
+            const cin_casc = cgs + cgd * 2;
+            const fp_casc = 1 / (2 * Math.PI * rs * cin_casc * 1e-12); // Frecuencia de corte Cascodo
+
+            const ganancia_db = 20 * Math.log10(gmrl);
+
+            // Bode Plot Data (Log scale aproximado)
+            const labels = []; const dEC = []; const dCasc = [];
+            // Frecuencias desde 100kHz hasta 1GHz
+            for (let exp = 5; exp <= 9; exp += 0.1) {
+                const f = Math.pow(10, exp);
+                labels.push(exp.toFixed(1)); // Log scale visual
+
+                // Filtro RC paso bajo: H(f) = 1 / sqrt(1 + (f/fp)^2) -> dB = 20log(|H|)
+                const mag_ec = 1 / Math.sqrt(1 + Math.pow(f / fp_ec, 2));
+                const mag_casc = 1 / Math.sqrt(1 + Math.pow(f / fp_casc, 2));
+
+                dEC.push(ganancia_db + 20 * Math.log10(mag_ec));
+                dCasc.push(ganancia_db + 20 * Math.log10(mag_casc));
+            }
+
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line', data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Emisor Común Normal', data: dEC, borderColor: '#9ca3af', borderDash: [5,5], tension: 0.1, pointRadius: 0, fill: true, backgroundColor: 'rgba(156,163,175,0.1)' },
+                        { label: 'Amplificador Cascodo', data: dCasc, borderColor: '#10b981', borderWidth: 3, tension: 0.1, pointRadius: 0, fill: true, backgroundColor: 'rgba(16,185,129,0.1)' }
+                    ]
+                }, options: { 
+                    responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, 
+                    scales: { 
+                        x: { title: { display: true, text: 'Frecuencia log(Hz)' }, ticks: { callback: function(val, index) { return index % 10 === 0 ? "10^" + labels[index] : ''; } } },
+                        y: { title: { display: true, text: 'Ganancia (dB)' } }
+                    } 
+                }
+            });
+
+            document.getElementById('math-title').textContent = "Teorema de Miller";
+            document.getElementById('math-container').innerHTML = `
+                <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                    <p class="text-sm text-emerald-400 font-semibold mb-2">1. Emisor Común (Sufre Efecto Miller)</p>
+                    <p class="text-sm text-gray-400 mb-1">La capacitancia se multiplica por la ganancia:</p>
+                    <div class="text-[1.1rem] overflow-x-auto">
+                        $$ C_{in(EC)} = C_{gs} + C_{gd}(1 + A_v) = ${cgs} + ${cgd}(1 + ${gmrl}) = ${cin_ec.toFixed(1)}\\text{ pF} $$
+                        $$ f_{c(EC)} = \\frac{1}{2\\pi R_s C_{in}} = ${(fp_ec / 1e6).toFixed(1)}\\text{ MHz} $$
+                    </div>
+                </div>
+                <div class="bg-[#151b2b] rounded-xl p-4 border border-emerald-900/50">
+                    <p class="text-sm text-emerald-400 font-semibold mb-2">2. Cascodo (Anula Efecto Miller)</p>
+                    <p class="text-sm text-gray-400 mb-1">El transistor Q1 (abajo) solo ve una carga de $1/g_m$, dándole una ganancia $A_{v1} \\approx -1$. Su capacidad no se multiplica.</p>
+                    <div class="text-[1.1rem] overflow-x-auto">
+                        $$ C_{in(Casc)} = C_{gs} + C_{gd}(1 - (-1)) = ${cgs} + 2(${cgd}) = ${cin_casc.toFixed(1)}\\text{ pF} $$
+                        $$ f_{c(Casc)} = \\frac{1}{2\\pi R_s C_{in}} = ${(fp_casc / 1e6).toFixed(1)}\\text{ MHz} $$
+                    </div>
+                    <p class="text-sm text-emerald-300 mt-2 font-bold">¡Ancho de banda mejorado por un factor de ${(fp_casc/fp_ec).toFixed(1)}x!</p>
+                </div>
+            `;
+            renderMathJax();
+        }
+
+        // ==========================================
+        // MÓDULO 4: POTENCIA Y DISTORSIÓN (CLASES)
+        // ==========================================
+        function initPotencia() {
+            document.getElementById('chart-title').textContent = "Etapa de Salida: Distorsión de Cruce";
+            document.getElementById('panel-controles').innerHTML = `
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-red-600">Clases de Amplificadores</h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Clase de Operación</label>
+                    <select id="sl-p-class" class="w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 focus:ring-red-500 focus:border-red-500">
+                        <option value="A">Clase A (Lineal, ineficiente)</option>
+                        <option value="B" selected>Clase B (Push-Pull, distorsión)</option>
+                        <option value="AB">Clase AB (Compensado, ideal)</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1"><label class="text-sm font-medium">Amplitud de Entrada ($V_{in}$)</label><span id="val-p-vin" class="text-sm font-bold text-red-600">3.0 V</span></div>
+                    <input id="sl-p-vin" type="range" min="0.5" max="10" value="3.0" step="0.5" class="slider-pow w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+                <div class="mt-4 p-3 bg-red-50 rounded border border-red-200 text-sm text-red-800" id="pow-hint">
+                    En <strong>Clase B</strong>, el transistor necesita superar 0.7V para encenderse, creando una zona muerta o "distorsión de cruce" en el centro de la onda.
+                </div>
+            `;
+
+            document.getElementById('panel-diagrama').innerHTML = `
+                <h3 class="font-bold text-gray-700 mb-2">Push-Pull Complementario</h3>
+                <svg width="200" height="180" viewBox="0 0 200 180" fill="none" stroke="#1f2937" stroke-width="2">
+                    <line x1="100" y1="10" x2="100" y2="30" /> <text x="110" y="20" fill="#ef4444" font-size="12" font-weight="bold">+VCC</text>
+                    <!-- Q1 NPN (Arriba) -->
+                    <circle cx="100" cy="55" r="15" /> <line x1="100" y1="30" x2="100" y2="40" /> 
+                    <line x1="100" y1="40" x2="90" y2="55" /> <polygon points="97,65 100,70 103,65" fill="#1f2937" /> <line x1="90" y1="55" x2="100" y2="70" />
+                    <!-- Input connection Q1 -->
+                    <line x1="90" y1="55" x2="60" y2="55" />
+                    
+                    <!-- Q2 PNP (Abajo) -->
+                    <circle cx="100" cy="125" r="15" /> <line x1="100" y1="150" x2="100" y2="140" /> 
+                    <line x1="100" y1="140" x2="90" y2="125" /> <polygon points="97,115 100,110 103,115" fill="#1f2937" /> <line x1="90" y1="125" x2="100" y2="110" />
+                    <!-- Input connection Q2 -->
+                    <line x1="90" y1="125" x2="60" y2="125" />
+                    
+                    <line x1="100" y1="150" x2="100" y2="170" /> <text x="110" y="165" fill="#3b82f6" font-size="12" font-weight="bold">-VCC</text>
+
+                    <!-- Unir bases -->
+                    <line x1="60" y1="55" x2="60" y2="125" /> <circle cx="60" cy="90" r="3" fill="#1f2937" /> <line x1="60" y1="90" x2="30" y2="90" /> <text x="5" y="95" fill="#8b5cf6" font-size="12" font-weight="bold">Vin</text>
+
+                    <!-- Unir emisores (Salida) -->
+                    <line x1="100" y1="70" x2="100" y2="110" /> <circle cx="100" cy="90" r="3" fill="#ef4444" /> <line x1="100" y1="90" x2="140" y2="90" stroke="#ef4444" stroke-width="3"/> <text x="145" y="95" fill="#ef4444" font-size="12" font-weight="bold">Vout</text>
+                    <polyline points="140,90 140,110 135,115 145,125 135,135 140,140 140,160" /> <text x="150" y="130" font-size="10">RL</text>
+                    <line x1="130" y1="160" x2="150" y2="160" /> <!-- GND -->
+                </svg>
+            `;
+
+            const inputs = ['sl-p-class', 'sl-p-vin'].map(id => document.getElementById(id));
+            inputs.forEach(el => el.addEventListener('input', updatePotencia));
+            updatePotencia();
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise([document.getElementById('panel-controles')]).catch(err => console.error(err));
+            }
+        }
+
+        function updatePotencia() {
+            if (currentTab !== 'pow') return;
+            const clase = document.getElementById('sl-p-class').value;
+            const vin = parseFloat(document.getElementById('sl-p-vin').value);
+            document.getElementById('val-p-vin').textContent = vin.toFixed(1) + ' V';
+
+            const VD = 0.7; // Caída de diodo
+
+            const labels = []; const dIn = []; const dOut = [];
+            for (let t = 0; t <= 4 * Math.PI; t += 0.05) {
+                labels.push(t.toFixed(1));
+                const v = vin * Math.sin(t);
+                dIn.push(v);
+
+                let vout = 0;
+                if (clase === 'A' || clase === 'AB') {
+                    // Idealmente no hay caída (AB está compensado por diodos, A está polarizado en el centro)
+                    vout = v; 
+                } else if (clase === 'B') {
+                    // Distorsión de cruce: El transistor no conduce hasta que V > 0.7 o V < -0.7
+                    if (v > VD) vout = v - VD;
+                    else if (v < -VD) vout = v + VD;
+                    else vout = 0;
+                }
+                dOut.push(vout);
+            }
+
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line', data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Entrada (Vin)', data: dIn, borderColor: '#9ca3af', borderDash: [5,5], tension: 0.1, pointRadius: 0 },
+                        { label: 'Salida (Vout)', data: dOut, borderColor: '#ef4444', borderWidth: 3, tension: 0.1, pointRadius: 0 }
+                    ]
+                }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, scales: { y: { title: { display: true, text: 'Voltaje (V)' }, suggestedMin: -10, suggestedMax: 10 } } }
+            });
+
+            // Textos y Matemáticas dinámicas según la clase
+            const hint = document.getElementById('pow-hint');
+            let mathHTML = "";
+
+            if (clase === 'A') {
+                hint.innerHTML = "En <strong>Clase A</strong>, el transistor siempre está conduciendo (polarizado en el centro). No hay distorsión, pero la eficiencia máxima es bajísima (25% a 50%).";
+                mathHTML = `
+                    <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                        <p class="text-sm text-red-400 font-semibold mb-2">Características Clase A</p>
+                        <div class="text-[1.1rem]">
+                            $$ V_{out} = V_{in} $$
+                            $$ \\eta_{max} \\approx 25\\% \\text{ (RC acoplado)} $$
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">Disipa mucha energía térmica ($P_D$) incluso cuando no hay señal de entrada de audio.</p>
+                    </div>
+                `;
+            } else if (clase === 'B') {
+                hint.innerHTML = "En <strong>Clase B</strong>, usamos dos transistores. Uno amplifica el semiciclo positivo y otro el negativo. Fíjate en la zona plana de la línea roja cuando la onda cruza el cero.";
+                mathHTML = `
+                    <div class="bg-[#151b2b] rounded-xl p-4 border border-red-900/50">
+                        <p class="text-sm text-red-400 font-semibold mb-2">Matemática de la Distorsión (Clase B)</p>
+                        <p class="text-sm text-gray-400 mb-2">El voltaje base-emisor ($V_{BE}$) requiere $0.7V$ para iniciar la conducción:</p>
+                        <div class="text-[1.1rem] overflow-x-auto">
+                            $$ V_{out} = 
+                            \\begin{cases} 
+                            V_{in} - 0.7\\text{V}, & \\text{si } V_{in} > 0.7\\text{V} \\\\
+                            0\\text{V}, & \\text{si } -0.7\\text{V} \\leq V_{in} \\leq 0.7\\text{V} \\\\
+                            V_{in} + 0.7\\text{V}, & \\text{si } V_{in} < -0.7\\text{V}
+                            \\end{cases} $$
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">Esta zona nula se escucha como una distorsión áspera en audio.</p>
+                    </div>
+                `;
+            } else {
+                hint.innerHTML = "En <strong>Clase AB</strong>, añadimos diodos en las bases para pre-polarizarlos justo a 0.7V. Eliminamos la distorsión de cruce manteniendo una gran eficiencia (hasta 78%).";
+                mathHTML = `
+                    <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                        <p class="text-sm text-red-400 font-semibold mb-2">Compensación mediante Diodos (Clase AB)</p>
+                        <p class="text-sm text-gray-400 mb-2">Al inyectar un sesgo ($V_{bias} = 0.7V$), contrarrestamos la caída $V_{BE}$ internamente:</p>
+                        <div class="text-[1.1rem]">
+                            $$ V_{out} = (V_{in} + V_{bias}) - V_{BE} $$
+                            $$ V_{out} = (V_{in} + 0.7\\text{V}) - 0.7\\text{V} = V_{in} $$
+                        </div>
+                        <p class="text-sm text-green-400 mt-2 font-bold">¡Distorsión eliminada exitosamente!</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('math-title').textContent = `Análisis Teórico: Clase ${clase}`;
+            document.getElementById('math-container').innerHTML = mathHTML;
+            renderMathJax();
+        }
+
+        // INICIAR APLICACIÓN
+        cambiarTab('multi');
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>
+```

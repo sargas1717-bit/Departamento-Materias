@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Transistores BJT y FET</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax -->
+    <script>
+        // CONFIGURACIÓN AÑADIDA: Activa la detección del símbolo $ para matemáticas en línea
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        input[type=range] { accent-color: #3b82f6; }
+        .slider-bjt { accent-color: #ef4444; } /* Rojo para BJT */
+        .slider-fet { accent-color: #10b981; } /* Verde para FET */
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+    <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Botón Volver -->
+        <div class="mb-6">
+            <a href="../index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Volver al Menú Principal
+            </a>
+        </div>
+
+        <!-- Encabezado -->
+        <header class="mb-8 text-center sm:text-left">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Características de Transistores (BJT vs FET)</h1>
+            <p class="text-gray-600">Analiza las curvas características de salida y el punto de operación (Q-point). Observa cómo el BJT se controla por corriente y el MOSFET por voltaje.</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+            
+            <!-- Panel de Controles -->
+            <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <h2 class="text-xl font-semibold mb-6 border-b pb-2">Panel de Control</h2>
+                
+                <!-- Tipo de Transistor -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Tecnología del Transistor</label>
+                    <div class="flex items-center mb-2">
+                        <input id="radio-bjt" type="radio" name="trans-type" value="bjt" class="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500" checked>
+                        <label for="radio-bjt" class="ml-2 block text-sm font-bold text-red-600">BJT (NPN)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="radio-fet" type="radio" name="trans-type" value="fet" class="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                        <label for="radio-fet" class="ml-2 block text-sm font-bold text-green-600">MOSFET (Canal N)</label>
+                    </div>
+                </div>
+
+                <!-- CONTROLES BJT -->
+                <div id="controles-bjt" class="space-y-6">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-medium text-gray-700">Ganancia (β o hFE)</label>
+                            <span id="val-beta" class="text-sm font-bold text-red-600">100</span>
+                        </div>
+                        <input id="slider-beta" type="range" min="50" max="300" value="100" step="10" class="slider-bjt w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-medium text-gray-700">Corriente de Base (I<sub>B</sub>)</label>
+                            <span id="val-ib" class="text-sm font-bold text-red-600">20 µA</span>
+                        </div>
+                        <input id="slider-ib" type="range" min="0" max="100" value="20" step="5" class="slider-bjt w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-medium text-gray-700">Voltaje Colector-Emisor (V<sub>CE</sub>)</label>
+                            <span id="val-vce" class="text-sm font-bold text-red-600">5.0 V</span>
+                        </div>
+                        <input id="slider-vce" type="range" min="0" max="15" value="5" step="0.5" class="slider-bjt w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- CONTROLES FET (Ocultos por defecto) -->
+                <div id="controles-fet" class="space-y-6 hidden">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-medium text-gray-700">Constante (k<sub>n</sub>)</label>
+                            <span id="val-kn" class="text-sm font-bold text-green-600">1.0 mA/V²</span>
+                        </div>
+                        <input id="slider-kn" type="range" min="0.5" max="5.0" value="1.0" step="0.5" class="slider-fet w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-medium text-gray-700">Voltaje Gate-Source (V<sub>GS</sub>)</label>
+                            <span id="val-vgs" class="text-sm font-bold text-green-600">3.0 V</span>
+                        </div>
+                        <input id="slider-vgs" type="range" min="0" max="5" value="3.0" step="0.2" class="slider-fet w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <p class="text-xs text-gray-500 mt-1">Voltaje umbral (V<sub>TH</sub>) fijo en 2.0V</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-medium text-gray-700">Voltaje Drain-Source (V<sub>DS</sub>)</label>
+                            <span id="val-vds" class="text-sm font-bold text-green-600">5.0 V</span>
+                        </div>
+                        <input id="slider-vds" type="range" min="0" max="15" value="5.0" step="0.5" class="slider-fet w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Panel del Gráfico -->
+            <div class="w-full lg:w-2/3 bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200 flex flex-col">
+                <h3 class="text-lg font-semibold text-center mb-2" id="chart-title">Curva Característica de Salida</h3>
+                <div class="w-full relative h-[350px]">
+                    <canvas id="transistorCanvas"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECCIÓN: Diagrama y Fórmulas -->
+        <div class="mt-8 flex flex-col lg:flex-row gap-6">
+            
+            <!-- Diagrama del Transistor -->
+            <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col items-center">
+                <h2 class="text-xl font-semibold mb-4 border-b w-full text-left pb-2">Símbolo y Terminales</h2>
+                
+                <!-- SVG BJT NPN -->
+                <div id="svg-bjt" class="flex flex-col items-center justify-center w-full h-full">
+                    <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" stroke="#1f2937" stroke-width="3" fill="none">
+                        <!-- Círculo -->
+                        <circle cx="100" cy="100" r="50" stroke-width="2" />
+                        <!-- Base -->
+                        <line x1="20" y1="100" x2="80" y2="100" />
+                        <line x1="80" y1="70" x2="80" y2="130" stroke-width="5" />
+                        <text x="5" y="105" stroke="none" fill="#ef4444" font-weight="bold">B (Base)</text>
+                        <text x="30" y="90" stroke="none" fill="#ef4444" font-size="12">I_B ➔</text>
+                        <!-- Colector -->
+                        <line x1="80" y1="85" x2="120" y2="40" />
+                        <line x1="120" y1="40" x2="120" y2="10" />
+                        <text x="105" y="15" stroke="none" fill="#3b82f6" font-weight="bold">C (Colector)</text>
+                        <text x="130" y="50" stroke="none" fill="#3b82f6" font-size="12">↓ I_C</text>
+                        <!-- Emisor -->
+                        <line x1="80" y1="115" x2="120" y2="160" />
+                        <line x1="120" y1="160" x2="120" y2="190" />
+                        <polygon points="110,140 120,160 100,150" fill="#1f2937" /> <!-- Flecha NPN -->
+                        <text x="105" y="195" stroke="none" fill="#1f2937" font-weight="bold">E (Emisor)</text>
+                    </svg>
+                    <p class="text-sm text-center text-gray-500 mt-2">BJT NPN: Controlado por corriente (I<sub>B</sub> controla I<sub>C</sub>)</p>
+                </div>
+
+                <!-- SVG MOSFET Canal N -->
+                <div id="svg-fet" class="hidden flex-col items-center justify-center w-full h-full">
+                    <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" stroke="#1f2937" stroke-width="3" fill="none">
+                        <!-- Círculo -->
+                        <circle cx="100" cy="100" r="50" stroke-width="2" />
+                        <!-- Gate -->
+                        <line x1="20" y1="100" x2="70" y2="100" />
+                        <line x1="70" y1="60" x2="70" y2="140" stroke-width="4" />
+                        <text x="5" y="105" stroke="none" fill="#10b981" font-weight="bold">G (Gate)</text>
+                        <text x="30" y="90" stroke="none" fill="#10b981" font-size="12">+ V_GS -</text>
+                        <!-- Canal roto (Enhancement) -->
+                        <line x1="85" y1="65" x2="85" y2="85" stroke-width="4" />
+                        <line x1="85" y1="90" x2="85" y2="110" stroke-width="4" />
+                        <line x1="85" y1="115" x2="85" y2="135" stroke-width="4" />
+                        <!-- Drain -->
+                        <line x1="85" y1="75" x2="120" y2="75" />
+                        <line x1="120" y1="75" x2="120" y2="10" />
+                        <text x="105" y="15" stroke="none" fill="#3b82f6" font-weight="bold">D (Drain)</text>
+                        <text x="130" y="50" stroke="none" fill="#3b82f6" font-size="12">↓ I_D</text>
+                        <!-- Source & Bulk -->
+                        <line x1="85" y1="125" x2="120" y2="125" />
+                        <line x1="120" y1="125" x2="120" y2="190" />
+                        <!-- Bulk connection -->
+                        <line x1="85" y1="100" x2="120" y2="100" />
+                        <line x1="120" y1="100" x2="120" y2="125" />
+                        <polygon points="95,95 85,100 95,105" fill="#1f2937" /> <!-- Flecha hacia adentro (Canal N) -->
+                        <text x="105" y="195" stroke="none" fill="#1f2937" font-weight="bold">S (Source)</text>
+                    </svg>
+                    <p class="text-sm text-center text-gray-500 mt-2">MOSFET Canal N: Controlado por voltaje (V<sub>GS</sub> controla I<sub>D</sub>)</p>
+                </div>
+            </div>
+
+            <!-- Fórmulas Matemáticas -->
+            <div class="w-full lg:w-2/3 bg-[#0b1121] p-6 rounded-xl shadow-lg border border-gray-800 text-gray-100">
+                <h2 class="text-xl font-bold mb-6 border-b border-gray-700 pb-3 text-white tracking-wide">Cálculo del Punto de Operación (Q-Point)</h2>
+                <div id="formulas-container" class="space-y-4">
+                    <!-- Fórmulas inyectadas vía JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN NUEVA: Tipos y Configuraciones BJT -->
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <header class="mb-6 border-b pb-2">
+                <h2 class="text-2xl font-bold text-gray-900">Tipos de BJT y Configuraciones Básicas</h2>
+                <p class="text-gray-600 text-sm">Compara las estructuras NPN y PNP, y explora las tres formas fundamentales de conectar un transistor BJT en un circuito amplificador.</p>
+            </header>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                
+                <!-- Polaridad: NPN vs PNP -->
+                <div class="w-full lg:w-1/3 bg-gray-50 p-5 rounded-xl border border-gray-200 flex flex-col items-center">
+                    <div class="flex gap-2 w-full mb-4">
+                        <button id="btn-npn" class="flex-1 bg-red-600 text-white font-bold py-2 rounded shadow transition-colors">NPN</button>
+                        <button id="btn-pnp" class="flex-1 bg-gray-300 text-gray-700 font-bold py-2 rounded hover:bg-gray-400 transition-colors">PNP</button>
+                    </div>
+
+                    <!-- SVG Dinámico NPN/PNP -->
+                    <div id="svg-polaridad" class="relative w-full h-[180px] flex justify-center items-center">
+                        <!-- Se llena vía JS -->
+                    </div>
+
+                    <div id="info-polaridad" class="mt-4 text-sm text-gray-700 bg-white p-3 rounded border w-full">
+                        <!-- Info inyectada vía JS -->
+                    </div>
+                </div>
+
+                <!-- Configuraciones del Amplificador -->
+                <div class="w-full lg:w-2/3 bg-[#0b1121] p-5 rounded-xl border border-gray-800 flex flex-col text-gray-100">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button id="btn-ec" class="flex-1 bg-blue-600 text-white font-bold py-2 px-2 rounded shadow text-sm sm:text-base">Emisor Común</button>
+                        <button id="btn-cc" class="flex-1 bg-gray-700 text-gray-300 font-bold py-2 px-2 rounded hover:bg-gray-600 transition-colors text-sm sm:text-base">Colector Común</button>
+                        <button id="btn-bc" class="flex-1 bg-gray-700 text-gray-300 font-bold py-2 px-2 rounded hover:bg-gray-600 transition-colors text-sm sm:text-base">Base Común</button>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-6 items-center flex-grow">
+                        <!-- SVG Configuración -->
+                        <div id="svg-configuracion" class="w-full sm:w-1/3 h-[150px] flex justify-center items-center bg-gray-900 rounded-lg p-2 border border-gray-700">
+                            <!-- Se llena vía JS -->
+                        </div>
+
+                        <!-- Tabla de Características -->
+                        <div class="w-full sm:w-2/3">
+                            <h3 id="titulo-configuracion" class="text-lg font-bold text-blue-400 mb-2 border-b border-gray-700 pb-1">Emisor Común (EC)</h3>
+                            <table class="w-full text-sm text-left text-gray-300">
+                                <tbody>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-2 font-medium text-gray-400">Entrada / Salida</th>
+                                        <td id="conf-io" class="py-2">Base / Colector</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-2 font-medium text-gray-400">Ganancia Voltaje ($A_v$)</th>
+                                        <td id="conf-av" class="py-2 text-green-400 font-bold">Alta</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-2 font-medium text-gray-400">Ganancia Corriente ($A_i$)</th>
+                                        <td id="conf-ai" class="py-2 text-green-400 font-bold">Alta ($\beta$)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="py-2 font-medium text-gray-400">Impedancias ($Z_{in}$ / $Z_{out}$)</th>
+                                        <td id="conf-z" class="py-2">Media / Media-Alta</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="py-2 font-medium text-gray-400">Desfase</th>
+                                        <td id="conf-fase" class="py-2 text-yellow-400">180° (Inversor)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN NUEVA Y MEJORADA: Ejercicios Prácticos (3 Configuraciones) -->
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-md border border-gray-200 mb-8">
+            <header class="mb-6 border-b pb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Laboratorio de Cálculos: BJT NPN</h2>
+                    <p class="text-gray-600 text-sm">Ajusta valores y observa cómo cambia el análisis matemático en cada configuración.</p>
+                </div>
+                <!-- Pestañas de Ejercicio -->
+                <div class="mt-4 sm:mt-0 flex bg-gray-100 p-1 rounded-lg border">
+                    <button id="tab-ex-ec" class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow transition">Emisor C.</button>
+                    <button id="tab-ex-cc" class="px-4 py-2 text-gray-600 text-sm font-bold rounded hover:bg-gray-200 transition">Colector C.</button>
+                    <button id="tab-ex-bc" class="px-4 py-2 text-gray-600 text-sm font-bold rounded hover:bg-gray-200 transition">Base C.</button>
+                </div>
+            </header>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Diagramas y Controles -->
+                <div class="w-full lg:w-1/3 flex flex-col gap-6">
+                    
+                    <!-- Diagramas SVG Alternables -->
+                    <div class="bg-gray-50 p-4 rounded-xl border flex justify-center items-center h-[250px] relative">
+                        
+                        <!-- SVG Emisor Común (Polarización Fija) -->
+                        <div id="svg-ex-ec" class="absolute">
+                            <svg width="220" height="220" viewBox="0 0 200 200" stroke="#1f2937" stroke-width="2" fill="none">
+                                <circle cx="100" cy="15" r="4" fill="#1f2937" /> <text x="110" y="20" stroke="none" fill="#ef4444" font-weight="bold">V_CC</text>
+                                <line x1="100" y1="15" x2="100" y2="40" /> <line x1="40" y1="40" x2="140" y2="40" />
+                                <line x1="40" y1="40" x2="40" y2="60" /> <polyline points="40,60 35,65 45,75 35,85 45,95 35,105 40,110" /> <text x="10" y="85" stroke="none" fill="#3b82f6" font-size="12">R_B</text>
+                                <line x1="40" y1="110" x2="40" y2="130" /> <line x1="40" y1="130" x2="80" y2="130" />
+                                <line x1="140" y1="40" x2="140" y2="60" /> <polyline points="140,60 135,65 145,75 135,85 145,95 135,105 140,110" /> <text x="155" y="85" stroke="none" fill="#3b82f6" font-size="12">R_C</text>
+                                <line x1="140" y1="110" x2="140" y2="120" />
+                                <circle cx="110" cy="130" r="25" stroke-width="1.5" />
+                                <line x1="80" y1="130" x2="100" y2="130" /> <line x1="100" y1="115" x2="100" y2="145" stroke-width="3" />
+                                <line x1="100" y1="120" x2="140" y2="120" /> <line x1="100" y1="140" x2="140" y2="155" /> <polygon points="135,145 140,155 125,152" fill="#1f2937" />
+                                <line x1="140" y1="155" x2="140" y2="180" /> <line x1="125" y1="180" x2="155" y2="180" /> <line x1="130" y1="185" x2="150" y2="185" />
+                            </svg>
+                        </div>
+
+                        <!-- SVG Colector Común -->
+                        <div id="svg-ex-cc" class="absolute hidden">
+                            <svg width="220" height="220" viewBox="0 0 200 200" stroke="#1f2937" stroke-width="2" fill="none">
+                                <circle cx="100" cy="15" r="4" fill="#1f2937" /> <text x="110" y="20" stroke="none" fill="#ef4444" font-weight="bold">V_CC</text>
+                                <line x1="100" y1="15" x2="100" y2="40" /> <line x1="40" y1="40" x2="100" y2="40" />
+                                <line x1="40" y1="40" x2="40" y2="60" /> <polyline points="40,60 35,65 45,75 35,85 45,95 35,105 40,110" /> <text x="10" y="85" stroke="none" fill="#3b82f6" font-size="12">R_B</text>
+                                <line x1="40" y1="110" x2="40" y2="120" /> <line x1="40" y1="120" x2="80" y2="120" />
+                                <circle cx="110" cy="120" r="25" stroke-width="1.5" />
+                                <line x1="80" y1="120" x2="100" y2="120" /> <line x1="100" y1="105" x2="100" y2="135" stroke-width="3" />
+                                <line x1="100" y1="40" x2="100" y2="105" /> <!-- Colector a VCC -->
+                                <line x1="100" y1="135" x2="100" y2="150" /> <polygon points="95,140 100,150 105,140" fill="#1f2937" />
+                                <polyline points="100,150 95,155 105,165 95,175 105,185 100,190" /> <text x="115" y="175" stroke="none" fill="#3b82f6" font-size="12">R_E</text>
+                                <line x1="100" y1="190" x2="100" y2="195" /> <line x1="90" y1="195" x2="110" y2="195" /> <line x1="95" y1="198" x2="105" y2="198" />
+                            </svg>
+                        </div>
+
+                        <!-- SVG Base Común -->
+                        <div id="svg-ex-bc" class="absolute hidden">
+                            <svg width="220" height="220" viewBox="0 0 200 200" stroke="#1f2937" stroke-width="2" fill="none">
+                                <circle cx="40" cy="180" r="4" fill="#1f2937" /> <text x="50" y="185" stroke="none" fill="#ef4444" font-weight="bold">-V_EE</text>
+                                <circle cx="160" cy="20" r="4" fill="#1f2937" /> <text x="170" y="25" stroke="none" fill="#ef4444" font-weight="bold">V_CC</text>
+                                <circle cx="100" cy="100" r="25" stroke-width="1.5" />
+                                <line x1="85" y1="90" x2="115" y2="90" stroke-width="3" /> 
+                                <line x1="100" y1="90" x2="100" y2="120" /> <!-- Base -->
+                                <line x1="100" y1="120" x2="100" y2="140" /> <line x1="90" y1="140" x2="110" y2="140" /> <line x1="95" y1="145" x2="105" y2="145" /> <!-- GND -->
+                                <line x1="85" y1="90" x2="70" y2="75" /> <line x1="70" y1="75" x2="40" y2="75" /> <polygon points="50,71 40,75 50,79" fill="#1f2937" /> <!-- Emisor out -->
+                                <line x1="40" y1="75" x2="40" y2="95" /> <polyline points="40,95 35,100 45,110 35,120 45,130 40,135" /> <text x="10" y="120" stroke="none" fill="#3b82f6" font-size="12">R_E</text>
+                                <line x1="40" y1="135" x2="40" y2="180" />
+                                <line x1="115" y1="90" x2="130" y2="75" /> <line x1="130" y1="75" x2="160" y2="75" /> <!-- Colector -->
+                                <line x1="160" y1="75" x2="160" y2="60" /> <polyline points="160,60 155,55 165,45 155,35 165,25 160,20" /> <text x="175" y="45" stroke="none" fill="#3b82f6" font-size="12">R_C</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Controles Dinámicos (Cambian según pestaña) -->
+                    <div id="controles-ex">
+                        <!-- VCC o VEE (Control común recicable) -->
+                        <div id="ctrl-vcc" class="mb-4">
+                            <div class="flex justify-between mb-1">
+                                <label id="lbl-title-vcc" class="text-sm font-medium">V<sub>CC</sub> (Fuente)</label>
+                                <span id="lbl-val-vcc" class="text-sm font-bold text-blue-600">12 V</span>
+                            </div>
+                            <input id="in-vcc" type="range" min="5" max="24" value="12" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                        </div>
+                        
+                        <!-- Fuente VEE solo para BC -->
+                        <div id="ctrl-vee" class="mb-4 hidden">
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium">| V<sub>EE</sub> | (Fuente Emisor)</label>
+                                <span id="lbl-val-vee" class="text-sm font-bold text-blue-600">5 V</span>
+                            </div>
+                            <input id="in-vee" type="range" min="1" max="15" value="5" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                        </div>
+
+                        <!-- RB o RE (Resistencia Entrada) -->
+                        <div class="mb-4">
+                            <div class="flex justify-between mb-1">
+                                <label id="lbl-title-rin" class="text-sm font-medium">R<sub>B</sub> (Resistencia Base)</label>
+                                <span id="lbl-val-rin" class="text-sm font-bold text-blue-600">220 kΩ</span>
+                            </div>
+                            <input id="in-rin" type="range" min="10" max="1000" value="220" step="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                        </div>
+
+                        <!-- RC o null (Resistencia Salida) -->
+                        <div id="ctrl-rout" class="mb-4">
+                            <div class="flex justify-between mb-1">
+                                <label id="lbl-title-rout" class="text-sm font-medium">R<sub>C</sub> (Resistencia Colector)</label>
+                                <span id="lbl-val-rout" class="text-sm font-bold text-blue-600">1.2 kΩ</span>
+                            </div>
+                            <input id="in-rout" type="range" min="0.1" max="10" value="1.2" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                        </div>
+
+                        <!-- Ganancia -->
+                        <div class="mb-4">
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium">Ganancia (β)</label>
+                                <span id="lbl-val-beta" class="text-sm font-bold text-blue-600">100</span>
+                            </div>
+                            <input id="in-beta" type="range" min="50" max="300" value="100" step="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resolución Paso a Paso -->
+                <div class="w-full lg:w-2/3 bg-[#0b1121] p-6 rounded-xl shadow-lg border border-gray-800 text-gray-100 flex flex-col">
+                    <h3 id="ejercicio-titulo" class="text-lg font-bold mb-4 border-b border-gray-700 pb-2 text-white">Resolución: Emisor Común</h3>
+                    <div id="ejercicio-container" class="space-y-4 flex-grow">
+                        <!-- Cálculos inyectados vía JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. Referencias DOM - Simulador Principal
+        const radioBJT = document.getElementById('radio-bjt');
+        const radioFET = document.getElementById('radio-fet');
+        const controlesBJT = document.getElementById('controles-bjt');
+        const sliderBeta = document.getElementById('slider-beta');
+        const sliderIb = document.getElementById('slider-ib');
+        const sliderVce = document.getElementById('slider-vce');
+        const controlesFET = document.getElementById('controles-fet');
+        const sliderKn = document.getElementById('slider-kn');
+        const sliderVgs = document.getElementById('slider-vgs');
+        const sliderVds = document.getElementById('slider-vds');
+        const ctx = document.getElementById('transistorCanvas').getContext('2d');
+        let chartInstance = null;
+        const V_TH = 2.0;
+
+        // Lógica de cambio entre BJT y FET
+        function toggleModo() {
+            if (radioBJT.checked) {
+                controlesBJT.classList.remove('hidden');
+                controlesFET.classList.add('hidden');
+                document.getElementById('svg-bjt').classList.remove('hidden');
+                document.getElementById('svg-bjt').classList.add('flex');
+                document.getElementById('svg-fet').classList.add('hidden');
+                document.getElementById('svg-fet').classList.remove('flex');
+            } else {
+                controlesBJT.classList.add('hidden');
+                controlesFET.classList.remove('hidden');
+                document.getElementById('svg-bjt').classList.add('hidden');
+                document.getElementById('svg-bjt').classList.remove('flex');
+                document.getElementById('svg-fet').classList.remove('hidden');
+                document.getElementById('svg-fet').classList.add('flex');
+            }
+            actualizarSimulacion();
+        }
+
+        [radioBJT, radioFET].forEach(el => el.addEventListener('change', toggleModo));
+
+        // Lógica de cálculo y renderizado del simulador principal
+        function actualizarSimulacion() {
+            const isBJT = radioBJT.checked;
+
+            if (isBJT) {
+                const beta = parseFloat(sliderBeta.value);
+                const ib_uA = parseFloat(sliderIb.value);
+                const ib_mA = ib_uA / 1000;
+                const vce = parseFloat(sliderVce.value);
+
+                document.getElementById('val-beta').textContent = beta;
+                document.getElementById('val-ib').textContent = ib_uA + ' µA';
+                document.getElementById('val-vce').textContent = vce.toFixed(1) + ' V';
+
+                graficarBJT(beta, ib_mA, vce);
+                calcularTeoriaBJT(beta, ib_uA, ib_mA, vce);
+            } else {
+                const kn = parseFloat(sliderKn.value);
+                const vgs = parseFloat(sliderVgs.value);
+                const vds = parseFloat(sliderVds.value);
+
+                document.getElementById('val-kn').textContent = kn.toFixed(1) + ' mA/V²';
+                document.getElementById('val-vgs').textContent = vgs.toFixed(1) + ' V';
+                document.getElementById('val-vds').textContent = vds.toFixed(1) + ' V';
+
+                graficarFET(kn, vgs, vds);
+                calcularTeoriaFET(kn, vgs, vds);
+            }
+        }
+
+        // Generar curva BJT
+        function ecBJT(v, ib, beta) {
+            const ic_max = beta * ib;
+            return ic_max * (1 - Math.exp(-v / 0.15));
+        }
+
+        function graficarBJT(beta, ib_mA, vce_op) {
+            document.getElementById('chart-title').textContent = 'Curva Característica BJT (I_C vs V_CE)';
+            const voltajes = [];
+            for(let v = 0; v <= 15; v += 0.2) voltajes.push(v.toFixed(1));
+
+            const curvaPrincipal = voltajes.map(v => ecBJT(v, ib_mA, beta));
+            const ic_op = ecBJT(vce_op, ib_mA, beta);
+
+            const familyIbs = [0.02, 0.04, 0.06, 0.08, 0.1];
+            const datasets = familyIbs.map(ib => ({
+                label: `I_B = ${ib*1000}µA`,
+                data: voltajes.map(v => ecBJT(v, ib, beta)),
+                borderColor: 'rgba(156, 163, 175, 0.3)',
+                borderWidth: 1,
+                pointRadius: 0,
+                tension: 0.2
+            }));
+
+            datasets.push({
+                label: `Curva Actual (I_B = ${ib_mA*1000}µA)`,
+                data: curvaPrincipal,
+                borderColor: '#ef4444',
+                borderWidth: 3,
+                pointRadius: 0,
+                tension: 0.2
+            });
+
+            datasets.push({
+                label: 'Punto de Operación (Q)',
+                data: voltajes.map(v => Math.abs(v - vce_op) < 0.1 ? ic_op : null),
+                backgroundColor: '#f59e0b',
+                borderColor: '#b45309',
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                showLine: false
+            });
+
+            renderizarGrafico(voltajes, datasets, 'V_CE (Voltios)', 'I_C (mA)', 12);
+        }
+
+        // Generar curva FET
+        function ecFET(vds, vgs, kn) {
+            if (vgs < V_TH) return 0;
+            const vov = vgs - V_TH;
+            if (vds < vov) {
+                return kn * (2 * vov * vds - vds * vds);
+            } else {
+                return kn * (vov * vov);
+            }
+        }
+
+        function graficarFET(kn, vgs_op, vds_op) {
+            document.getElementById('chart-title').textContent = 'Curva Característica MOSFET (I_D vs V_DS)';
+            const voltajes = [];
+            for(let v = 0; v <= 15; v += 0.2) voltajes.push(v.toFixed(1));
+
+            const curvaPrincipal = voltajes.map(v => ecFET(v, vgs_op, kn));
+            const id_op = ecFET(vds_op, vgs_op, kn);
+
+            const familyVgs = [2.5, 3.0, 3.5, 4.0, 4.5]; 
+            const datasets = familyVgs.map(vgs => ({
+                label: `V_GS = ${vgs}V`,
+                data: voltajes.map(v => ecFET(v, vgs, kn)),
+                borderColor: 'rgba(156, 163, 175, 0.3)',
+                borderWidth: 1,
+                pointRadius: 0,
+                tension: 0.2
+            }));
+
+            datasets.push({
+                label: `Curva Actual (V_GS = ${vgs_op}V)`,
+                data: curvaPrincipal,
+                borderColor: '#10b981',
+                borderWidth: 3,
+                pointRadius: 0,
+                tension: 0.2
+            });
+
+            datasets.push({
+                label: 'Punto de Operación (Q)',
+                data: voltajes.map(v => Math.abs(v - vds_op) < 0.1 ? id_op : null),
+                backgroundColor: '#f59e0b',
+                borderColor: '#b45309',
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                showLine: false
+            });
+
+            renderizarGrafico(voltajes, datasets, 'V_DS (Voltios)', 'I_D (mA)', 15);
+        }
+
+        function renderizarGrafico(labels, datasets, xTitle, yTitle, yMax) {
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { title: { display: true, text: xTitle }, ticks: { maxTicksLimit: 10 } },
+                        y: { title: { display: true, text: yTitle }, min: 0, max: yMax }
+                    }
+                }
+            });
+        }
+
+        function calcularTeoriaBJT(beta, ib_uA, ib_mA, vce) {
+            const ic_ideal = beta * ib_mA;
+            let region = ""; let colorRegion = "";
+            let ic_real = ecBJT(vce, ib_mA, beta);
+
+            if (ib_uA === 0) { region = "CORTE"; colorRegion = "text-gray-400"; }
+            else if (vce < 0.3) { region = "SATURACIÓN"; colorRegion = "text-yellow-400"; }
+            else { region = "ACTIVA (Lineal)"; colorRegion = "text-green-400"; }
+
+            const pd = vce * ic_real;
+
+            const html = `
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#ef4444] text-white font-bold mr-6 shadow-[0_0_12px_rgba(239,68,68,0.5)]">1</div>
+                    <div class="flex-grow overflow-x-auto text-[1.1rem]">
+                        <p class="text-sm text-gray-400 mb-1">Cálculo de la Corriente de Colector Ideal ($I_{C} = \\beta \\cdot I_{B}$)</p>
+                        <div class="text-center">$$ I_C = (${beta}) \\cdot (${ib_uA} \\mu A) = ${ic_ideal.toFixed(2)} \\text{ mA} $$</div>
+                    </div>
+                </div>
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#ef4444] text-white font-bold mr-6 shadow-[0_0_12px_rgba(239,68,68,0.5)]">2</div>
+                    <div class="flex-grow overflow-x-auto text-[1.1rem]">
+                        <p class="text-sm text-gray-400 mb-1">Zona de Operación ($V_{CE} = ${vce}V$)</p>
+                        <p class="text-center font-bold tracking-widest ${colorRegion}">${region}</p>
+                        ${vce < 0.3 && ib_uA > 0 ? `<p class="text-xs text-center text-gray-500 mt-1">$V_{CE}$ es casi 0V. La corriente no alcanza el ideal.</p>` : ''}
+                    </div>
+                </div>
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#ef4444] text-white font-bold mr-6 shadow-[0_0_12px_rgba(239,68,68,0.5)]">3</div>
+                    <div class="flex-grow overflow-x-auto text-[1.1rem]">
+                        <p class="text-sm text-gray-400 mb-1">Potencia Disipada ($P_D = V_{CE} \\cdot I_C$)</p>
+                        <div class="text-center">$$ P_D = (${vce}V) \\cdot (${ic_real.toFixed(2)}mA) = ${pd.toFixed(2)} \\text{ mW} $$</div>
+                    </div>
+                </div>`;
+            actualizarMathJax(html);
+        }
+
+        function calcularTeoriaFET(kn, vgs, vds) {
+            const vov = vgs - V_TH;
+            let region = ""; let colorRegion = ""; let id = 0; let formula = "";
+
+            if (vgs < V_TH) {
+                region = "CORTE"; colorRegion = "text-gray-400";
+                formula = `$$ I_D = 0 \\text{ mA} \\quad (V_{GS} < V_{TH}) $$`;
+            } else if (vds < vov) {
+                region = "ÓHMICA / TRIODO"; colorRegion = "text-yellow-400";
+                id = kn * (2 * vov * vds - vds * vds);
+                formula = `$$ I_D = k_n [2(V_{GS}-V_{TH})V_{DS} - V_{DS}^2] $$
+                           $$ I_D = ${kn}[2(${vov.toFixed(1)})(${vds}) - (${vds})^2] = ${id.toFixed(2)} \\text{ mA} $$`;
+            } else {
+                region = "SATURACIÓN (Corriente Constante)"; colorRegion = "text-green-400";
+                id = kn * (vov * vov);
+                formula = `$$ I_D = k_n (V_{GS}-V_{TH})^2 $$
+                           $$ I_D = ${kn} (${vov.toFixed(1)})^2 = ${id.toFixed(2)} \\text{ mA} $$`;
+            }
+
+            const pd = vds * id;
+
+            const html = `
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#10b981] text-white font-bold mr-6 shadow-[0_0_12px_rgba(16,185,129,0.5)]">1</div>
+                    <div class="flex-grow overflow-x-auto text-[1.1rem]">
+                        <p class="text-sm text-gray-400 mb-1">Verificar Voltaje de Sobremarcha ($V_{OV} = V_{GS} - V_{TH}$)</p>
+                        <div class="text-center">$$ V_{OV} = ${vgs}V - 2.0V = ${vov.toFixed(2)}V $$</div>
+                    </div>
+                </div>
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#10b981] text-white font-bold mr-6 shadow-[0_0_12px_rgba(16,185,129,0.5)]">2</div>
+                    <div class="flex-grow overflow-x-auto text-[1.1rem]">
+                        <p class="text-sm text-gray-400 mb-1">Zona de Operación y Corriente Drain ($I_D$)</p>
+                        <p class="text-center font-bold tracking-widest ${colorRegion} mb-2">${region}</p>
+                        <div class="text-center text-sm">${formula}</div>
+                    </div>
+                </div>
+                <div class="flex items-center bg-[#151b2b] rounded-xl p-5 shadow-inner border border-gray-800">
+                    <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#10b981] text-white font-bold mr-6 shadow-[0_0_12px_rgba(16,185,129,0.5)]">3</div>
+                    <div class="flex-grow overflow-x-auto text-[1.1rem]">
+                        <p class="text-sm text-gray-400 mb-1">Potencia Disipada ($P_D = V_{DS} \\cdot I_D$)</p>
+                        <div class="text-center">$$ P_D = (${vds}V) \\cdot (${id.toFixed(2)}mA) = ${pd.toFixed(2)} \\text{ mW} $$</div>
+                    </div>
+                </div>`;
+            actualizarMathJax(html);
+        }
+
+        function actualizarMathJax(html) {
+            document.getElementById('formulas-container').innerHTML = html;
+            // VALIDACIÓN AÑADIDA PARA EVITAR ERROR AL INICIO DE LA CARGA:
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise([document.getElementById('formulas-container')]).catch(err => console.error(err));
+            }
+        }
+
+        [sliderBeta, sliderIb, sliderVce, sliderKn, sliderVgs, sliderVds].forEach(el => {
+            el.addEventListener('input', actualizarSimulacion);
+        });
+
+        actualizarSimulacion();
+
+        // 2. Lógica Tipos y Configuraciones BJT
+        const btnNpn = document.getElementById('btn-npn');
+        const btnPnp = document.getElementById('btn-pnp');
+        const svgPolaridad = document.getElementById('svg-polaridad');
+        const infoPolaridad = document.getElementById('info-polaridad');
+
+        function renderNPN() {
+            btnNpn.className = "flex-1 bg-red-600 text-white font-bold py-2 rounded shadow transition-colors";
+            btnPnp.className = "flex-1 bg-gray-300 text-gray-700 font-bold py-2 rounded hover:bg-gray-400 transition-colors";
+            svgPolaridad.innerHTML = `
+                <svg width="150" height="150" viewBox="0 0 200 200" stroke="#1f2937" stroke-width="3" fill="none">
+                    <circle cx="100" cy="100" r="50" stroke-width="2" />
+                    <line x1="20" y1="100" x2="80" y2="100" /> <text x="5" y="105" stroke="none" fill="#ef4444" font-weight="bold">B</text>
+                    <line x1="80" y1="70" x2="80" y2="130" stroke-width="5" />
+                    <line x1="80" y1="85" x2="120" y2="40" /> <line x1="120" y1="40" x2="120" y2="10" /> <text x="105" y="15" stroke="none" fill="#3b82f6" font-weight="bold">C</text>
+                    <line x1="80" y1="115" x2="120" y2="160" /> <line x1="120" y1="160" x2="120" y2="190" /> <text x="105" y="195" stroke="none" fill="#1f2937" font-weight="bold">E</text>
+                    <polygon points="110,140 120,160 100,150" fill="#1f2937" />
+                    <text x="35" y="90" stroke="none" fill="#ef4444" font-size="14">I_B ➔</text>
+                    <text x="130" y="50" stroke="none" fill="#3b82f6" font-size="14">↓ I_C</text>
+                    <text x="130" y="175" stroke="none" fill="#1f2937" font-size="14">↓ I_E</text>
+                </svg>`;
+            infoPolaridad.innerHTML = `<strong>NPN (Negativo-Positivo-Negativo):</strong> Las corrientes de Base y Colector <strong>entran</strong> al transistor y se suman para salir por el Emisor ($I_E = I_B + I_C$). Portadores mayoritarios: Electrones.`;
+            // VALIDACIÓN:
+            if (window.MathJax && window.MathJax.typesetPromise) MathJax.typesetPromise([infoPolaridad]);
+        }
+
+        function renderPNP() {
+            btnPnp.className = "flex-1 bg-red-600 text-white font-bold py-2 rounded shadow transition-colors";
+            btnNpn.className = "flex-1 bg-gray-300 text-gray-700 font-bold py-2 rounded hover:bg-gray-400 transition-colors";
+            svgPolaridad.innerHTML = `
+                <svg width="150" height="150" viewBox="0 0 200 200" stroke="#1f2937" stroke-width="3" fill="none">
+                    <circle cx="100" cy="100" r="50" stroke-width="2" />
+                    <line x1="20" y1="100" x2="80" y2="100" /> <text x="5" y="105" stroke="none" fill="#ef4444" font-weight="bold">B</text>
+                    <line x1="80" y1="70" x2="80" y2="130" stroke-width="5" />
+                    <line x1="80" y1="85" x2="120" y2="40" /> <line x1="120" y1="40" x2="120" y2="10" /> <text x="105" y="15" stroke="none" fill="#1f2937" font-weight="bold">E</text>
+                    <line x1="80" y1="115" x2="120" y2="160" /> <line x1="120" y1="160" x2="120" y2="190" /> <text x="105" y="195" stroke="none" fill="#3b82f6" font-weight="bold">C</text>
+                    <polygon points="100,65 80,85 110,80" fill="#1f2937" />
+                    <text x="35" y="90" stroke="none" fill="#ef4444" font-size="14">I_B ⬅</text>
+                    <text x="130" y="175" stroke="none" fill="#3b82f6" font-size="14">↓ I_C</text>
+                    <text x="130" y="50" stroke="none" fill="#1f2937" font-size="14">↓ I_E</text>
+                </svg>`;
+            infoPolaridad.innerHTML = `<strong>PNP (Positivo-Negativo-Positivo):</strong> La corriente de Emisor <strong>entra</strong> al transistor y se divide saliendo por la Base y el Colector. Operan con voltajes negativos. Portadores mayoritarios: Huecos.`;
+            // VALIDACIÓN:
+            if (window.MathJax && window.MathJax.typesetPromise) MathJax.typesetPromise([infoPolaridad]);
+        }
+
+        btnNpn.addEventListener('click', renderNPN);
+        btnPnp.addEventListener('click', renderPNP);
+
+        const btnEc = document.getElementById('btn-ec');
+        const btnCc = document.getElementById('btn-cc');
+        const btnBc = document.getElementById('btn-bc');
+        const svgConf = document.getElementById('svg-configuracion');
+
+        function setBtnActive(btn) {
+            [btnEc, btnCc, btnBc].forEach(b => {
+                b.className = "flex-1 bg-gray-700 text-gray-300 font-bold py-2 px-2 rounded hover:bg-gray-600 transition-colors text-sm sm:text-base";
+            });
+            btn.className = "flex-1 bg-blue-600 text-white font-bold py-2 px-2 rounded shadow text-sm sm:text-base";
+        }
+
+        function renderConfig(tipo) {
+            let svgHtml = '';
+            const tBase = `
+                <line x1="70" y1="30" x2="70" y2="70" stroke-width="4" stroke="#9ca3af" />
+                <line x1="70" y1="40" x2="100" y2="20" stroke="#9ca3af" />
+                <line x1="70" y1="60" x2="100" y2="80" stroke="#9ca3af" />
+                <polygon points="90,73 100,80 85,80" fill="#9ca3af" />
+            `;
+
+            if (tipo === 'EC') {
+                setBtnActive(btnEc);
+                document.getElementById('titulo-configuracion').textContent = "Emisor Común (EC)";
+                document.getElementById('conf-io').textContent = "Base / Colector";
+                document.getElementById('conf-av').innerHTML = "<span class='text-green-400 font-bold'>Alta</span>";
+                document.getElementById('conf-ai').innerHTML = "<span class='text-green-400 font-bold'>Alta ($\\beta$)</span>";
+                document.getElementById('conf-z').textContent = "Media / Media-Alta";
+                document.getElementById('conf-fase').innerHTML = "<span class='text-yellow-400'>180° (Inversor)</span>";
+                
+                svgHtml = `
+                    <svg width="120" height="120" viewBox="0 0 140 100" fill="none">
+                        ${tBase}
+                        <line x1="20" y1="50" x2="70" y2="50" stroke="#3b82f6" stroke-width="2" /> <text x="10" y="45" fill="#3b82f6" font-size="12">IN</text>
+                        <line x1="100" y1="20" x2="130" y2="20" stroke="#ef4444" stroke-width="2" /> <text x="110" y="15" fill="#ef4444" font-size="12">OUT</text>
+                        <line x1="100" y1="80" x2="100" y2="95" stroke="#9ca3af" stroke-width="2" />
+                        <line x1="90" y1="95" x2="110" y2="95" stroke="#9ca3af" stroke-width="2" /> <text x="115" y="98" fill="#9ca3af" font-size="10">GND</text>
+                    </svg>`;
+            } else if (tipo === 'CC') {
+                setBtnActive(btnCc);
+                document.getElementById('titulo-configuracion').textContent = "Colector Común (CC) / Seguidor de Emisor";
+                document.getElementById('conf-io').textContent = "Base / Emisor";
+                document.getElementById('conf-av').innerHTML = "<span class='text-gray-400'>~ 1 (Casi unitaria)</span>";
+                document.getElementById('conf-ai').innerHTML = "<span class='text-green-400 font-bold'>Muy Alta ($\\beta+1$)</span>";
+                document.getElementById('conf-z').textContent = "Muy Alta / Muy Baja";
+                document.getElementById('conf-fase').innerHTML = "<span class='text-green-400'>0° (Sin desfase)</span>";
+
+                svgHtml = `
+                    <svg width="120" height="120" viewBox="0 0 140 100" fill="none">
+                        ${tBase}
+                        <line x1="20" y1="50" x2="70" y2="50" stroke="#3b82f6" stroke-width="2" /> <text x="10" y="45" fill="#3b82f6" font-size="12">IN</text>
+                        <line x1="100" y1="20" x2="100" y2="5" stroke="#9ca3af" stroke-width="2" /> <text x="105" y="10" fill="#9ca3af" font-size="10">VCC</text>
+                        <line x1="100" y1="80" x2="130" y2="80" stroke="#ef4444" stroke-width="2" /> <text x="110" y="75" fill="#ef4444" font-size="12">OUT</text>
+                    </svg>`;
+            } else {
+                setBtnActive(btnBc);
+                document.getElementById('titulo-configuracion').textContent = "Base Común (BC)";
+                document.getElementById('conf-io').textContent = "Emisor / Colector";
+                document.getElementById('conf-av').innerHTML = "<span class='text-green-400 font-bold'>Alta</span>";
+                document.getElementById('conf-ai').innerHTML = "<span class='text-gray-400'>~ 1 (Casi unitaria)</span>";
+                document.getElementById('conf-z').textContent = "Muy Baja / Muy Alta";
+                document.getElementById('conf-fase').innerHTML = "<span class='text-green-400'>0° (Sin desfase)</span>";
+
+                svgHtml = `
+                    <svg width="120" height="120" viewBox="0 0 140 100" fill="none">
+                        <line x1="70" y1="30" x2="70" y2="70" stroke-width="4" stroke="#9ca3af" />
+                        <line x1="70" y1="40" x2="100" y2="20" stroke="#9ca3af" /> 
+                        <line x1="70" y1="60" x2="100" y2="80" stroke="#9ca3af" />
+                        <polygon points="90,33 100,20 85,20" fill="#9ca3af" /> 
+                        <line x1="70" y1="50" x2="40" y2="50" stroke="#9ca3af" stroke-width="2" />
+                        <line x1="40" y1="50" x2="40" y2="90" stroke="#9ca3af" stroke-width="2" />
+                        <line x1="30" y1="90" x2="50" y2="90" stroke="#9ca3af" stroke-width="2" /> <text x="55" y="95" fill="#9ca3af" font-size="10">GND</text>
+                        <line x1="100" y1="20" x2="130" y2="20" stroke="#3b82f6" stroke-width="2" /> <text x="110" y="15" fill="#3b82f6" font-size="12">IN</text>
+                        <line x1="100" y1="80" x2="130" y2="80" stroke="#ef4444" stroke-width="2" /> <text x="110" y="75" fill="#ef4444" font-size="12">OUT</text>
+                    </svg>`;
+            }
+
+            svgConf.innerHTML = svgHtml;
+            // VALIDACIÓN:
+            if (window.MathJax && window.MathJax.typesetPromise) MathJax.typesetPromise([document.getElementById('conf-av'), document.getElementById('conf-ai')]);
+        }
+
+        btnEc.addEventListener('click', () => renderConfig('EC'));
+        btnCc.addEventListener('click', () => renderConfig('CC'));
+        btnBc.addEventListener('click', () => renderConfig('BC'));
+
+        renderNPN();
+        renderConfig('EC');
+
+        // 3. Lógica del Laboratorio (Ejercicios Prácticos 3 Modos)
+        let modoEjercicio = 'EC';
+        
+        const tabEc = document.getElementById('tab-ex-ec');
+        const tabCc = document.getElementById('tab-ex-cc');
+        const tabBc = document.getElementById('tab-ex-bc');
+        
+        const svgEc = document.getElementById('svg-ex-ec');
+        const svgCc = document.getElementById('svg-ex-cc');
+        const svgBc = document.getElementById('svg-ex-bc');
+
+        const ctrlVee = document.getElementById('ctrl-vee');
+        const ctrlRout = document.getElementById('ctrl-rout');
+        const lblTitleVcc = document.getElementById('lbl-title-vcc');
+        const lblTitleRin = document.getElementById('lbl-title-rin');
+        const lblTitleRout = document.getElementById('lbl-title-rout');
+        const ejTitulo = document.getElementById('ejercicio-titulo');
+
+        const inVcc = document.getElementById('in-vcc');
+        const inVee = document.getElementById('in-vee');
+        const inRin = document.getElementById('in-rin'); 
+        const inRout = document.getElementById('in-rout'); 
+        const inBeta = document.getElementById('in-beta');
+
+        function setModoEjercicio(modo) {
+            modoEjercicio = modo;
+            [tabEc, tabCc, tabBc].forEach(t => t.className = "px-4 py-2 text-gray-600 text-sm font-bold rounded hover:bg-gray-200 transition");
+            [svgEc, svgCc, svgBc].forEach(s => s.classList.add('hidden'));
+
+            if (modo === 'EC') {
+                tabEc.className = "px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow transition";
+                svgEc.classList.remove('hidden');
+                ejTitulo.textContent = "Resolución: Polarización Fija (Emisor Común)";
+                ctrlVee.classList.add('hidden');
+                ctrlRout.classList.remove('hidden');
+                lblTitleVcc.innerHTML = "V<sub>CC</sub> (Fuente)";
+                lblTitleRin.innerHTML = "R<sub>B</sub> (Resistencia Base)";
+                inRin.max = 1000; inRin.step = 10; inRin.value = 220; 
+                
+            } else if (modo === 'CC') {
+                tabCc.className = "px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow transition";
+                svgCc.classList.remove('hidden');
+                ejTitulo.textContent = "Resolución: Seguidor de Emisor (Colector Común)";
+                ctrlVee.classList.add('hidden');
+                ctrlRout.classList.add('hidden'); 
+                lblTitleVcc.innerHTML = "V<sub>CC</sub> (Fuente)";
+                lblTitleRin.innerHTML = "R<sub>B</sub> (Resistencia Base)";
+                inRin.max = 1000; inRin.step = 10; inRin.value = 220;
+                
+            } else if (modo === 'BC') {
+                tabBc.className = "px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow transition";
+                svgBc.classList.remove('hidden');
+                ejTitulo.textContent = "Resolución: Polarización Base Común";
+                ctrlVee.classList.remove('hidden');
+                ctrlRout.classList.remove('hidden');
+                lblTitleVcc.innerHTML = "V<sub>CC</sub> (Fuente Colector)";
+                lblTitleRin.innerHTML = "R<sub>E</sub> (Resistencia Emisor)";
+                inRin.max = 10; inRin.step = 0.1; inRin.value = 1.2; 
+            }
+
+            actualizarEjercicio();
+        }
+
+        tabEc.addEventListener('click', () => setModoEjercicio('EC'));
+        tabCc.addEventListener('click', () => setModoEjercicio('CC'));
+        tabBc.addEventListener('click', () => setModoEjercicio('BC'));
+
+        function actualizarEjercicio() {
+            const vcc = parseFloat(inVcc.value);
+            const vee = parseFloat(inVee.value);
+            const rin = parseFloat(inRin.value);
+            const rout = parseFloat(inRout.value);
+            const beta = parseFloat(inBeta.value);
+
+            document.getElementById('lbl-val-vcc').textContent = vcc + ' V';
+            document.getElementById('lbl-val-vee').textContent = vee + ' V';
+            document.getElementById('lbl-val-rin').textContent = rin + (modoEjercicio==='BC' ? ' kΩ' : ' kΩ');
+            document.getElementById('lbl-val-rout').textContent = rout + ' kΩ';
+            document.getElementById('lbl-val-beta').textContent = beta;
+
+            let htmlEjercicio = "";
+
+            if (modoEjercicio === 'EC') {
+                const rb = rin * 1000;
+                const rc = rout * 1000;
+                let ib_A = (vcc - 0.7) / rb;
+                let ib_uA = ib_A * 1e6;
+                let ic_A = ib_A * beta;
+                let vce = vcc - (ic_A * rc);
+
+                if (vce < 0.2) {
+                    let ic_sat = (vcc - 0.2) / rc;
+                    let b_forz = ic_sat / ib_A;
+                    htmlEjercicio = `
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-red-900/50 relative">
+                            <div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded font-bold uppercase tracking-wider">¡Saturación!</div>
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 1: Malla de Entrada</p>
+                            <div class="text-[1.1rem]">$$I_B = \\frac{V_{CC} - V_{BE}}{R_B} = ${ib_uA.toFixed(2)} \\mu A$$</div>
+                            <p class="text-sm text-gray-400 mt-2 mb-1">El transistor entra en saturación. Limitamos $V_{CE(sat)} \\approx 0.2V$:</p>
+                            <div class="text-[1.1rem]">
+                                $$I_{C(sat)} = \\frac{V_{CC} - 0.2V}{R_C} = ${(ic_sat*1000).toFixed(2)} \\text{ mA}$$
+                                $$\\beta_{forzada} = \\frac{I_{C(sat)}}{I_B} = ${b_forz.toFixed(1)}$$
+                            </div>
+                        </div>`;
+                } else {
+                    htmlEjercicio = `
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 1: Malla de Entrada (Base)</p>
+                            <div class="text-[1.1rem]">$$I_B = \\frac{V_{CC} - V_{BE}}{R_B} = \\frac{${vcc}V - 0.7V}{${rin} k\\Omega} = ${ib_uA.toFixed(2)} \\mu A$$</div>
+                        </div>
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 2: Ganancia de Corriente</p>
+                            <div class="text-[1.1rem]">$$I_C = \\beta \\cdot I_B = ${beta} \\cdot ${(ib_uA/1000).toFixed(4)} mA = ${(ic_A*1000).toFixed(2)} \\text{ mA}$$</div>
+                        </div>
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-green-900/50">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 3: Malla de Salida (Colector)</p>
+                            <div class="text-[1.1rem]">$$V_{CE} = V_{CC} - I_C R_C = ${vcc}V - (${(ic_A*1000).toFixed(2)} mA)(${rout} k\\Omega) = ${vce.toFixed(2)} V$$</div>
+                            <p class="text-sm text-gray-400 mt-2">Opera en <strong class="text-green-400">Zona Activa</strong> porque $V_{CE} > 0.2V$.</p>
+                        </div>`;
+                }
+            } 
+            else if (modoEjercicio === 'CC') {
+                ctrlRout.classList.remove('hidden');
+                lblTitleRout.innerHTML = "R<sub>E</sub> (Resistencia Emisor)";
+                
+                const rb = rin * 1000;
+                const re = rout * 1000;
+                
+                let ib_A = (vcc - 0.7) / (rb + (beta + 1) * re);
+                let ib_uA = ib_A * 1e6;
+                let ie_A = (beta + 1) * ib_A;
+                let vce = vcc - (ie_A * re);
+
+                if (vce < 0.2) {
+                    htmlEjercicio = `
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-red-900/50">
+                            <div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded font-bold uppercase tracking-wider">¡Saturación!</div>
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Análisis de Seguidor</p>
+                            <div class="text-[1.1rem]">$$V_{CE} < 0.2V$$</div>
+                            <p class="text-sm text-gray-400 mt-2">La resistencia de emisor es demasiado grande para esta configuración o la polarización es excesiva.</p>
+                        </div>`;
+                } else {
+                    htmlEjercicio = `
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 1: Malla Completa (Base a Emisor)</p>
+                            <p class="text-sm text-gray-400 mb-2">Como $I_E = (\\beta+1)I_B$, la resistencia $R_E$ se "refleja" a la base multiplicada por la ganancia.</p>
+                            <div class="text-[1.1rem]">
+                                $$I_B = \\frac{V_{CC} - V_{BE}}{R_B + (\\beta+1)R_E}$$
+                                $$I_B = \\frac{${vcc}V - 0.7V}{${rin}k\\Omega + (${beta}+1)(${rout}k\\Omega)} = ${ib_uA.toFixed(2)} \\mu A$$
+                            </div>
+                        </div>
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 2: Corriente de Emisor ($I_E$)</p>
+                            <div class="text-[1.1rem]">$$I_E = (\\beta+1)I_B = (${beta+1}) \\cdot ${(ib_uA/1000).toFixed(4)} mA = ${(ie_A*1000).toFixed(2)} \\text{ mA}$$</div>
+                        </div>
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-green-900/50">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 3: Voltaje Colector-Emisor ($V_{CE}$)</p>
+                            <div class="text-[1.1rem]">$$V_{CE} = V_{CC} - I_E R_E = ${vcc}V - (${(ie_A*1000).toFixed(2)} mA)(${rout} k\\Omega) = ${vce.toFixed(2)} V$$</div>
+                        </div>`;
+                }
+            } 
+            else if (modoEjercicio === 'BC') {
+                const re = rin * 1000;
+                const rc = rout * 1000;
+                
+                let ie_A = (vee - 0.7) / re;
+                if (ie_A < 0) ie_A = 0; 
+                
+                let alpha = beta / (beta + 1);
+                let ic_A = alpha * ie_A;
+                
+                let vcb = vcc - (ic_A * rc);
+                let vce = vcb + 0.7;
+
+                if (ie_A === 0) {
+                    htmlEjercicio = `<div class="bg-[#151b2b] p-4 border border-gray-800 rounded text-center text-gray-400 font-bold">Transistor en CORTE ($V_{EE} < 0.7V$)</div>`;
+                } else if (vcb < 0) {
+                    htmlEjercicio = `
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-red-900/50 relative">
+                            <div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded font-bold uppercase tracking-wider">¡Saturación!</div>
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Malla de Entrada (Emisor)</p>
+                            <div class="text-[1.1rem]">$$I_E = \\frac{|V_{EE}| - V_{BE}}{R_E} = ${(ie_A*1000).toFixed(2)} \\text{ mA}$$</div>
+                            <p class="text-sm text-gray-400 mt-4 mb-2">Malla de Salida (Colector)</p>
+                            <div class="text-[1.1rem]">$$V_{CB} = V_{CC} - I_C R_C = ${vcb.toFixed(2)}V$$</div>
+                            <p class="text-sm text-gray-400 mt-2">Como $V_{CB}$ es negativo, la unión Colector-Base se polariza en directa. El transistor está saturado.</p>
+                        </div>`;
+                } else {
+                    htmlEjercicio = `
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 1: Malla de Entrada (Emisor aislado)</p>
+                            <p class="text-sm text-gray-400 mb-2">La Base está en tierra ($0V$). Analizamos el lazo del Emisor a $-V_{EE}$:</p>
+                            <div class="text-[1.1rem]">$$I_E = \\frac{|V_{EE}| - V_{BE}}{R_E} = \\frac{${vee}V - 0.7V}{${rin} k\\Omega} = ${(ie_A*1000).toFixed(2)} \\text{ mA}$$</div>
+                        </div>
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-gray-800">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 2: Corriente de Colector</p>
+                            <div class="text-[1.1rem]">
+                                $$\\alpha = \\frac{\\beta}{\\beta + 1} = \\frac{${beta}}{${beta+1}} = ${alpha.toFixed(4)}$$
+                                $$I_C = \\alpha \\cdot I_E \\approx ${(ic_A*1000).toFixed(2)} \\text{ mA}$$
+                            </div>
+                        </div>
+                        <div class="bg-[#151b2b] rounded-xl p-4 border border-green-900/50">
+                            <p class="text-sm text-blue-400 font-semibold mb-2">Paso 3: Malla de Salida (Voltaje Base-Colector)</p>
+                            <div class="text-[1.1rem]">$$V_{CB} = V_{CC} - I_C R_C = ${vcc}V - (${(ic_A*1000).toFixed(2)} mA)(${rout} k\\Omega) = ${vcb.toFixed(2)} V$$</div>
+                            <p class="text-sm text-gray-400 mt-2">Opera normal. Voltaje Total: $V_{CE} = V_{CB} + V_{BE} = ${vce.toFixed(2)}V$</p>
+                        </div>`;
+                }
+            }
+
+            document.getElementById('ejercicio-container').innerHTML = htmlEjercicio;
+            // VALIDACIÓN:
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise([document.getElementById('ejercicio-container')]).catch(e => console.error(e));
+            }
+        }
+
+        [inVcc, inVee, inRin, inRout, inBeta].forEach(el => {
+            el.addEventListener('input', actualizarEjercicio);
+        });
+
+        setModoEjercicio('EC');
+    </script>
+    <footer class="bg-gray-100 text-gray-500 py-12 text-center mt-12 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-bold text-blue-600 mb-2 underline tracking-widest uppercase text-xs">Universidad de Oriente - Núcleo de Anzoátegui</p>
+            <p class="text-sm italic">Propuesta Curricular: <span class="text-gray-800">Prof. Eulogio Hernández</span></p>
+            <p class="text-sm italic">Profesor Actual: <span class="text-gray-800">Prof. Jose Bernardo Peña</span></p>
+            <p class="text-sm italic mb-6">Desarrollo Interactivo: <span class="text-gray-800">Jose Rojas Dagger</span></p>
+            <div class="flex justify-center gap-6 text-xs font-medium uppercase tracking-tighter">
+                <a href="../index.html" class="hover:text-blue-600 transition">Inicio</a>
+                <a href="datos_curricular.html" class="hover:text-blue-600 transition">Programa</a>
+                <a href="Teoria.html" class="hover:text-blue-600 transition">Teoría</a>
+                <a href="Formulas.html" class="hover:text-blue-600 transition">Fórmulas</a>
+                <a href="Analogias.html" class="hover:text-blue-600 transition">Analogías</a>
+            </div>
+            <p class="text-[10px] mt-8 opacity-40">&copy; 2026 Laboratorio Virtual de Electrónica Analógica</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>

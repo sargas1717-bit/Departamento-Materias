@@ -1,0 +1,55 @@
+================================================================================
+GUÍA DE ARQUITECTURA: HUB DE INGENIERÍA INTERACTIVO
+================================================================================
+Este documento detalla la estructura estándar para replicar este sistema de 
+laboratorio virtual en otras materias (Teoría de Circuitos, Control, etc.).
+
+1. ESTRUCTURA DE CARPETAS (ORDEN Y MANTENIBILIDAD)
+--------------------------------------------------------------------------------
+/Raíz del Proyecto
+|-- index.html              <-- Dashboard / Menú de entrada (Único en raíz)
+|-- Lanzador_Hub.bat        <-- Script para abrir en "Modo App" sin navegador
+|-- manifest.json           <-- Configuración para instalación en Móviles (PWA)
+|-- favicon.ico             <-- Icono profesional del sistema
+|-- /pages/                 <-- Módulos de contenido (HTMLs secundarios)
+|   |-- Teoria.html
+|   |-- Simuladores.html
+|   |-- Formulas.html
+|   |-- Instrucciones.html
+|-- /css/                   <-- Estilos globales (main.css)
+|-- /js/                    <-- Lógica compartida (simulator.js, components.js)
+|-- /assets/                <-- Imágenes de fondo, iconos y multimedia
+
+2. SISTEMA DE DISEÑO (BASE TECNOLÓGICA)
+--------------------------------------------------------------------------------
+Para garantizar un aspecto "Premium" y rapidez de carga:
+- FRAMEWORK CSS: Tailwind CSS (Vía CDN para evitar instalaciones pesadas).
+- ICONOGRAFÍA: Lucide Icons (Vía CDN).
+- MATEMÁTICAS: MathJax o KaTeX (Para renderizar ecuaciones LaTeX).
+- ESTÉTICA: Glassmorphism (Fondos traslúcidos con blur) y Dark Mode.
+
+3. FLUJO DE NAVEGACIÓN ESTÁNDAR
+--------------------------------------------------------------------------------
+- MENU: El index.html debe ser una rejilla (grid) de "Tarjetas" (Cards).
+- RETROCESO: Cada página en /pages/ DEBE tener un botón de "Volver al Menú"
+  apuntando a href="../index.html".
+- PIE DE PÁGINA: Footer estandarizado en todas las páginas con autoría y 
+  links rápidos para navegación cruzada.
+
+4. ACCESO MÓVIL Y DESPLIEGUE
+--------------------------------------------------------------------------------
+- HOSTING: GitHub Pages (Gratis y eficiente para contenido estático).
+- ROOT: El archivo index.html debe estar en la raíz del repositorio de GitHub.
+- PWA: Incluir el enlace <link rel="manifest" href="manifest.json"> en el 
+  head de index.html para que los móviles permitan "Instalar".
+
+5. PERSONALIZACIÓN POR MATERIA
+--------------------------------------------------------------------------------
+- COLOR ACCENTO: Cambiar el código de color de Tailwind (ej. blue-600 por 
+  emerald-600) para diferenciar materias visualmente.
+- SIMULADORES: Usar Chart.js para visualización de señales en tiempo real 
+  basadas en fórmulas matemáticas (vía Sliders de entrada).
+
+================================================================================
+Diseñado por Sargas-PC | 2026
+================================================================================
