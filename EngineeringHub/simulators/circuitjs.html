@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CircuitJS1 - Engineering Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #a855f7;    
+            --bg-canvas: #050505;  
+            --bg-toolbar: #111111; 
+            --border: #333333;
+            --text: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --active-bg: #27272a;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .app-container { display: flex; flex-direction: column; height: 100vh; }
+
+        header {
+            background: var(--bg-toolbar);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            height: 50px;
+            padding: 0 15px;
+            z-index: 100;
+        }
+
+        .action-btn {
+            background: transparent; color: var(--text-muted); border: none;
+            width: 40px; height: 40px; border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .action-btn:hover { background: var(--active-bg); color: var(--text); }
+
+        .comp-divider { width: 1px; height: 24px; background: var(--border); margin: 0 10px; }
+
+        /* Dropdown Estilos */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background: rgba(17, 17, 17, 0.95);
+            backdrop-filter: blur(10px);
+            min-width: 220px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropdown-item {
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: var(--active-bg); color: var(--primary); }
+        .dropdown-item.active { color: var(--primary); font-weight: 600; background: rgba(168, 85, 247, 0.1); }
+
+        main { flex: 1; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        .header-title {
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .header-title b { color: var(--primary); font-size: 0.9rem; letter-spacing: 1px; }
+        .header-title span { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <button class="action-btn" onclick="window.location.href='../index.html'" title="Volver al Hub" style="color: var(--primary); margin-right: 5px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </button>
+            <div class="dropdown">
+                <button class="action-btn" title="Otros Simuladores">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </button>
+                <div class="dropdown-content">
+                    <a href="antigravity/index.html" class="dropdown-item">Electrik Pro</a>
+                    <a href="lsc/LSC.html" class="dropdown-item">LSC Logic</a>
+                    <a href="plc/index.html" class="dropdown-item">PLC Ladder</a>
+                    <a href="PID.html" class="dropdown-item">Control PID</a>
+                    <a href="circuitjs.html" class="dropdown-item active">CircuitJS (Externo)</a>
+                </div>
+            </div>
+            <div class="comp-divider"></div>
+            <div class="header-title">
+                <b>CIRCUITJS1</b>
+                <span>External Repository Wrapper</span>
+            </div>
+        </header>
+        <main>
+            <iframe src="https://www.falstad.com/circuit/circuitjs.html"></iframe>
+        </main>
+    </div>
+</body>
+</html>

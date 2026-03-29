@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrik Pro - Ultra Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #84cc16;    
+            --negative: #ef4444;   
+            --current: #fbbf24;    
+            --zero-v: #71717a;     
+            
+            --bg-canvas: #050505;  
+            --bg-toolbar: #1a1a1a; 
+            --bg-panel: #111111;
+            
+            --border: #333333;
+            --text: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --active-bg: #27272a;
+        }
+
+        /* Dropdown Estilos */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background: rgba(17, 17, 17, 0.95);
+            backdrop-filter: blur(10px);
+            min-width: 220px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .dropdown-item:last-child { border-bottom: none; }
+
+        .dropdown-item:hover {
+            background: var(--active-bg);
+            color: var(--primary);
+        }
+
+        .dropdown-item i { width: 18px; text-align: center; }
+        .dropdown-item.active { color: var(--primary); font-weight: 600; background: rgba(132, 204, 22, 0.1); }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .app-container { display: flex; flex-direction: column; height: 100vh; }
+
+        header {
+            background: var(--bg-toolbar);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: stretch;
+            height: 50px;
+            z-index: 100;
+        }
+
+        .left-actions {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-right: 1px solid var(--border);
+            background: #111;
+        }
+
+        .action-btn {
+            background: transparent; color: var(--text-muted); border: none;
+            width: 40px; height: 40px; border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .action-btn:hover { background: var(--active-bg); color: var(--text); }
+        .action-btn.active { color: var(--primary); }
+        .action-btn.probe-active { color: var(--current); }
+
+        .component-toolbar {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 2px;
+            overflow-x: auto;
+            scrollbar-width: thin; 
+            scrollbar-color: var(--border) transparent;
+        }
+        
+        .comp-divider { width: 1px; height: 24px; background: var(--border); margin: 0 8px; flex-shrink: 0; }
+
+        .comp-item {
+            min-width: 40px; height: 40px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: grab; transition: background 0.2s; flex-shrink: 0;
+        }
+        .comp-item:hover { background: var(--active-bg); }
+        .comp-icon { width: 24px; height: 24px; stroke: var(--text-muted); stroke-width: 2; fill: none; transition: stroke 0.2s;}
+        .comp-item:hover .comp-icon { stroke: var(--text); }
+
+        .status-area {
+            display: flex; align-items: center; padding: 0 20px;
+            border-left: 1px solid var(--border); font-size: 0.75rem;
+            color: var(--text-muted); font-weight: 500;
+            background: #111; flex-shrink: 0;
+        }
+        .live-indicator {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--negative);
+            margin-right: 8px; box-shadow: 0 0 5px var(--negative);
+        }
+        .live-indicator.running { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+
+        main { display: flex; flex: 1; overflow: hidden; }
+        .editor-area { flex: 1; display: flex; flex-direction: column; position: relative; }
+
+        .canvas-wrapper { flex: 1; position: relative; cursor: crosshair; }
+        #circuit-canvas { width: 100%; height: 100%; display: block; }
+        
+        body.mode-probe .canvas-wrapper { cursor: help; }
+        body.is-panning .canvas-wrapper { cursor: grabbing !important; }
+
+        .scope-wrapper {
+            height: 180px; background: #0a0a0a; border-top: 1px solid var(--border);
+            display: flex; flex-direction: column; position: relative;
+        }
+        .scope-header {
+            padding: 6px 15px; font-size: 0.65rem; color: var(--text-muted);
+            display: flex; justify-content: space-between; border-bottom: 1px solid var(--border);
+            text-transform: uppercase; letter-spacing: 1px; background: #111;
+        }
+        .scope-legend { display: flex; gap: 15px; }
+        .legend-v { color: var(--primary); font-weight: 600; }
+        .legend-i { color: var(--current); font-weight: 600; }
+        #scope-canvas { flex: 1; width: 100%; height: 100%; display: block; }
+
+        .right-panel {
+            width: 280px; background: var(--bg-panel); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; z-index: 10;
+        }
+        .panel-header {
+            padding: 15px; font-size: 0.8rem; font-weight: 600; color: var(--text);
+            border-bottom: 1px solid var(--border); background: var(--bg-toolbar);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .prop-content { padding: 20px; display: none; }
+        #empty-props {
+            padding: 40px 20px; text-align: center; color: var(--text-muted);
+            font-size: 0.8rem; line-height: 1.5;
+        }
+
+        .prop-group { margin-bottom: 20px; }
+        .prop-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        .modern-input {
+            flex: 1; background: #000; border: 1px solid var(--border);
+            color: var(--primary); font-family: monospace; font-size: 16px;
+            padding: 10px; border-radius: 4px; width: 100%; text-align: left;
+            outline: none; transition: border 0.2s;
+        }
+        .modern-input:focus { border-color: var(--primary); }
+        .unit-label { font-size: 1rem; font-weight: bold; color: var(--text); width: 25px; text-align: center; }
+
+        input[type="range"] {
+            width: 100%; appearance: none; background: #333; height: 4px; border-radius: 2px; outline: none; margin-bottom: 10px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--text); cursor: pointer;
+        }
+        
+        .live-stats {
+            background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 15px;
+            font-family: monospace; font-size: 0.85rem; color: var(--text-muted);
+        }
+        .live-stats span { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .live-stats span:last-child { margin-bottom: 0; }
+        .stat-val { color: var(--text); font-weight: 600; }
+        .stat-val.volts { color: var(--primary); }
+        .stat-val.amps { color: var(--current); }
+
+        #wiring-helper {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(39, 39, 42, 0.9); border: 1px solid var(--border); color: var(--text);
+            padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; display: none;
+            backdrop-filter: blur(5px); pointer-events: none; z-index: 40;
+        }
+
+        .tips-box {
+            margin-top: auto; font-size: 0.7rem; color: var(--text-muted); 
+            line-height: 1.5; padding: 15px 20px; border-top: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Toolbar -->
+        <header>
+            <div class="left-actions">
+                <button class="action-btn" onclick="window.location.href='../../index.html'" title="Volver al Hub" style="color: var(--primary); margin-right: 5px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </button>
+                <div class="dropdown">
+                    <button class="action-btn" title="Otros Simuladores" style="color: var(--text);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="index.html" class="dropdown-item active">Electrik Pro</a>
+                        <a href="../lsc/LSC.html" class="dropdown-item">LSC Logic</a>
+                        <a href="../plc/index.html" class="dropdown-item">PLC Ladder</a>
+                        <a href="../PID.html" class="dropdown-item">Control PID</a>
+                        <a href="../circuitjs.html" class="dropdown-item" style="color: #a855f7;">CircuitJS (Externo)</a>
+                    </div>
+                </div>
+                <div class="comp-divider"></div>
+                <button class="action-btn" id="play-pause-btn" title="Simular">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <button class="action-btn" id="probe-btn" title="Inspeccionar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </button>
+                <button class="action-btn" id="delete-btn" title="Borrar (Supr)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+            </div>
+            
+            <div class="component-toolbar">
+                <!-- Tierra y Fuentes -->
+                <div class="comp-item" draggable="true" data-type="GND" title="Tierra (GND)"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M20 10v15M10 25h20M14 30h12M18 35h4"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="V" title="Fuente DC"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M12 20h16M20 12v16"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="VAC" title="Fuente AC"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M12 20 Q16 12 20 20 T28 20" stroke-width="2"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="CLOCK" title="Reloj (Onda Cuadrada)"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M12 24v-8h8v8h8"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="I" title="Fuente Corriente"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M20 12v16M15 17l5-5 5 5"/></svg></div>
+                
+                <div class="comp-divider"></div>
+                <!-- Medidores -->
+                <div class="comp-item" draggable="true" data-type="VM" title="Voltímetro"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M15 15l5 10 5-10M5 20h3M32 20h3"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="AM" title="Amperímetro"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M20 13l-5 12h10zM17 20h6M5 20h3M32 20h3"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="OHM" title="Óhmetro"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M13 22c0-5 14-5 14 0M13 22h-3M27 22h3M5 20h3M32 20h3"/></svg></div>
+                
+                <div class="comp-divider"></div>
+                <!-- Pasivos -->
+                <div class="comp-item" draggable="true" data-type="R" title="Resistencia"><svg class="comp-icon" viewBox="0 0 40 20"><path d="M0 10h8l3-6 6 12 6-12 6 12 3-6h8"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="POT" title="Potenciómetro"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M0 20h8l3-6 6 12 6-12 6 12 3-6h8M20 8v-8M17 5l3 3 3-3"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="C" title="Capacitor"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h12M17 12v16M23 12v16M23 20h12"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="CPOL" title="Cap Polarizado"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h10M27 20h8M15 12v16"/><path d="M27 12 a10 10 0 0 0 0 16"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="L" title="Inductor"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h6c0-4 4-4 4 0s4 4 4 0s4-4 4 0s4 4 4 0h6"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="XFMR" title="Transformador"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M15 5v5c4 0 4 5 0 5s4 5 0 5s4 5 0 5v5M25 5v5c-4 0-4 5 0 5s-4 5 0 5s-4 5 0 5v5M18 10v20M22 10v20"/></svg></div>
+                
+                <div class="comp-divider"></div>
+                <!-- Switches -->
+                <div class="comp-item" draggable="true" data-type="SW" title="Interruptor"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h8M27 20h8M13 20l12-10"/><circle cx="13" cy="20" r="2" fill="currentColor"/><circle cx="27" cy="20" r="2" fill="currentColor"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="SPDT" title="2 Vías (SPDT)"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h8M27 10h8M27 30h8M13 20l12-10"/><circle cx="13" cy="20" r="2" fill="currentColor"/><circle cx="27" cy="10" r="2" fill="currentColor"/><circle cx="27" cy="30" r="2" fill="currentColor"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="PBNO" title="Pulsador NO"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h10M25 20h10M15 12h10M20 12v-8"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="PBNC" title="Pulsador NC"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h10M25 20h10M15 20h10M20 20v-8"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="RELAY" title="Relé"><svg class="comp-icon" viewBox="0 0 40 40"><rect x="5" y="10" width="10" height="20"/><path d="M15 20l10-10M25 10h10M25 30h10"/></svg></div>
+                
+                <div class="comp-divider"></div>
+                <!-- Diodes & Opamp -->
+                <div class="comp-item" draggable="true" data-type="D" title="Diodo"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M10 20h8M18 12v16l10-8zM28 12v16M28 20h8"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="ZENER" title="Zener"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M10 20h8M18 12v16l10-8zM28 12v16M32 12h-4M28 28h-4M28 20h8"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="SCHOTTKY" title="Schottky"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M10 20h8M18 12v16l10-8zM28 12v16M30 12h-2v4M26 28h2v-4M28 20h8"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="LED" title="LED"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M10 22h8M18 14v16l10-8zM28 14v16M28 22h8M22 12l5-5M26 12l5-5"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="OPAMP" title="Op-Amp"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M10 10v20l20-10zM5 15h5M5 25h5M30 20h5"/></svg></div>
+                
+                <div class="comp-divider"></div>
+                <!-- Transistors & Misc -->
+                <div class="comp-item" draggable="true" data-type="NPN" title="NPN"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16"/><path d="M5 20h10M15 10v20M15 15l10-10v-5M15 25l10 10v5M20 25l5 5 2-4z"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="PNP" title="PNP"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16"/><path d="M5 20h10M15 10v20M15 15l10-10v-5M15 25l10 10v5M22 17l-5-5-2 4z"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="NMOS" title="NMOS"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h10M15 10v20M18 10v6M18 17v6M18 24v6M18 13h10v-8M18 27h10v8M18 20h10v15M23 20l5-3v6z"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="PMOS" title="PMOS"><svg class="comp-icon" viewBox="0 0 40 40"><path d="M5 20h10M15 10v20M18 10v6M18 17v6M18 24v6M18 13h10v-8M18 27h10v8M18 20h10v15M23 20l-5-3v6z"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="LAMP" title="Lámpara"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M5 20h3M32 20h3M12 12l16 16M28 12L12 28"/></svg></div>
+                <div class="comp-item" draggable="true" data-type="MOTOR" title="Motor"><svg class="comp-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="M5 20h3M32 20h3"/><text x="20" y="25" fill="currentColor" stroke="none" font-size="14" text-anchor="middle" font-weight="bold">M</text></svg></div>
+            </div>
+
+            <div class="status-area">
+                <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 15px;">
+                    <span style="font-family: 'Inter', sans-serif; font-weight: 800; color: var(--primary); font-size: 0.9rem; letter-spacing: 1px;">ELECTRIK PRO</span>
+                    <span style="font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase;">Ultra Edition</span>
+                </div>
+                <div class="live-indicator" id="status-dot"></div>
+                <span id="status-text">Pausado</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="editor-area">
+                <div class="canvas-wrapper">
+                    <canvas id="circuit-canvas"></canvas>
+                    <div id="wiring-helper">Modo Cableado: Clic en vacío para esquina, clic en nodo para finalizar. Esc para cancelar.</div>
+                </div>
+                
+                <div class="scope-wrapper">
+                    <div class="scope-header">
+                        <span>Osciloscopio</span>
+                        <div class="scope-legend">
+                            <span class="legend-v">■ V</span>
+                            <span class="legend-i">■ I</span>
+                        </div>
+                    </div>
+                    <canvas id="scope-canvas"></canvas>
+                </div>
+            </div>
+
+            <aside class="right-panel">
+                <div class="panel-header">
+                    <span>Detalles del Circuito</span>
+                </div>
+                
+                <div id="empty-props">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:10px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg><br>
+                    Selecciona un componente para editar sus propiedades.
+                </div>
+
+                <div id="prop-content" class="prop-content">
+                    <div class="prop-group">
+                        <label id="prop-title">Valor Principal</label>
+                        <div class="input-row">
+                            <input type="text" id="prop-val-input" class="modern-input" autocomplete="off">
+                            <span class="unit-label" id="prop-unit">Ω</span>
+                        </div>
+                        <input type="range" id="prop-slider" min="1" max="100" step="1">
+                        
+                        <!-- Slider secundario para POT -->
+                        <div id="pot-wiper-group" style="display:none; margin-top:15px;">
+                            <label>Posición (%)</label>
+                            <input type="range" id="prop-slider-wiper" min="1" max="99" step="1">
+                        </div>
+                    </div>
+
+                    <div class="live-stats" id="live-stats-box">
+                        <span>Voltaje <span class="stat-val volts" id="stat-v">-- V</span></span>
+                        <span>Corriente <span class="stat-val amps" id="stat-i">-- A</span></span>
+                        <div style="height:1px; background:var(--border); margin:10px 0;"></div>
+                        <span>Dato Extra <span class="stat-val" id="stat-p" style="color:var(--text)">-- W</span></span>
+                    </div>
+                </div>
+
+                <div class="tips-box">
+                    💡 <b>Interacción:</b><br>
+                    • <b>Mover:</b> Arrastra fondo.<br>
+                    • <b>Zoom:</b> Rueda ratón.<br>
+                    • <b>Pulsadores:</b> Mantén clic presionado.<br>
+                    • <b>Switches:</b> Clic simple.
+                </div>
+                <div style="margin-top: auto; padding: 15px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); font-size: 0.75rem; line-height: 1.4;">
+                    <div style="color: var(--primary); font-weight: 700; margin-bottom: 2px;">Creado por Ing. Jose Gabriel Rojas</div>
+                    <div style="color: var(--text-muted); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Herramienta: IDE Antigravity</div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script>
+        /** ==========================================
+         * Utilities for Engineering Values
+         * ========================================== */
+        function formatEngineering(val, unit) {
+            if (val === 0) return `0 ${unit}`;
+            const absVal = Math.abs(val);
+            if(absVal >= 1e6) return (val/1e6).toFixed(2).replace(/\.?0+$/, '') + ' M' + unit;
+            if(absVal >= 1e3) return (val/1e3).toFixed(2).replace(/\.?0+$/, '') + ' k' + unit;
+            if(absVal >= 1) return val.toFixed(2).replace(/\.?0+$/, '') + ' ' + unit;
+            if(absVal >= 1e-3) return (val*1e3).toFixed(2).replace(/\.?0+$/, '') + ' m' + unit;
+            if(absVal >= 1e-6) return (val*1e6).toFixed(2).replace(/\.?0+$/, '') + ' µ' + unit;
+            if(absVal >= 1e-9) return (val*1e9).toFixed(2).replace(/\.?0+$/, '') + ' n' + unit;
+            if(absVal >= 1e-12) return (val*1e12).toFixed(2).replace(/\.?0+$/, '') + ' p' + unit;
+            return val.toExponential(2) + ' ' + unit;
+        }
+
+        function parseEngineering(str) {
+            str = String(str).replace(/,/g, '.').trim();
+            const match = str.match(/^([\-\+]?\d*\.?\d+)\s*([kKmMµuUnNpPgG]?)/);
+            if(!match) return null;
+            let val = parseFloat(match[1]);
+            const mult = match[2];
+            if(mult === 'k' || mult === 'K') val *= 1e3;
+            else if(mult === 'M') val *= 1e6;
+            else if(mult === 'm') val *= 1e-3;
+            else if(mult === 'u' || mult === 'µ' || mult === 'U') val *= 1e-6;
+            else if(mult === 'n' || mult === 'N') val *= 1e-9;
+            else if(mult === 'p' || mult === 'P') val *= 1e-12;
+            else if(mult === 'G' || mult === 'g') val *= 1e9;
+            return val;
+        }
+
+        function dist2(v, w) { return (v.x - w.x)*(v.x - w.x) + (v.y - w.y)*(v.y - w.y); }
+        function distToSegmentSquared(p, v, w) {
+            let l2 = dist2(v, w);
+            if (l2 === 0) return dist2(p, v);
+            let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            return dist2(p, { x: v.x + t * (w.x - v.x), y: v.y + t * (w.y - v.y) });
+        }
+
+        /** ==========================================
+         * Transient MNA Solver (Macro Models)
+         * ========================================== */
+        class SimulatorEngine {
+            constructor() {
+                this.dt = 0.001; 
+                this.time = 0;
+                this.isRunning = false;
+                this.nodeCount = 0;
+                this.nodes = []; 
+                this.vSourcesCount = 0;
+            }
+
+            assignNodes(components, wires) {
+                let id = 1; 
+                components.forEach(c => {
+                    if(c.type === 'GND') {
+                        c.ports[0].nodeId = 0;
+                    } else {
+                        c.ports.forEach(p => p.nodeId = id++);
+                    }
+                    if(['C', 'CPOL', 'D', 'LED', 'ZENER', 'SCHOTTKY'].includes(c.type) && c.v_old === undefined) c.v_old = 0;
+                    if(c.type === 'L' && c.i_old === undefined) c.i_old = 0;
+                    if(['D', 'LED', 'ZENER', 'SCHOTTKY', 'NPN', 'PNP', 'NMOS', 'PMOS'].includes(c.type)) c.v_state = 0; 
+                    if(c.type === 'POT' && c.state === undefined) c.state = 0.5; // wiper pos
+                    c.current = 0;
+                });
+                wires.forEach(w => { w.current = 0; });
+                this.nodeCount = id;
+                // Contar componentes que añaden filas a la matriz (Fuentes de Voltaje e Inductores Acoplados)
+                this.vSourcesCount = components.filter(c => ['V', 'VAC', 'CLOCK', 'AM', 'XFMR'].includes(c.type)).length;
+                this.nodes = new Float64Array(this.nodeCount).fill(0);
+            }
+
+            step(components, wires) {
+                if(this.nodeCount === 0) return;
+                const n = this.nodeCount;
+                const m = this.vSourcesCount;
+                const dim = n + m;
+                if (dim <= 1) return;
+
+                let A = Array.from({ length: dim }, () => new Float64Array(dim).fill(0));
+                let Z = new Float64Array(dim).fill(0);
+
+                // Admitancia parásita universal para prevenir singularidades (nodos flotantes)
+                for(let i=1; i<n; i++) A[i][i] += 1e-9; 
+
+                let vIdx = 0;
+
+                components.forEach(c => {
+                    if (c.type === 'GND') return;
+                    const n1 = c.ports[0].nodeId;
+                    const n2 = c.ports[1] ? c.ports[1].nodeId : null;
+                    const n3 = c.ports[2] ? c.ports[2].nodeId : null;
+                    const n4 = c.ports[3] ? c.ports[3].nodeId : null;
+                    
+                    switch (c.type) {
+                        case 'R':
+                        case 'LAMP':
+                        case 'MOTOR': // Simplified motor model
+                            this.stampConductance(A, n1, n2, 1 / Math.max(c.value, 1e-3));
+                            break;
+                        case 'POT':
+                            const alpha = Math.max(0.01, Math.min(0.99, c.state || 0.5));
+                            this.stampConductance(A, n1, n3, 1 / (c.value * (1 - alpha))); // Top to Wiper
+                            this.stampConductance(A, n2, n3, 1 / (c.value * alpha));       // Bot to Wiper
+                            break;
+                        case 'SW':
+                        case 'PBNO':
+                            this.stampConductance(A, n1, n2, c.state ? 1/1e-3 : 1e-9);
+                            break;
+                        case 'PBNC':
+                            this.stampConductance(A, n1, n2, c.state ? 1e-9 : 1/1e-3);
+                            break;
+                        case 'SPDT':
+                            this.stampConductance(A, n1, n2, c.state ? 1e-9 : 1/1e-3); // Com to L1
+                            this.stampConductance(A, n1, n3, c.state ? 1/1e-3 : 1e-9); // Com to L2
+                            break;
+                        case 'RELAY':
+                            this.stampConductance(A, n1, n2, 1/100); // Bobina (100 Ohm)
+                            const i_coil = (this.nodes[n1] - this.nodes[n2]) / 100;
+                            c.state = Math.abs(i_coil) > 0.02 ? 1 : 0; // Trigger a 20mA
+                            this.stampConductance(A, n3, n4, c.state ? 1/1e-3 : 1e-9); // Switch
+                            break;
+                        case 'VM':
+                            this.stampConductance(A, n1, n2, 1e-9); 
+                            break;
+                        case 'OHM':
+                            const i_test = 1e-3; // 1mA test
+                            if (n1 !== 0) Z[n1] -= i_test;
+                            if (n2 !== 0) Z[n2] += i_test;
+                            break;
+                        case 'C':
+                        case 'CPOL':
+                            const Gc = c.value / this.dt;
+                            this.stampConductance(A, n1, n2, Gc);
+                            const Ieq_C = Gc * c.v_old;
+                            if (n1 !== 0) Z[n1] -= Ieq_C;
+                            if (n2 !== 0) Z[n2] += Ieq_C;
+                            break;
+                        case 'L':
+                            const Gl = this.dt / Math.max(c.value, 1e-9);
+                            this.stampConductance(A, n1, n2, Gl);
+                            if (n1 !== 0) Z[n1] -= c.i_old;
+                            if (n2 !== 0) Z[n2] += c.i_old;
+                            break;
+                        case 'V':
+                            this.stampVoltageSource(A, Z, n, n1, n2, c.value, vIdx++);
+                            break;
+                        case 'VAC':
+                            const vac = c.value * Math.sin(2 * Math.PI * 2 * this.time); 
+                            this.stampVoltageSource(A, Z, n, n1, n2, vac, vIdx++);
+                            break;
+                        case 'CLOCK':
+                            const vclk = (this.time % (1/c.value) < (0.5/c.value)) ? 5 : 0; 
+                            this.stampVoltageSource(A, Z, n, n1, n2, vclk, vIdx++);
+                            break;
+                        case 'AM':
+                            this.stampVoltageSource(A, Z, n, n1, n2, 0, vIdx++); 
+                            break;
+                        case 'XFMR':
+                            const N_t = c.value;
+                            const idx_x = n + vIdx++;
+                            if (n3 !== 0) A[idx_x][n3] += 1;
+                            if (n4 !== 0) A[idx_x][n4] -= 1;
+                            if (n1 !== 0) A[idx_x][n1] -= N_t;
+                            if (n2 !== 0) A[idx_x][n2] += N_t;
+                            
+                            if (n3 !== 0) A[n3][idx_x] += 1; 
+                            if (n4 !== 0) A[n4][idx_x] -= 1; 
+                            if (n1 !== 0) A[n1][idx_x] += N_t; 
+                            if (n2 !== 0) A[n2][idx_x] -= N_t; 
+                            Z[idx_x] = 0;
+                            break;
+                        case 'I':
+                            if (n1 !== 0) Z[n1] -= c.value;
+                            if (n2 !== 0) Z[n2] += c.value;
+                            break;
+                        case 'OPAMP':
+                            // Macro-modelo Ideal: VCCS de altísima ganancia con resistencia de salida
+                            const gm = 1000;
+                            if (n3 !== 0) {
+                                if (n1 !== 0) A[n3][n1] += gm;
+                                if (n2 !== 0) A[n3][n2] -= gm;
+                                A[n3][n3] += 1 / 100; // Rout = 100 ohms a GND
+                            }
+                            break;
+                        case 'D':
+                        case 'LED':
+                        case 'SCHOTTKY':
+                        case 'ZENER':
+                            let Vf = 0.6;
+                            if (c.type === 'LED') Vf = 2.0;
+                            if (c.type === 'SCHOTTKY') Vf = 0.2;
+                            
+                            const v_eval = c.v_state !== undefined ? c.v_state : 0;
+                            
+                            if (v_eval > Vf) {
+                                const G_on = 0.1; 
+                                this.stampConductance(A, n1, n2, G_on);
+                                if (n1 !== 0) Z[n1] -= G_on * Vf;
+                                if (n2 !== 0) Z[n2] += G_on * Vf;
+                            } else if (c.type === 'ZENER' && v_eval < -c.value) { // Breakdown
+                                const G_on = 0.1; 
+                                this.stampConductance(A, n1, n2, G_on);
+                                if (n1 !== 0) Z[n1] -= G_on * (-c.value);
+                                if (n2 !== 0) Z[n2] += G_on * (-c.value);
+                            } else {
+                                this.stampConductance(A, n1, n2, 1e-6); 
+                            }
+                            break;
+                        case 'NPN':
+                        case 'PNP':
+                        case 'NMOS':
+                        case 'PMOS':
+                            // Switch models for transistors (Stable & Logic friendly)
+                            const v_ctrl = c.v_state !== undefined ? c.v_state : 0;
+                            let r_on = 1e6;
+                            
+                            if (c.type === 'NPN') {
+                                this.stampConductance(A, n1, n3, (v_ctrl > 0.6) ? 1/100 : 1e-6); // BE
+                                r_on = (v_ctrl > 0.6) ? 0.1 : 1e6; // CE
+                                this.stampConductance(A, n2, n3, 1/r_on);
+                            } else if (c.type === 'PNP') {
+                                this.stampConductance(A, n3, n1, (v_ctrl > 0.6) ? 1/100 : 1e-6); // EB
+                                r_on = (v_ctrl > 0.6) ? 0.1 : 1e6; // EC
+                                this.stampConductance(A, n3, n2, 1/r_on);
+                            } else if (c.type === 'NMOS') {
+                                this.stampConductance(A, n1, n3, 1e-9); // GS open
+                                r_on = (v_ctrl > 2.0) ? 0.1 : 1e6; // DS
+                                this.stampConductance(A, n2, n3, 1/r_on);
+                            } else if (c.type === 'PMOS') {
+                                this.stampConductance(A, n1, n3, 1e-9); // SG open
+                                r_on = (v_ctrl > 2.0) ? 0.1 : 1e6; // SD
+                                this.stampConductance(A, n2, n3, 1/r_on);
+                            }
+                            break;
+                    }
+                });
+
+                wires.forEach(w => {
+                    this.stampConductance(A, w.p1.nodeId, w.p2.nodeId, 1000); 
+                });
+
+                const x = this.solveGaussian(A, Z);
+                if (!x) return;
+
+                for(let i=1; i<n; i++) this.nodes[i] = x[i];
+                this.nodes[0] = 0;
+
+                vIdx = 0;
+                components.forEach(c => {
+                    if (c.type === 'GND') return;
+                    const v1 = this.nodes[c.ports[0].nodeId];
+                    const v2 = this.nodes[c.ports[1] ? c.ports[1].nodeId : 0];
+                    const vDiff = v1 - v2;
+
+                    switch (c.type) {
+                        case 'R': 
+                        case 'LAMP':
+                        case 'MOTOR':
+                            c.current = vDiff / Math.max(c.value, 1e-3); 
+                            break;
+                        case 'SW':
+                        case 'PBNO':
+                            c.current = c.state ? vDiff / 1e-3 : vDiff * 1e-9; break;
+                        case 'PBNC':
+                            c.current = c.state ? vDiff * 1e-9 : vDiff / 1e-3; break;
+                        case 'SPDT':
+                            c.current = vDiff; // simplified stat
+                            break;
+                        case 'VM':
+                            c.current = vDiff * 1e-9; break;
+                        case 'OHM':
+                            c.current = 1e-3; c.measuredR = Math.abs(vDiff / 1e-3); break;
+                        case 'V': 
+                        case 'VAC': 
+                        case 'CLOCK':
+                        case 'AM':
+                            c.current = x[n + vIdx++]; break; 
+                        case 'XFMR':
+                            c.current = x[n + vIdx++]; break; // I_sec is stored here
+                        case 'I': 
+                            c.current = c.value; break;
+                        case 'C': 
+                        case 'CPOL':
+                            c.current = (c.value / this.dt) * (vDiff - c.v_old);
+                            c.v_old = vDiff; 
+                            break;
+                        case 'L':
+                            c.current = c.i_old + (this.dt / Math.max(c.value, 1e-9)) * vDiff;
+                            c.i_old = c.current;
+                            break;
+                        case 'D':
+                        case 'LED':
+                        case 'SCHOTTKY':
+                        case 'ZENER':
+                            c.v_state = (c.v_state !== undefined) ? c.v_state * 0.8 + vDiff * 0.2 : vDiff;
+                            c.current = vDiff > 0.6 ? (vDiff-0.6)*10 : 0; // vis only
+                            break;
+                        case 'NPN':
+                        case 'NMOS':
+                            const v3 = this.nodes[c.ports[2].nodeId];
+                            c.v_state = c.v_state * 0.8 + (v1 - v3) * 0.2; // Ctrl: n1 to n3
+                            c.current = (this.nodes[c.ports[1].nodeId] - v3) / ((c.v_state > 0.6) ? 0.1 : 1e6);
+                            break;
+                        case 'PNP':
+                        case 'PMOS':
+                            const vp3 = this.nodes[c.ports[2].nodeId];
+                            c.v_state = c.v_state * 0.8 + (vp3 - v1) * 0.2; // Ctrl: n3 to n1
+                            c.current = (vp3 - this.nodes[c.ports[1].nodeId]) / ((c.v_state > 0.6) ? 0.1 : 1e6);
+                            break;
+                        case 'OPAMP':
+                            c.current = this.nodes[c.ports[2].nodeId] / 100; // Output current
+                            break;
+                    }
+                    c.voltageDrop = vDiff;
+                });
+
+                wires.forEach(w => {
+                    const v1 = this.nodes[w.p1.nodeId];
+                    const v2 = this.nodes[w.p2.nodeId];
+                    w.current = (v1 - v2) * 1000;
+                    w.voltage = (v1 + v2) / 2;
+                });
+
+                this.time += this.dt;
+            }
+
+            stampConductance(A, n1, n2, g) {
+                if (n1 !== 0) A[n1][n1] += g;
+                if (n2 !== 0) A[n2][n2] += g;
+                if (n1 !== 0 && n2 !== 0) { A[n1][n2] -= g; A[n2][n1] -= g; }
+            }
+
+            stampVoltageSource(A, Z, n, n1, n2, v, vIdx) {
+                const idx = n + vIdx;
+                if (n1 !== 0) { A[n1][idx] += 1; A[idx][n1] += 1; }
+                if (n2 !== 0) { A[n2][idx] -= 1; A[idx][n2] -= 1; }
+                Z[idx] = v;
+            }
+
+            solveGaussian(A, b) {
+                const n = b.length;
+                A[0].fill(0); A[0][0] = 1; b[0] = 0;
+                for(let r=1; r<n; r++) A[r][0] = 0; 
+
+                for (let i = 0; i < n; i++) {
+                    let max = Math.abs(A[i][i]), maxRow = i;
+                    for (let k = i + 1; k < n; k++) {
+                        if (Math.abs(A[k][i]) > max) { max = Math.abs(A[k][i]); maxRow = k; }
+                    }
+                    if (max < 1e-12) return null;
+
+                    [A[i], A[maxRow]] = [A[maxRow], A[i]];
+                    [b[i], b[maxRow]] = [b[maxRow], b[i]];
+
+                    for (let k = i + 1; k < n; k++) {
+                        const c = -A[k][i] / A[i][i];
+                        for (let j = i; j < n; j++) A[k][j] += c * A[i][j];
+                        b[k] += c * b[i];
+                    }
+                }
+
+                const x = new Float64Array(n);
+                for (let i = n - 1; i >= 0; i--) {
+                    x[i] = b[i] / A[i][i];
+                    for (let k = i - 1; k >= 0; k--) b[k] -= A[k][i] * x[i];
+                }
+                return x;
+            }
+        }
+
+        /** ==========================================
+         * Graphics & Visualizer
+         * ========================================== */
+        const GRID_SIZE = 20;
+        const C_PRIMARY = '#84cc16';
+        const C_NEGATIVE = '#ef4444';
+        const C_ZERO = '#71717a';
+
+        function getVoltageColor(v) {
+            if(v === undefined || isNaN(v)) return C_ZERO; 
+            if(Math.abs(v) < 0.05) return C_ZERO;
+            if(v > 0) return C_PRIMARY;
+            return C_NEGATIVE;
+        }
+
+        class Component {
+            constructor(type, x, y, value) {
+                this.type = type; 
+                this.x = Math.round(x / GRID_SIZE) * GRID_SIZE;
+                this.y = Math.round(y / GRID_SIZE) * GRID_SIZE;
+                this.value = value;
+                this.state = (type === 'POT') ? 0.5 : 0; 
+                this.selected = false;
+                this.rotation = 0; 
+                this.ports = this.initPorts();
+                this.current = 0;
+                this.voltageDrop = 0;
+                this.getRotatedPorts(); 
+            }
+
+            initPorts() {
+                let pts = [];
+                if (this.type === 'GND') pts = [{ relX: 0, relY: 0, id: 'p1' }];
+                else if (this.type === 'POT') pts = [{ relX: -30, relY: 0, id: 'p1' }, { relX: 30, relY: 0, id: 'p2' }, { relX: 0, relY: -20, id: 'p3' }];
+                else if (this.type === 'SPDT') pts = [{ relX: -30, relY: 0, id: 'p1' }, { relX: 30, relY: -20, id: 'p2' }, { relX: 30, relY: 20, id: 'p3' }];
+                else if (['NPN', 'PNP', 'NMOS', 'PMOS'].includes(this.type)) pts = [{ relX: -20, relY: 0, id: 'p1' }, { relX: 20, relY: -20, id: 'p2' }, { relX: 20, relY: 20, id: 'p3' }];
+                else if (this.type === 'OPAMP') pts = [{ relX: -30, relY: -15, id: 'p1' }, { relX: -30, relY: 15, id: 'p2' }, { relX: 30, relY: 0, id: 'p3' }];
+                else if (['XFMR', 'RELAY'].includes(this.type)) pts = [{ relX: -20, relY: -20, id: 'p1' }, { relX: -20, relY: 20, id: 'p2' }, { relX: 20, relY: -20, id: 'p3' }, { relX: 20, relY: 20, id: 'p4' }];
+                else pts = [{ relX: -30, relY: 0, id: 'p1' }, { relX: 30, relY: 0, id: 'p2' }];
+                
+                return pts.map(p => ({ ...p, x: 0, y: 0, owner: this }));
+            }
+
+            getRotatedPorts() {
+                const rad = (this.rotation * Math.PI) / 180;
+                this.ports.forEach(p => {
+                    p.x = this.x + (p.relX * Math.cos(rad) - p.relY * Math.sin(rad));
+                    p.y = this.y + (p.relX * Math.sin(rad) + p.relY * Math.cos(rad));
+                });
+                return this.ports;
+            }
+
+            draw(ctx, engineNodes) {
+                const v1 = engineNodes && this.ports[0].nodeId !== undefined ? engineNodes[this.ports[0].nodeId] : 0;
+                const v2 = engineNodes && this.ports[1] && this.ports[1].nodeId !== undefined ? engineNodes[this.ports[1].nodeId] : 0;
+                
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.rotation * Math.PI) / 180);
+
+                ctx.strokeStyle = this.selected ? '#ffffff' : getVoltageColor(v1);
+                ctx.lineWidth = 2.5;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+
+                if (this.type === 'LED' && this.current > 0.002) {
+                    ctx.shadowBlur = 15; ctx.shadowColor = '#ef4444'; ctx.strokeStyle = '#ef4444';
+                }
+
+                ctx.beginPath();
+                if(['R','POT','L','D','ZENER','SCHOTTKY','SW','SPDT','PBNO','PBNC','RELAY','LAMP','GND'].includes(this.type)) {
+                    ctx.strokeStyle = this.selected ? '#ffffff' : C_ZERO;
+                }
+                
+                switch (this.type) {
+                    case 'R': this.drawResistor(ctx); break;
+                    case 'POT': this.drawPot(ctx); break;
+                    case 'V': this.drawVoltageSource(ctx); break;
+                    case 'VAC': this.drawACSource(ctx); break;
+                    case 'CLOCK': this.drawClock(ctx); break;
+                    case 'I': this.drawCurrentSource(ctx); break;
+                    case 'L': this.drawInductor(ctx); break;
+                    case 'XFMR': this.drawXFMR(ctx); break;
+                    case 'C': this.drawCapacitor(ctx, v1, v2); break;
+                    case 'CPOL': this.drawPolarizedCapacitor(ctx, v1, v2); break;
+                    case 'D': this.drawDiode(ctx); break;
+                    case 'ZENER': this.drawZener(ctx); break;
+                    case 'SCHOTTKY': this.drawSchottky(ctx); break;
+                    case 'LED': this.drawLED(ctx); break;
+                    case 'SW': this.drawSwitch(ctx); break;
+                    case 'SPDT': this.drawSPDT(ctx); break;
+                    case 'PBNO': this.drawPBNO(ctx); break;
+                    case 'PBNC': this.drawPBNC(ctx); break;
+                    case 'RELAY': this.drawRelay(ctx); break;
+                    case 'LAMP': this.drawLamp(ctx); break;
+                    case 'MOTOR': this.drawMotor(ctx); break;
+                    case 'VM': ctx.strokeStyle = this.selected ? '#ffffff' : '#38bdf8'; this.drawMeter(ctx, 'V'); break;
+                    case 'AM': ctx.strokeStyle = this.selected ? '#ffffff' : '#fbbf24'; this.drawMeter(ctx, 'A'); break;
+                    case 'OHM': ctx.strokeStyle = this.selected ? '#ffffff' : '#a1a1aa'; this.drawMeter(ctx, 'Ω'); break;
+                    case 'OPAMP': this.drawOpamp(ctx); break;
+                    case 'NPN': this.drawNPN(ctx); break;
+                    case 'PNP': this.drawPNP(ctx); break;
+                    case 'NMOS': this.drawNMOS(ctx); break;
+                    case 'PMOS': this.drawPMOS(ctx); break;
+                    case 'GND': this.drawGround(ctx); break;
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                // Draw Ports
+                this.ports.forEach(p => {
+                    const nodeV = engineNodes && p.nodeId !== undefined ? engineNodes[p.nodeId] : 0;
+                    ctx.fillStyle = getVoltageColor(nodeV);
+                    ctx.strokeStyle = '#222';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2); 
+                    ctx.fill(); ctx.stroke();
+                });
+
+                // LabeLs
+                ctx.fillStyle = this.selected ? '#ffffff' : '#a1a1aa';
+                ctx.font = '500 11px Inter';
+                ctx.textAlign = 'center';
+                
+                let unit = '';
+                if(['R', 'POT', 'LAMP'].includes(this.type)) unit='Ω'; if(['V', 'VAC'].includes(this.type)) unit='V';
+                if(['C', 'CPOL'].includes(this.type)) unit='F'; if(this.type==='L') unit='H';
+                if(this.type==='I') unit='A'; if(this.type==='CLOCK') unit='Hz';
+                
+                if(['VM', 'AM', 'OHM', 'SW', 'SPDT', 'PBNO', 'PBNC', 'RELAY', 'XFMR'].includes(this.type)) {
+                    let txt = '';
+                    if (this.type === 'VM') txt = formatEngineering(Math.abs(this.voltageDrop), 'V');
+                    if (this.type === 'AM') txt = formatEngineering(Math.abs(this.current), 'A');
+                    if (this.type === 'OHM') txt = this.measuredR ? formatEngineering(this.measuredR, 'Ω') : 'OPEN';
+                    if (['SW', 'PBNO', 'PBNC'].includes(this.type)) txt = this.state ? 'Cerrado' : 'Abierto';
+                    if (this.type === 'SPDT') txt = this.state ? 'Pos 2' : 'Pos 1';
+                    if (this.type === 'RELAY') txt = this.state ? 'ON' : 'OFF';
+                    if (this.type === 'XFMR') txt = `1:${this.value}`;
+                    ctx.fillText(txt, this.x, this.y - 25);
+                } else if(!['GND', 'D', 'LED', 'ZENER', 'SCHOTTKY', 'OPAMP', 'NPN', 'PNP', 'NMOS', 'PMOS', 'MOTOR'].includes(this.type)) {
+                    ctx.fillText(`${formatEngineering(this.value, unit)}`, this.x, this.y - 25);
+                } else if (this.type === 'LED') {
+                    ctx.fillText(`LED`, this.x, this.y - 25);
+                } else if (['NPN', 'PNP', 'NMOS', 'PMOS'].includes(this.type)) {
+                    ctx.fillText(this.type, this.x, this.y - 25);
+                }
+            }
+
+            drawResistor(ctx) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-15, 0);
+                for(let i=0; i<6; i++) ctx.lineTo(-12.5 + i*5, (i%2==0)?-8:8);
+                ctx.lineTo(15, 0); ctx.lineTo(30, 0);
+            }
+            drawPot(ctx) {
+                this.drawResistor(ctx);
+                const wX = -10 + (this.state * 20);
+                ctx.moveTo(wX, -20); ctx.lineTo(wX, -10);
+                ctx.lineTo(wX-4, -14); ctx.moveTo(wX, -10); ctx.lineTo(wX+4, -14);
+            }
+            drawVoltageSource(ctx) {
+                ctx.arc(0, 0, 15, 0, Math.PI*2);
+                ctx.moveTo(-30, 0); ctx.lineTo(-15, 0); ctx.moveTo(15, 0); ctx.lineTo(30, 0);
+                ctx.moveTo(-6, 0); ctx.lineTo(-2, 0); 
+                ctx.moveTo(4, -2); ctx.lineTo(4, 2); ctx.moveTo(2, 0); ctx.lineTo(6, 0); 
+            }
+            drawACSource(ctx) {
+                ctx.arc(0, 0, 15, 0, Math.PI*2);
+                ctx.moveTo(-30, 0); ctx.lineTo(-15, 0); ctx.moveTo(15, 0); ctx.lineTo(30, 0);
+                ctx.moveTo(-8, 0); ctx.quadraticCurveTo(-4, -8, 0, 0); ctx.quadraticCurveTo(4, 8, 8, 0);
+            }
+            drawClock(ctx) {
+                ctx.arc(0, 0, 15, 0, Math.PI*2);
+                ctx.moveTo(-30, 0); ctx.lineTo(-15, 0); ctx.moveTo(15, 0); ctx.lineTo(30, 0);
+                ctx.moveTo(-8, 6); ctx.lineTo(-8, -6); ctx.lineTo(0, -6); ctx.lineTo(0, 6); ctx.lineTo(8, 6);
+            }
+            drawCurrentSource(ctx) {
+                ctx.arc(0, 0, 15, 0, Math.PI*2);
+                ctx.moveTo(-30, 0); ctx.lineTo(-15, 0); ctx.moveTo(15, 0); ctx.lineTo(30, 0);
+                ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.moveTo(4, -4); ctx.lineTo(8, 0); ctx.lineTo(4, 4);
+            }
+            drawCapacitor(ctx, v1, v2) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-4, 0); ctx.moveTo(4, 0); ctx.lineTo(30, 0);
+                ctx.stroke(); 
+                ctx.beginPath(); ctx.strokeStyle = this.selected ? '#fff' : getVoltageColor(v1);
+                ctx.moveTo(-4, -12); ctx.lineTo(-4, 12); ctx.stroke();
+                ctx.beginPath(); ctx.strokeStyle = this.selected ? '#fff' : getVoltageColor(v2);
+                ctx.moveTo(4, -12); ctx.lineTo(4, 12); ctx.stroke();
+                ctx.beginPath();
+            }
+            drawPolarizedCapacitor(ctx, v1, v2) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-4, 0); ctx.moveTo(8, 0); ctx.lineTo(30, 0);
+                ctx.stroke(); 
+                ctx.beginPath(); ctx.strokeStyle = this.selected ? '#fff' : getVoltageColor(v1);
+                ctx.moveTo(-4, -12); ctx.lineTo(-4, 12); ctx.stroke();
+                ctx.beginPath(); ctx.strokeStyle = '#a1a1aa';
+                ctx.moveTo(-14, -8); ctx.lineTo(-8, -8); ctx.moveTo(-11, -11); ctx.lineTo(-11, -5); ctx.stroke();
+                ctx.beginPath(); ctx.strokeStyle = this.selected ? '#fff' : getVoltageColor(v2);
+                ctx.arc(12, 0, 12, Math.PI*0.7, Math.PI*1.3, false); ctx.stroke();
+                ctx.beginPath();
+            }
+            drawInductor(ctx) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-15, 0);
+                for(let i=0; i<3; i++) ctx.arc(-10 + i*10, 0, 5, Math.PI, 0);
+                ctx.moveTo(15, 0); ctx.lineTo(30, 0);
+            }
+            drawXFMR(ctx) {
+                ctx.moveTo(-20, -20); ctx.lineTo(-10, -20);
+                for(let i=0; i<3; i++) ctx.arc(-10, -10 + i*10, 5, -Math.PI/2, Math.PI/2, true);
+                ctx.lineTo(-10, 20); ctx.lineTo(-20, 20); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-2, -15); ctx.lineTo(-2, 15); ctx.moveTo(2, -15); ctx.lineTo(2, 15); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(20, -20); ctx.lineTo(10, -20);
+                for(let i=0; i<3; i++) ctx.arc(10, -10 + i*10, 5, -Math.PI/2, Math.PI/2, false);
+                ctx.lineTo(10, 20); ctx.lineTo(20, 20);
+            }
+            drawDiode(ctx) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-8, 0); ctx.moveTo(-8,-10); ctx.lineTo(-8,10); ctx.lineTo(8,0); ctx.closePath();
+                ctx.moveTo(8,-10); ctx.lineTo(8,10); ctx.moveTo(8,0); ctx.lineTo(30,0);
+            }
+            drawZener(ctx) {
+                this.drawDiode(ctx); ctx.moveTo(8,-10); ctx.lineTo(12,-10); ctx.moveTo(8,10); ctx.lineTo(4,10);
+            }
+            drawSchottky(ctx) {
+                this.drawDiode(ctx); ctx.moveTo(8,-10); ctx.lineTo(12,-10); ctx.lineTo(12,-6); ctx.moveTo(8,10); ctx.lineTo(4,10); ctx.lineTo(4,6);
+            }
+            drawLED(ctx) {
+                this.drawDiode(ctx);
+                ctx.moveTo(10, -10); ctx.lineTo(15, -15); ctx.moveTo(12, -15); ctx.lineTo(15, -15); ctx.lineTo(15, -12);
+                ctx.moveTo(15, -5);  ctx.lineTo(20, -10); ctx.moveTo(17, -10); ctx.lineTo(20, -10); ctx.lineTo(20, -7);
+            }
+            drawSwitch(ctx) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-10, 0); ctx.moveTo(10, 0); ctx.lineTo(30, 0); ctx.stroke();
+                ctx.beginPath(); ctx.arc(-10, 0, 2.5, 0, Math.PI*2); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+                ctx.beginPath(); ctx.arc(10, 0, 2.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath();
+                if (this.state) { ctx.moveTo(-10, 0); ctx.lineTo(10, 0); } 
+                else { ctx.moveTo(-10, 0); ctx.lineTo(8, -10); }
+            }
+            drawSPDT(ctx) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-10, 0); ctx.moveTo(10, -20); ctx.lineTo(30, -20); ctx.moveTo(10, 20); ctx.lineTo(30, 20); ctx.stroke();
+                ctx.beginPath(); ctx.arc(-10, 0, 2.5, 0, Math.PI*2); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+                ctx.beginPath(); ctx.arc(10, -20, 2.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(10, 20, 2.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, this.state ? 20 : -20);
+            }
+            drawPBNO(ctx) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-10, 0); ctx.moveTo(10, 0); ctx.lineTo(30, 0); ctx.stroke();
+                ctx.beginPath(); ctx.arc(-10, 0, 2.5, 0, Math.PI*2); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+                ctx.beginPath(); ctx.arc(10, 0, 2.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath();
+                const y = this.state ? 0 : -8;
+                ctx.moveTo(-12, y); ctx.lineTo(12, y); ctx.moveTo(0, y); ctx.lineTo(0, y - 8); ctx.moveTo(-6, y - 8); ctx.lineTo(6, y - 8);
+            }
+            drawPBNC(ctx) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-10, 0); ctx.moveTo(10, 0); ctx.lineTo(30, 0); ctx.stroke();
+                ctx.beginPath(); ctx.arc(-10, 0, 2.5, 0, Math.PI*2); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+                ctx.beginPath(); ctx.arc(10, 0, 2.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath();
+                const y = this.state ? -8 : 0;
+                ctx.moveTo(-12, y); ctx.lineTo(12, y); ctx.moveTo(0, y); ctx.lineTo(0, y - 8); ctx.moveTo(-6, y - 8); ctx.lineTo(6, y - 8);
+            }
+            drawRelay(ctx) {
+                ctx.rect(-20, -15, 10, 30); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-15, -20); ctx.lineTo(-15, -15); ctx.moveTo(-15, 15); ctx.lineTo(-15, 20); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(5, -20); ctx.lineTo(20, -20); ctx.moveTo(5, 20); ctx.lineTo(20, 20); ctx.stroke();
+                ctx.beginPath(); ctx.arc(5, -20, 2, 0, Math.PI*2); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+                ctx.beginPath(); ctx.arc(5, 20, 2, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(5, 20); ctx.lineTo(5, this.state ? -20 : 0);
+            }
+            drawMeter(ctx, label) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-15, 0); ctx.moveTo(15, 0); ctx.lineTo(30, 0); ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.stroke();
+                ctx.fillStyle = ctx.strokeStyle; ctx.font = 'bold 14px Inter'; ctx.fillText(label, 0, 5);
+            }
+            drawLamp(ctx) {
+                ctx.moveTo(-30, 0); ctx.lineTo(-15, 0); ctx.moveTo(15, 0); ctx.lineTo(30, 0); ctx.stroke();
+                const power = Math.abs(this.current * this.voltageDrop);
+                if (power > 0.05) { 
+                    ctx.save(); ctx.shadowBlur = Math.min(30, power * 50); ctx.shadowColor = '#fbbf24';
+                    ctx.fillStyle = `rgba(251, 191, 36, ${Math.min(0.8, power)})`;
+                    ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill(); ctx.restore();
+                }
+                ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(10, 10); ctx.moveTo(10, -10); ctx.lineTo(-10, 10);
+            }
+            drawMotor(ctx) {
+                this.drawMeter(ctx, 'M');
+            }
+            drawOpamp(ctx) {
+                ctx.moveTo(-20, -25); ctx.lineTo(-20, 25); ctx.lineTo(25, 0); ctx.closePath(); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-30, -15); ctx.lineTo(-20, -15); ctx.moveTo(-30, 15); ctx.lineTo(-20, 15); ctx.moveTo(25, 0); ctx.lineTo(30, 0); ctx.stroke();
+                ctx.fillStyle = ctx.strokeStyle; ctx.font = '12px Inter'; ctx.fillText('+', -12, -10); ctx.fillText('-', -12, 18);
+            }
+            drawNPN(ctx) {
+                ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.stroke(); 
+                ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(-8, 0); 
+                ctx.moveTo(-8, -12); ctx.lineTo(-8, 12); 
+                ctx.moveTo(-8, -6); ctx.lineTo(10, -18); ctx.lineTo(20, -20); 
+                ctx.moveTo(-8, 6); ctx.lineTo(10, 18); ctx.lineTo(20, 20); 
+                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(10, 18); ctx.lineTo(2, 12); ctx.lineTo(12, 10); ctx.closePath(); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+            }
+            drawPNP(ctx) {
+                ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(-8, 0);
+                ctx.moveTo(-8, -12); ctx.lineTo(-8, 12); 
+                ctx.moveTo(-8, -6); ctx.lineTo(10, -18); ctx.lineTo(20, -20); 
+                ctx.moveTo(-8, 6); ctx.lineTo(10, 18); ctx.lineTo(20, 20); 
+                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-8, 6); ctx.lineTo(-2, 14); ctx.lineTo(2, 6); ctx.closePath(); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+            }
+            drawNMOS(ctx) {
+                ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(-10, 0); ctx.moveTo(-10, -15); ctx.lineTo(-10, 15);
+                ctx.moveTo(-5, -15); ctx.lineTo(-5, -5); ctx.moveTo(-5, -10); ctx.lineTo(20, -20);
+                ctx.moveTo(-5, 5); ctx.lineTo(-5, 15); ctx.moveTo(-5, 10); ctx.lineTo(20, 20);
+                ctx.moveTo(-5, -2); ctx.lineTo(-5, 2); ctx.moveTo(-5, 0); ctx.lineTo(15, 0); ctx.lineTo(15, 20);
+                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-5, 0); ctx.lineTo(2, -4); ctx.lineTo(2, 4); ctx.closePath(); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+            }
+            drawPMOS(ctx) {
+                ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(-10, 0); ctx.moveTo(-10, -15); ctx.lineTo(-10, 15);
+                ctx.moveTo(-5, -15); ctx.lineTo(-5, -5); ctx.moveTo(-5, -10); ctx.lineTo(20, -20);
+                ctx.moveTo(-5, 5); ctx.lineTo(-5, 15); ctx.moveTo(-5, 10); ctx.lineTo(20, 20);
+                ctx.moveTo(-5, -2); ctx.lineTo(-5, 2); ctx.moveTo(-5, 0); ctx.lineTo(15, 0); ctx.lineTo(15, 20);
+                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-5, 0); ctx.lineTo(-12, -4); ctx.lineTo(-12, 4); ctx.closePath(); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+            }
+            drawGround(ctx) {
+                ctx.moveTo(0,0); ctx.lineTo(0,15); ctx.moveTo(-10,15); ctx.lineTo(10,15);
+                ctx.moveTo(-6,20); ctx.lineTo(6,20); ctx.moveTo(-2,25); ctx.lineTo(2,25);
+            }
+            isPointInside(x, y) { return Math.hypot(this.x - x, this.y - y) < 25; }
+        }
+
+        class Wire {
+            constructor(p1, p2, points) { 
+                this.p1 = p1; this.p2 = p2; 
+                this.points = points || [];
+                this.current = 0; 
+                this.voltage = 0;
+                this.chargeOffset = 0;
+                this.selected = false;
+            }
+            
+            draw(ctx, isRunning) {
+                if(this.points.length < 2) return;
+                this.points[0] = {x: this.p1.x, y: this.p1.y};
+                this.points[this.points.length-1] = {x: this.p2.x, y: this.p2.y};
+
+                // Resaltado si está seleccionado
+                if (this.selected) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 6;
+                    ctx.lineJoin = 'round';
+                    ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y);
+                    for(let i=1; i<this.points.length; i++) ctx.lineTo(this.points[i].x, this.points[i].y);
+                    ctx.stroke();
+                }
+
+                ctx.strokeStyle = getVoltageColor(this.voltage);
+                ctx.lineWidth = 3;
+                ctx.lineJoin = 'round';
+                ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y);
+                for(let i=1; i<this.points.length; i++) ctx.lineTo(this.points[i].x, this.points[i].y);
+                ctx.stroke();
+
+                if (Math.abs(this.current) > 1e-5) {
+                    if (isRunning) {
+                        const speed = Math.min(Math.abs(this.current) * 15, 20); 
+                        this.chargeOffset += this.current > 0 ? speed : -speed; 
+                    }
+                    ctx.save();
+                    ctx.strokeStyle = '#fbbf24'; 
+                    ctx.shadowBlur = 6; ctx.shadowColor = '#fbbf24'; 
+                    ctx.lineWidth = 3.5;         
+                    ctx.setLineDash([4, 16]); 
+                    ctx.lineDashOffset = -this.chargeOffset;
+                    ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y);
+                    for(let i=1; i<this.points.length; i++) ctx.lineTo(this.points[i].x, this.points[i].y);
+                    ctx.stroke(); ctx.restore();
+                }
+            }
+
+            isPointInside(x, y) {
+                for(let i=0; i<this.points.length-1; i++) {
+                    // Ampliado de 8 a 12 para facilitar la selección de cables cortos
+                    if (Math.sqrt(distToSegmentSquared({x,y}, this.points[i], this.points[i+1])) < 12) return true;
+                }
+                return false;
+            }
+        }
+
+        class Probe {
+            constructor(type, target, id) {
+                this.type = type; this.target = target; this.id = id;
+            }
+
+            draw(ctx, engineNodes) {
+                let x = 0, y = 0; let lines = [];
+                if (this.type === 'node') {
+                    x = this.target.x; y = this.target.y - 15;
+                    const v = engineNodes && this.target.nodeId !== undefined ? engineNodes[this.target.nodeId] : 0;
+                    lines.push(`V: ${formatEngineering(v, 'V')}`);
+                } 
+                else if (this.type === 'component') {
+                    x = this.target.x; y = this.target.y - 35;
+                    lines.push(`V: ${formatEngineering(this.target.voltageDrop, 'V')}`);
+                    lines.push(`I: ${formatEngineering(Math.abs(this.target.current), 'A')}`);
+                }
+                else if (this.type === 'wire') {
+                    x = this.target.points[0].x + (this.target.points[1].x - this.target.points[0].x)/2;
+                    y = this.target.points[0].y + (this.target.points[1].y - this.target.points[0].y)/2 - 15;
+                    lines.push(`I: ${formatEngineering(Math.abs(this.target.current), 'A')}`);
+                }
+
+                ctx.save();
+                ctx.fillStyle = '#111'; ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.roundRect(x - 40, y - (lines.length * 15) - 10, 80, (lines.length * 15) + 10, 4);
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#fff'; ctx.font = '500 11px monospace'; ctx.textAlign = 'left';
+                lines.forEach((l, idx) => {
+                    if (l.startsWith('I:')) ctx.fillStyle = '#fbbf24'; else ctx.fillStyle = '#84cc16';
+                    ctx.fillText(l, x - 35, y - (lines.length * 15) + 4 + (idx * 15));
+                });
+                ctx.restore();
+            }
+        }
+
+        /** ==========================================
+         * Main Application Editor
+         * ========================================== */
+        class CircuitEditor {
+            constructor() {
+                this.canvas = document.getElementById('circuit-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.scopeCanvas = document.getElementById('scope-canvas');
+                this.scopeCtx = this.scopeCanvas.getContext('2d');
+
+                this.components = [];
+                this.wires = [];
+                this.probes = [];
+                this.engine = new SimulatorEngine();
+                
+                this.camera = { x: 0, y: 0, zoom: 1 };
+                this.isPanning = false; this.hasPanned = false; 
+
+                this.isWiring = false; this.isProbing = false; 
+                this.wirePoints = []; this.activeWireStart = null; this.tempMousePos = null;
+                this.activePushButton = null;
+
+                this.draggedComponent = null; this.selectedComponent = null; this.selectedWire = null; this.offset = { x: 0, y: 0 };
+                
+                this.scopeHistory = []; this.scopeMaxPoints = 250;
+                this.currentMaxV = 0.1; this.currentMaxI = 0.001;
+
+                this.setupUI();
+                this.setupCanvasListeners();
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                
+                // Demo Circuit
+                this.addComponent('VAC', 200, 200);
+                this.addComponent('D', 300, 100); this.components[this.components.length-1].rotation = 0;
+                this.addComponent('C', 400, 200); this.components[this.components.length-1].rotation = 90;
+                this.addComponent('R', 500, 200); this.components[this.components.length-1].rotation = 90;
+                this.addComponent('GND', 400, 300);
+                this.camera.x = this.canvas.width / 2 - 350; this.camera.y = this.canvas.height / 2 - 200;
+
+                this.loop();
+            }
+
+            resize() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.canvas.width = rect.width; this.canvas.height = rect.height;
+                const scopeRect = this.scopeCanvas.parentElement.getBoundingClientRect();
+                this.scopeCanvas.width = scopeRect.width; this.scopeCanvas.height = scopeRect.height; 
+            }
+
+            screenToWorld(sx, sy) {
+                return { x: (sx - this.camera.x) / this.camera.zoom, y: (sy - this.camera.y) / this.camera.zoom };
+            }
+
+            setupUI() {
+                const playBtn = document.getElementById('play-pause-btn');
+                playBtn.addEventListener('click', () => {
+                    this.engine.isRunning = !this.engine.isRunning;
+                    if(this.engine.isRunning) {
+                        this.engine.assignNodes(this.components, this.wires);
+                        playBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                        playBtn.classList.add('active');
+                        document.getElementById('status-dot').classList.add('running');
+                        document.getElementById('status-text').innerText = "Simulando";
+                    } else {
+                        playBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+                        playBtn.classList.remove('active');
+                        document.getElementById('status-dot').classList.remove('running');
+                        document.getElementById('status-text').innerText = "Pausado";
+                    }
+                });
+
+                const probeBtn = document.getElementById('probe-btn');
+                probeBtn.addEventListener('click', () => {
+                    this.isProbing = !this.isProbing;
+                    if (this.isProbing) {
+                        probeBtn.classList.add('probe-active'); document.body.classList.add('mode-probe');
+                    } else {
+                        probeBtn.classList.remove('probe-active'); document.body.classList.remove('mode-probe');
+                    }
+                });
+
+                document.getElementById('delete-btn').addEventListener('click', () => {
+                    let changed = false;
+                    if (this.selectedComponent) {
+                        this.probes = this.probes.filter(p => p.target !== this.selectedComponent);
+                        this.wires = this.wires.filter(w => w.p1.owner !== this.selectedComponent && w.p2.owner !== this.selectedComponent);
+                        this.components = this.components.filter(c => c !== this.selectedComponent);
+                        this.selectedComponent = null;
+                        changed = true;
+                    } else if (this.selectedWire) {
+                        this.probes = this.probes.filter(p => p.target !== this.selectedWire);
+                        this.wires = this.wires.filter(w => w !== this.selectedWire);
+                        this.selectedWire = null;
+                        changed = true;
+                    }
+                    
+                    if (changed) {
+                        this.scopeHistory = [];
+                        this.showPropertyPanel();
+                        if(this.engine.isRunning) this.engine.assignNodes(this.components, this.wires);
+                    }
+                });
+
+                const slider = document.getElementById('prop-slider');
+                const wiperSlider = document.getElementById('prop-slider-wiper');
+                const valInput = document.getElementById('prop-val-input');
+
+                slider.addEventListener('input', (e) => {
+                    if(this.selectedComponent) {
+                        let val = parseFloat(e.target.value);
+                        if(['R', 'POT', 'LAMP'].includes(this.selectedComponent.type)) val = Math.pow(10, val/10); 
+                        else if(['C', 'CPOL'].includes(this.selectedComponent.type)) val = Math.pow(10, val/10 - 8); 
+                        else if(this.selectedComponent.type === 'L') val = Math.pow(10, val/10 - 5); 
+                        
+                        this.selectedComponent.value = val;
+                        valInput.value = formatEngineering(val, '').trim();
+                    }
+                });
+
+                wiperSlider.addEventListener('input', (e) => {
+                    if(this.selectedComponent && this.selectedComponent.type === 'POT') {
+                        this.selectedComponent.state = parseFloat(e.target.value) / 100;
+                    }
+                });
+
+                valInput.addEventListener('change', (e) => {
+                    if(this.selectedComponent) {
+                        const parsed = parseEngineering(e.target.value);
+                        if(parsed !== null && parsed > 0 || (['V','VAC','I'].includes(this.selectedComponent.type))) {
+                            this.selectedComponent.value = parsed; this.showPropertyPanel(); 
+                        } else {
+                            valInput.value = formatEngineering(this.selectedComponent.value, '').trim(); 
+                        }
+                    }
+                });
+
+                document.querySelectorAll('.comp-item').forEach(item => {
+                    item.addEventListener('dragstart', (e) => { e.dataTransfer.setData('type', item.dataset.type); });
+                    item.addEventListener('click', () => {
+                        const rect = this.canvas.getBoundingClientRect();
+                        const center = this.screenToWorld(rect.width/2, rect.height/2);
+                        this.addComponent(item.dataset.type, center.x, center.y);
+                    });
+                });
+                
+                this.canvas.addEventListener('dragover', e => e.preventDefault());
+                this.canvas.addEventListener('drop', e => {
+                    e.preventDefault();
+                    const rect = this.canvas.getBoundingClientRect();
+                    const worldPos = this.screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+                    this.addComponent(e.dataTransfer.getData('type'), worldPos.x, worldPos.y);
+                });
+
+                this.canvas.addEventListener('contextmenu', e => e.preventDefault());
+            }
+
+            setupCanvasListeners() {
+                const PORT_CLICK_RADIUS = 12; 
+                const PORT_SNAP_RADIUS = 30;  
+
+                this.canvas.addEventListener('wheel', e => {
+                    e.preventDefault(); 
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top;
+
+                    const worldPos = this.screenToWorld(mouseX, mouseY);
+                    const zoomFactor = 1.1;
+                    if (e.deltaY < 0) this.camera.zoom *= zoomFactor; else this.camera.zoom /= zoomFactor; 
+
+                    this.camera.zoom = Math.max(0.2, Math.min(5, this.camera.zoom));
+                    this.camera.x = mouseX - worldPos.x * this.camera.zoom;
+                    this.camera.y = mouseY - worldPos.y * this.camera.zoom;
+                }, { passive: false });
+
+                this.canvas.addEventListener('mousedown', e => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const sx = e.clientX - rect.left; const sy = e.clientY - rect.top;
+                    const worldPos = this.screenToWorld(sx, sy);
+                    const x = worldPos.x; const y = worldPos.y;
+
+                    if (e.button === 1 || e.button === 2) {
+                        this.isPanning = true; this.hasPanned = false; document.body.classList.add('is-panning'); return;
+                    }
+
+                    if (this.isWiring || this.isProbing) return; 
+
+                    // Pushbutton interaction
+                    const clickedCompForInteraction = this.components.find(c => c.isPointInside(x, y));
+                    if (clickedCompForInteraction && ['PBNO', 'PBNC'].includes(clickedCompForInteraction.type)) {
+                        clickedCompForInteraction.state = 1;
+                        this.activePushButton = clickedCompForInteraction;
+                    }
+
+                    const ports = this.components.flatMap(c => c.ports);
+                    if (ports.some(p => Math.hypot(p.x - x, p.y - y) < PORT_CLICK_RADIUS)) return; 
+
+                    this.draggedComponent = this.components.find(c => c.isPointInside(x, y));
+                    this.components.forEach(c => c.selected = false);
+                    this.wires.forEach(w => w.selected = false);
+                    
+                    if (this.draggedComponent) {
+                        if (this.selectedComponent !== this.draggedComponent) {
+                            this.scopeHistory = []; this.currentMaxV = 0.1; this.currentMaxI = 0.001;
+                        }
+                        this.draggedComponent.selected = true;
+                        this.selectedComponent = this.draggedComponent;
+                        this.selectedWire = null;
+                        this.offset.x = x - this.draggedComponent.x; this.offset.y = y - this.draggedComponent.y;
+                        this.showPropertyPanel();
+                        document.body.classList.add('is-dragging');
+                    } else {
+                        const clickedWire = this.wires.find(w => w.isPointInside(x, y));
+                        if (clickedWire) {
+                            clickedWire.selected = true;
+                            this.selectedWire = clickedWire;
+                            this.selectedComponent = null;
+                            this.scopeHistory = [];
+                            this.showPropertyPanel();
+                        } else {
+                            this.selectedComponent = null;
+                            this.selectedWire = null;
+                            this.scopeHistory = [];
+                            this.showPropertyPanel();
+                            
+                            this.isPanning = true; this.hasPanned = false; document.body.classList.add('is-panning');
+                        }
+                    }
+                });
+
+                window.addEventListener('mouseup', () => {
+                    this.draggedComponent = null;
+                    if (this.isPanning) { this.isPanning = false; document.body.classList.remove('is-panning'); }
+                    if (this.activePushButton) { this.activePushButton.state = 0; this.activePushButton = null; }
+                });
+
+                this.canvas.addEventListener('mousemove', e => {
+                    if (this.isPanning) {
+                        this.camera.x += e.movementX; this.camera.y += e.movementY; this.hasPanned = true; return;
+                    }
+                    const rect = this.canvas.getBoundingClientRect();
+                    const sx = e.clientX - rect.left; const sy = e.clientY - rect.top;
+                    const worldPos = this.screenToWorld(sx, sy);
+                    const x = worldPos.x; const y = worldPos.y;
+
+                    const ports = this.components.flatMap(c => c.ports);
+                    const hoveredPort = ports.find(p => Math.hypot(p.x - x, p.y - y) < PORT_SNAP_RADIUS);
+
+                    if (this.isWiring && this.wirePoints.length > 0) {
+                        if (hoveredPort && hoveredPort.owner !== this.activeWireStart.owner) {
+                            this.tempMousePos = { x: hoveredPort.x, y: hoveredPort.y };
+                        } else {
+                            let snapX = Math.round(x/GRID_SIZE)*GRID_SIZE; let snapY = Math.round(y/GRID_SIZE)*GRID_SIZE;
+                            const lastP = this.wirePoints[this.wirePoints.length-1];
+                            if (Math.abs(snapX - lastP.x) > Math.abs(snapY - lastP.y)) snapY = lastP.y; 
+                            else snapX = lastP.x; 
+                            this.tempMousePos = { x: snapX, y: snapY };
+                        }
+                    } 
+                    else if (this.draggedComponent) {
+                        this.draggedComponent.x = Math.round((x - this.offset.x) / GRID_SIZE) * GRID_SIZE;
+                        this.draggedComponent.y = Math.round((y - this.offset.y) / GRID_SIZE) * GRID_SIZE;
+                        this.draggedComponent.getRotatedPorts();
+                        if(this.engine.isRunning) this.engine.assignNodes(this.components, this.wires);
+                    }
+                });
+
+                this.canvas.addEventListener('click', e => {
+                    if (this.hasPanned) { this.hasPanned = false; return; }
+
+                    const rect = this.canvas.getBoundingClientRect();
+                    const sx = e.clientX - rect.left; const sy = e.clientY - rect.top;
+                    const worldPos = this.screenToWorld(sx, sy);
+                    const x = worldPos.x; const y = worldPos.y;
+
+                    if (this.isProbing) {
+                        const existingProbe = this.probes.find(p => {
+                            let px = p.target.x; let py = p.target.y;
+                            if(p.type === 'wire') {
+                                px = p.target.points[0].x + (p.target.points[1].x - p.target.points[0].x)/2;
+                                py = p.target.points[0].y + (p.target.points[1].y - p.target.points[0].y)/2;
+                            }
+                            return Math.hypot(px - x, py - 15 - y) < 25; 
+                        });
+                        if (existingProbe) { this.probes = this.probes.filter(p => p !== existingProbe); return; }
+
+                        const ports = this.components.flatMap(c => c.ports);
+                        const clickedPort = ports.find(p => Math.hypot(p.x - x, p.y - y) < 15);
+                        if (clickedPort) { this.probes.push(new Probe('node', clickedPort, Date.now())); return; }
+
+                        const clickedComp = this.components.find(c => c.isPointInside(x, y));
+                        if (clickedComp) {
+                            if (!this.probes.find(p => p.target === clickedComp)) this.probes.push(new Probe('component', clickedComp, Date.now()));
+                            return;
+                        }
+
+                        const clickedWire = this.wires.find(w => w.isPointInside(x, y));
+                        if (clickedWire) {
+                            if (!this.probes.find(p => p.target === clickedWire)) this.probes.push(new Probe('wire', clickedWire, Date.now()));
+                            return;
+                        }
+                        return; 
+                    }
+                    
+                    const clickedCompForInteraction = this.components.find(c => c.isPointInside(x, y));
+                    if (clickedCompForInteraction && ['SW', 'SPDT'].includes(clickedCompForInteraction.type) && !this.isWiring) {
+                        clickedCompForInteraction.state = clickedCompForInteraction.state ? 0 : 1;
+                    }
+
+                    const ports = this.components.flatMap(c => c.ports);
+                    const searchRadius = this.isWiring ? PORT_SNAP_RADIUS : PORT_CLICK_RADIUS;
+                    const clickedPort = ports.find(p => Math.hypot(p.x - x, p.y - y) < searchRadius);
+
+                    if (this.isWiring) {
+                        if (clickedPort && clickedPort.owner !== this.activeWireStart.owner) {
+                            this.wirePoints.push({x: clickedPort.x, y: clickedPort.y});
+                            const exists = this.wires.some(w => (w.p1 === this.activeWireStart && w.p2 === clickedPort) || (w.p2 === this.activeWireStart && w.p1 === clickedPort));
+                            if(!exists) {
+                                this.wires.push(new Wire(this.activeWireStart, clickedPort, [...this.wirePoints]));
+                                if(this.engine.isRunning) this.engine.assignNodes(this.components, this.wires);
+                            }
+                            this.cancelWiring();
+                        } else if (!clickedPort) {
+                            if(this.tempMousePos) this.wirePoints.push({...this.tempMousePos});
+                        }
+                    } else if (clickedPort) {
+                        this.isWiring = true; this.activeWireStart = clickedPort;
+                        this.wirePoints = [{x: clickedPort.x, y: clickedPort.y}];
+                        this.tempMousePos = {x: clickedPort.x, y: clickedPort.y};
+                        document.getElementById('wiring-helper').style.display = 'block';
+                    }
+                });
+
+                window.addEventListener('keydown', e => {
+                    if (e.key === 'Escape') this.cancelWiring();
+                    if(document.activeElement.tagName === 'INPUT') return; 
+                    if (e.key.toLowerCase() === 'r' && this.selectedComponent) {
+                        this.selectedComponent.rotation = (this.selectedComponent.rotation + 90) % 360;
+                        this.selectedComponent.getRotatedPorts();
+                        if(this.engine.isRunning) this.engine.assignNodes(this.components, this.wires);
+                    }
+                    if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedComponent) document.getElementById('delete-btn').click();
+                });
+            }
+
+            cancelWiring() {
+                this.isWiring = false; this.activeWireStart = null; this.wirePoints = []; this.tempMousePos = null;
+                document.getElementById('wiring-helper').style.display = 'none';
+            }
+
+            addComponent(type, x, y) {
+                const defaults = { 
+                    'R': 1000, 'V': 5, 'VAC': 5, 'I': 0.01, 'L': 0.1, 'C': 0.000001, 'CPOL': 0.000001, 
+                    'LAMP': 100, 'GND': 0, 'D':0, 'LED':0, 'SW':0, 'VM':0, 'AM':0,
+                    'OHM': 0, 'CLOCK': 5, 'POT': 10000, 'XFMR': 1, 'SPDT': 0, 'PBNO': 0, 'PBNC': 0,
+                    'RELAY': 0, 'MOTOR': 10, 'OPAMP': 0, 'ZENER': 5, 'SCHOTTKY': 0,
+                    'NPN': 0, 'PNP': 0, 'NMOS': 0, 'PMOS': 0
+                };
+                const comp = new Component(type, x, y, defaults[type], `${type}${Date.now()}`);
+                this.components.push(comp);
+                if(this.engine.isRunning) this.engine.assignNodes(this.components, this.wires);
+            }
+
+            clearAll() {
+                this.components = []; this.wires = []; this.selectedComponent = null; this.selectedWire = null;
+                this.probes = []; this.scopeHistory = [];
+                this.showPropertyPanel();
+                if(this.engine.isRunning) this.engine.assignNodes(this.components, this.wires);
+            }
+
+            showPropertyPanel() {
+                const p = this.selectedComponent;
+                const propContent = document.getElementById('prop-content');
+                const emptyProps = document.getElementById('empty-props');
+                const wiperGroup = document.getElementById('pot-wiper-group');
+                const statsBox = document.getElementById('live-stats-box');
+
+                if(!p || ['GND', 'D', 'LED', 'SW', 'VM', 'AM', 'SPDT', 'PBNO', 'PBNC', 'OPAMP', 'NPN', 'PNP', 'NMOS', 'PMOS'].includes(p.type)) {
+                    propContent.style.display = 'none'; emptyProps.style.display = 'block';
+                    if(p) emptyProps.innerHTML = `<b>${p.type}</b> seleccionado.<br>No tiene valores primarios ajustables.`;
+                    else emptyProps.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:10px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg><br>Selecciona un componente para editar sus propiedades.`;
+                    return;
+                }
+                
+                propContent.style.display = 'block'; emptyProps.style.display = 'none';
+                
+                let unit = '';
+                if(['R', 'POT', 'LAMP', 'MOTOR'].includes(p.type)) unit='Ω'; if(['V', 'VAC'].includes(p.type)) unit='V';
+                if(['C', 'CPOL'].includes(p.type)) unit='F'; if(p.type==='L') unit='H';
+                if(p.type==='I') unit='A'; if(p.type==='CLOCK') unit='Hz'; if(p.type==='XFMR') unit=' Ratio';
+                document.getElementById('prop-unit').innerText = unit;
+
+                const slider = document.getElementById('prop-slider');
+                if(['V', 'VAC'].includes(p.type)) { slider.min = -24; slider.max = 24; slider.step = 0.5; slider.value = p.value; }
+                if(p.type === 'CLOCK') { slider.min = 1; slider.max = 100; slider.step = 1; slider.value = p.value; }
+                if(p.type === 'I') { slider.min = -1; slider.max = 1; slider.step = 0.01; slider.value = p.value; }
+                if(['R', 'POT', 'LAMP'].includes(p.type)) { slider.min = 0; slider.max = 70; slider.step = 1; slider.value = Math.log10(p.value)*10; } 
+                if(['C', 'CPOL'].includes(p.type)) { slider.min = 0; slider.max = 60; slider.step = 1; slider.value = (Math.log10(p.value)+8)*10; }
+                if(p.type === 'L') { slider.min = 0; slider.max = 60; slider.step = 1; slider.value = (Math.log10(p.value)+5)*10; }
+                if(p.type === 'XFMR') { slider.min = 1; slider.max = 100; slider.step = 1; slider.value = p.value; }
+                
+                if (p.type === 'POT') {
+                    wiperGroup.style.display = 'block';
+                    document.getElementById('prop-slider-wiper').value = (p.state || 0.5) * 100;
+                } else {
+                    wiperGroup.style.display = 'none';
+                }
+
+                if (p.type === 'XFMR' || p.type === 'CLOCK') statsBox.style.display = 'none'; else statsBox.style.display = 'block';
+                
+                document.getElementById('prop-val-input').value = formatEngineering(p.value, '').trim();
+            }
+
+            drawScope() {
+                const ctx = this.scopeCtx; const w = this.scopeCanvas.width; const h = this.scopeCanvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1; ctx.beginPath();
+                for(let i=1; i<4; i++) { ctx.moveTo(0, (h/4)*i); ctx.lineTo(w, (h/4)*i); }
+                for(let i=0; i<w; i+=50) { ctx.moveTo(i, 0); ctx.lineTo(i, h); }
+                ctx.stroke();
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+
+                if (this.scopeHistory.length < 2) return;
+
+                let targetMaxV = 0.1; let targetMaxI = 0.001; 
+                this.scopeHistory.forEach(d => {
+                    if(Math.abs(d.v) > targetMaxV) targetMaxV = Math.abs(d.v);
+                    if(Math.abs(d.i) > targetMaxI) targetMaxI = Math.abs(d.i);
+                });
+
+                this.currentMaxV = this.currentMaxV ? this.currentMaxV + (targetMaxV - this.currentMaxV) * 0.1 : targetMaxV;
+                this.currentMaxI = this.currentMaxI ? this.currentMaxI + (targetMaxI - this.currentMaxI) * 0.1 : targetMaxI;
+
+                const maxV = this.currentMaxV * 1.2; const maxI = this.currentMaxI * 1.2; const stepX = w / this.scopeMaxPoints;
+
+                ctx.beginPath(); ctx.moveTo(0, h/2);
+                this.scopeHistory.forEach((d, i) => ctx.lineTo(i * stepX, (h/2) - (d.v / maxV) * (h/2)));
+                ctx.lineTo((this.scopeHistory.length - 1) * stepX, h/2);
+                ctx.fillStyle = 'rgba(132, 204, 22, 0.15)'; ctx.fill();
+
+                ctx.strokeStyle = '#84cc16'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.beginPath();
+                this.scopeHistory.forEach((d, i) => {
+                    const x = i * stepX; const y = (h/2) - (d.v / maxV) * (h/2);
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }); ctx.stroke();
+
+                ctx.beginPath(); ctx.moveTo(0, h/2);
+                this.scopeHistory.forEach((d, i) => ctx.lineTo(i * stepX, (h/2) - (d.i / maxI) * (h/2)));
+                ctx.lineTo((this.scopeHistory.length - 1) * stepX, h/2);
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.15)'; ctx.fill();
+
+                ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.beginPath();
+                this.scopeHistory.forEach((d, i) => {
+                    const x = i * stepX; const y = (h/2) - (d.i / maxI) * (h/2);
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }); ctx.stroke();
+
+                ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+                ctx.fillText(`±${formatEngineering(maxV/1.2, 'V')}`, w - 10, 15);
+                ctx.fillText(`±${formatEngineering(maxI/1.2, 'A')}`, w - 10, 28);
+            }
+
+            loop() {
+                if (this.engine.isRunning) {
+                    for(let i=0; i<5; i++) this.engine.step(this.components, this.wires);
+                    
+                    if(this.selectedComponent && !['GND'].includes(this.selectedComponent.type)) {
+                        const p = this.selectedComponent;
+                        this.scopeHistory.push({ v: p.voltageDrop || 0, i: p.current || 0 });
+                        if(this.scopeHistory.length > this.scopeMaxPoints) this.scopeHistory.shift();
+
+                        if(!['D','LED','SW','SPDT','PBNO','PBNC','RELAY','NPN','PNP','NMOS','PMOS','OPAMP'].includes(p.type)) {
+                            document.getElementById('stat-v').innerText = `${p.voltageDrop.toFixed(2)} V`;
+                            let currentStr = Math.abs(p.current) < 0.001 ? (p.current*1000).toFixed(2) + ' mA' : p.current.toFixed(3) + ' A';
+                            document.getElementById('stat-i').innerText = `${currentStr}`;
+                            const power = Math.abs(p.voltageDrop * p.current);
+                            let powerStr = power < 0.001 ? (power*1000).toFixed(2) + ' mW' : power.toFixed(3) + ' W';
+                            document.getElementById('stat-p').innerText = `${powerStr}`;
+                        }
+                    } else if (this.scopeHistory.length > 0) {
+                        this.scopeHistory = [];
+                    }
+                }
+
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.save();
+                this.ctx.translate(this.camera.x, this.camera.y);
+                this.ctx.scale(this.camera.zoom, this.camera.zoom);
+
+                this.drawGrid();
+                this.components.forEach(c => c.getRotatedPorts());
+                this.wires.forEach(w => w.draw(this.ctx, this.engine.isRunning));
+                this.components.forEach(c => c.draw(this.ctx, this.engine.nodes));
+
+                if (this.isWiring && this.tempMousePos) {
+                    this.ctx.strokeStyle = '#fff'; this.ctx.lineWidth = 2; this.ctx.setLineDash([5, 5]);
+                    this.ctx.beginPath(); this.ctx.moveTo(this.wirePoints[0].x, this.wirePoints[0].y);
+                    for(let i=1; i<this.wirePoints.length; i++) this.ctx.lineTo(this.wirePoints[i].x, this.wirePoints[i].y);
+                    this.ctx.lineTo(this.tempMousePos.x, this.tempMousePos.y);
+                    this.ctx.stroke(); this.ctx.setLineDash([]);
+                }
+
+                this.probes.forEach(probe => probe.draw(this.ctx, this.engine.nodes));
+                this.ctx.restore();
+                this.drawScope();
+
+                requestAnimationFrame(() => this.loop());
+            }
+
+            drawGrid() {
+                this.ctx.fillStyle = '#222';
+                const left = -this.camera.x / this.camera.zoom; const top = -this.camera.y / this.camera.zoom;
+                const right = left + this.canvas.width / this.camera.zoom; const bottom = top + this.canvas.height / this.camera.zoom;
+                const startX = Math.floor(left / GRID_SIZE) * GRID_SIZE; const startY = Math.floor(top / GRID_SIZE) * GRID_SIZE;
+                const dotSize = 2 / this.camera.zoom; 
+
+                for (let x = startX; x < right; x += GRID_SIZE) {
+                    for (let y = startY; y < bottom; y += GRID_SIZE) {
+                        this.ctx.fillRect(x - dotSize/2, y - dotSize/2, dotSize, dotSize);
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { window.editor = new CircuitEditor(); });
+    </script>
+</body>
+</html>

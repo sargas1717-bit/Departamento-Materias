@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrodinámica II - Ondas Electromagnéticas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax para Fórmulas -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Three.js para gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #020617; /* Very dark slate, almost black for better 3D contrast */
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-e: #f43f5e; /* Rose for Electric Field */
+            --accent-b: #06b6d4; /* Cyan for Magnetic Field */
+            --accent-k: #eab308; /* Yellow for Propagation */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(244, 63, 94, 0.1), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.1), transparent 40%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+        .app-container { max-width: 1500px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; height: 16px; width: 16px;
+            border-radius: 50%; background: #fff; cursor: pointer;
+            margin-top: -6px; box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.2); border-radius: 2px;
+        }
+
+        .math-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 8px; }
+        .math-scroll::-webkit-scrollbar { height: 6px; }
+        .math-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        #canvas3D-container { position: relative; width: 100%; height: 100%; border-radius: 1rem; overflow: hidden; }
+        
+        .legend-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i> Volver al Menú Principal
+        </a>
+
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-full">
+                    Ingeniería Eléctrica - Electrodinámica II
+                </div>
+                <h1 class="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight">Ondas Electromagnéticas 3D</h1>
+                <p class="text-slate-400 text-sm md:text-base max-w-2xl">Visualización tridimensional de la propagación de campos en el espacio-tiempo. Analiza la atenuación en diferentes medios y la regla de la mano derecha.</p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-[75vh] min-h-[700px]">
+            
+            <!-- PANEL IZQUIERDO: Controles y Teoría -->
+            <div class="lg:col-span-4 flex flex-col gap-6 h-full">
+                
+                <!-- Controles Físicos -->
+                <div class="glass-panel flex-none">
+                    <h3 class="text-sm font-bold text-slate-200 uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i> Parámetros de Onda
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                <span>Frecuencia (\(\omega\))</span>
+                                <span id="valFreq" class="text-white font-mono">1.0 rad/s</span>
+                            </label>
+                            <input type="range" id="freqRange" min="0" max="5" step="0.1" value="1.0">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                <span>Número de Onda (\(\beta\))</span>
+                                <span id="valK" class="text-white font-mono">1.0 rad/m</span>
+                            </label>
+                            <input type="range" id="kRange" min="0.5" max="3" step="0.1" value="1.0">
+                        </div>
+
+                        <div class="space-y-2 pt-4 border-t border-white/10">
+                            <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                <span class="flex items-center gap-2"><i data-lucide="zap" class="w-3 h-3 text-yellow-400"></i> Conductividad del Medio (\(\sigma\))</span>
+                                <span id="valAtten" class="text-yellow-300 font-mono">0.0 (Vacío)</span>
+                            </label>
+                            <input type="range" id="attenRange" min="0" max="0.5" step="0.01" value="0">
+                            <p class="text-[10px] text-slate-500">Aumenta para simular un medio con pérdidas (ej. conductor). La onda sufrirá atenuación exponencial \(e^{-\alpha x}\).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explicación Matemática (Actualizada Dinámicamente) -->
+                <div class="glass-panel flex-1 flex flex-col overflow-hidden">
+                    <h3 class="text-sm font-bold text-slate-200 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i data-lucide="sigma" class="w-4 h-4 text-rose-400"></i> Ecuaciones en el Tiempo
+                    </h3>
+                    <div class="bg-black/40 rounded-xl p-4 border border-white/5 flex-1 math-scroll flex flex-col justify-center space-y-4" id="mathExplanation">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO: Visualización 3D -->
+            <div class="lg:col-span-8 glass-panel p-2 flex flex-col relative h-[500px] lg:h-full">
+                
+                <!-- Overlays UI dentro del 3D -->
+                <div class="absolute top-6 left-6 z-10 pointer-events-none">
+                    <div class="bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-lg shadow-xl">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2 border-b border-white/10 pb-1">Regla de la Mano Derecha</h4>
+                        <div class="space-y-2">
+                            <div class="legend-badge text-rose-400"><div class="legend-color bg-rose-500"></div> Campo Eléctrico (\(\vec{E}\))</div>
+                            <div class="legend-badge text-cyan-400"><div class="legend-color bg-cyan-500"></div> Campo Magnético (\(\vec{H}\))</div>
+                            <div class="legend-badge text-yellow-400"><div class="legend-color bg-yellow-500"></div> Propagación (\(\vec{S} = \vec{E} \times \vec{H}\))</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-6 right-6 z-10 pointer-events-none text-right">
+                    <div class="bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-lg shadow-xl inline-block">
+                        <p class="text-xs text-slate-300 mb-1"><i data-lucide="mouse-pointer-2" class="w-3 h-3 inline"></i> <strong>Click + Arrastrar:</strong> Rotar cámara</p>
+                        <p class="text-xs text-slate-300"><i data-lucide="move" class="w-3 h-3 inline"></i> <strong>Scroll:</strong> Acercar / Alejar</p>
+                    </div>
+                </div>
+
+                <!-- Contenedor WebGL -->
+                <div id="canvas3D-container"></div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --------------------------------------------------------
+        // THREE.JS SCENE SETUP
+        // --------------------------------------------------------
+        const container = document.getElementById('canvas3D-container');
+        const scene = new THREE.Scene();
+        
+        // Add subtle fog to blend into the background
+        scene.fog = new THREE.FogExp2(0x020617, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(15, 10, 15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = 50;
+        controls.minDistance = 5;
+
+        // --------------------------------------------------------
+        // SCENE ELEMENTS
+        // --------------------------------------------------------
+        
+        // Grid & Axes
+        const gridHelper = new THREE.GridHelper(40, 40, 0x334155, 0x1e293b);
+        gridHelper.position.y = -5; // Move grid down a bit
+        scene.add(gridHelper);
+
+        // Custom Axes (Thicker lines)
+        const axisLength = 20;
+        const axisMaterialX = new THREE.LineBasicMaterial({ color: 0x64748b, linewidth: 2 });
+        const axisGeometryX = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-axisLength, 0, 0), new THREE.Vector3(axisLength, 0, 0)]);
+        scene.add(new THREE.Line(axisGeometryX, axisMaterialX));
+
+        // Wave Vectors Array
+        const eArrows = [];
+        const hArrows = [];
+        const numArrows = 60;
+        const xStart = -15;
+        const xEnd = 15;
+        const spacing = (xEnd - xStart) / numArrows;
+
+        // Colors
+        const colorE = 0xf43f5e; // Rose
+        const colorH = 0x06b6d4; // Cyan
+
+        for (let i = 0; i <= numArrows; i++) {
+            let x = xStart + (i * spacing);
+            
+            // Electric Field Arrow (Y-axis)
+            let eArrow = new THREE.ArrowHelper(
+                new THREE.Vector3(0, 1, 0), 
+                new THREE.Vector3(x, 0, 0), 
+                0, colorE, 0.4, 0.3
+            );
+            
+            // Magnetic Field Arrow (Z-axis)
+            let hArrow = new THREE.ArrowHelper(
+                new THREE.Vector3(0, 0, 1), 
+                new THREE.Vector3(x, 0, 0), 
+                0, colorH, 0.4, 0.3
+            );
+
+            scene.add(eArrow);
+            scene.add(hArrow);
+            eArrows.push({ arrow: eArrow, x: x });
+            hArrows.push({ arrow: hArrow, x: x });
+        }
+
+        // Poynting Vector Arrow (Big Yellow Arrow indicating direction)
+        const poyntingArrow = new THREE.ArrowHelper(
+            new THREE.Vector3(1, 0, 0),
+            new THREE.Vector3(0, 5, 0), // Hovering above
+            3, 0xeab308, 0.8, 0.6
+        );
+        scene.add(poyntingArrow);
+
+        // --------------------------------------------------------
+        // PHYSICS LOGIC & UI UPDATES
+        // --------------------------------------------------------
+        
+        let time = 0;
+        const inputs = {
+            freq: document.getElementById('freqRange'),
+            k: document.getElementById('kRange'),
+            atten: document.getElementById('attenRange')
+        };
+        const displays = {
+            freq: document.getElementById('valFreq'),
+            k: document.getElementById('valK'),
+            atten: document.getElementById('valAtten'),
+            math: document.getElementById('mathExplanation')
+        };
+
+        function updateMathUI(omega, beta, alpha) {
+            let eqE, eqH;
+            
+            const wStr = omega.toFixed(1);
+            const bStr = beta.toFixed(1);
+            
+            if (alpha === 0) {
+                // Medio sin pérdidas
+                eqE = `\\vec{E}(x,t) = E_0 \\cos(${wStr}t - ${bStr}x) \\hat{a}_y`;
+                eqH = `\\vec{H}(x,t) = H_0 \\cos(${wStr}t - ${bStr}x) \\hat{a}_z`;
+            } else {
+                // Medio con pérdidas (Conductor)
+                const aStr = alpha.toFixed(2);
+                eqE = `\\vec{E}(x,t) = E_0 e^{-${aStr}x} \\cos(${wStr}t - ${bStr}x) \\hat{a}_y`;
+                // En un medio con pérdidas, H tiene un desfase. Aquí simplificamos para visualización.
+                eqH = `\\vec{H}(x,t) = H_0 e^{-${aStr}x} \\cos(${wStr}t - ${bStr}x - \\theta_\\eta) \\hat{a}_z`;
+            }
+
+            const poynting = `\\vec{S}_{prom} = \\frac{1}{2} \\text{Re}(\\vec{E}_s \\times \\vec{H}^*_s) \\hat{a}_x`;
+
+            displays.math.innerHTML = `
+                <div class="text-rose-200">
+                    <p class="text-xs text-rose-400 mb-1 font-bold">Campo Eléctrico:</p>
+                    \\[ ${eqE} \\]
+                </div>
+                <div class="text-cyan-200 border-t border-white/10 pt-4 mt-2">
+                    <p class="text-xs text-cyan-400 mb-1 font-bold">Campo Magnético:</p>
+                    \\[ ${eqH} \\]
+                </div>
+                <div class="text-yellow-200 border-t border-white/10 pt-4 mt-2">
+                    <p class="text-xs text-yellow-400 mb-1 font-bold">Vector de Poynting (Potencia):</p>
+                    \\[ ${poynting} \\]
+                </div>
+            `;
+
+            if (window.MathJax) {
+                MathJax.typesetPromise([displays.math]);
+            }
+        }
+
+        let currentOmega = 1.0;
+        let currentBeta = 1.0;
+        let currentAlpha = 0.0;
+
+        function updateParameters() {
+            currentOmega = parseFloat(inputs.freq.value);
+            currentBeta = parseFloat(inputs.k.value);
+            currentAlpha = parseFloat(inputs.atten.value);
+
+            displays.freq.innerText = currentOmega.toFixed(1) + ' rad/s';
+            displays.k.innerText = currentBeta.toFixed(1) + ' rad/m';
+            
+            if(currentAlpha === 0) {
+                displays.atten.innerText = '0.00 (Vacío perfecto)';
+                displays.atten.className = 'text-slate-400 font-mono';
+            } else {
+                displays.atten.innerText = currentAlpha.toFixed(2) + ' Np/m (Atenuación)';
+                displays.atten.className = 'text-yellow-300 font-mono font-bold';
+            }
+
+            updateMathUI(currentOmega, currentBeta, currentAlpha);
+        }
+
+        // Event Listeners for Sliders
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updateParameters);
+            // Throttle MathJax updates to mouseup to avoid lag
+            input.addEventListener('change', updateParameters);
+        });
+
+        // --------------------------------------------------------
+        // ANIMATION LOOP
+        // --------------------------------------------------------
+        function animate() {
+            requestAnimationFrame(animate);
+
+            time += 0.016 * currentOmega; // delta time scaled by frequency
+            
+            const amplitude = 4; // Max length of arrows
+
+            for (let i = 0; i < numArrows; i++) {
+                let x = eArrows[i].x;
+                
+                // Calculate attenuation factor based on distance from source (assume source is far left x=-15)
+                // We only attenuate if x > -15, mapped from 0 to 30
+                let distance = x + 15; 
+                let attenuation = Math.exp(-currentAlpha * distance);
+
+                // E = E0 * e^(-ax) * cos(wt - Bx)
+                let phaseE = time - (currentBeta * x);
+                let magE = Math.cos(phaseE) * attenuation * amplitude;
+
+                // Update E Field (Y Axis)
+                let dirE = magE >= 0 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, -1, 0);
+                eArrows[i].arrow.setDirection(dirE);
+                eArrows[i].arrow.setLength(Math.abs(magE) + 0.01, 0.4, 0.3);
+
+                // Update H Field (Z Axis) - In lossy media, H is out of phase
+                let phaseH = phaseE - (currentAlpha * 2); // Lag visualization
+                let magH = Math.cos(phaseH) * attenuation * amplitude;
+                
+                let dirH = magH >= 0 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 0, -1);
+                hArrows[i].arrow.setDirection(dirH);
+                hArrows[i].arrow.setLength(Math.abs(magH) + 0.01, 0.4, 0.3);
+            }
+
+            // Animate Poynting vector slightly to show flow
+            poyntingArrow.position.x = -5 + Math.sin(time*2) * 1;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // Initialize
+        updateParameters();
+        animate();
+
+    </script>
+</body>
+</html>

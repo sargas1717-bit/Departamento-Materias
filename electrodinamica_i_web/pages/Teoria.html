@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teoría | Electrodinámica I</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body class="fade-in">
+
+    <nav class="container glass" style="margin-top: 20px;">
+        <a href="../index.html">Inicio</a>
+        <a href="datos_curricular.html">Programa</a>
+        <a href="Teoria.html" class="active">Teoría</a>
+        <a href="Formulas.html">Fórmulas</a>
+    </nav>
+
+    <main class="container">
+        <header>
+            <h1 class="main-title">Desarrollos Teóricos</h1>
+            <p class="subtitle">UNIDADES I A IV</p>
+        </header>
+
+        <section id="unidad-1" class="glass card" style="margin-bottom: 40px; padding: 40px;">
+            <div class="badge">UNIDAD I</div>
+            <h3>Sistemas Coordenados & Leyes Integrales</h3>
+            <p>El electromagnetismo describe cómo las cargas y corrientes interactúan a través de campos. Las leyes integrales son fundamentales para geometrías simétricas.</p>
+            
+            <div class="math-block">
+                <h4 class="highlight">Ley de Gauss:</h4>
+                <p>$$\oint_S \mathbf{D} \cdot d\mathbf{s} = \int_V \rho_v dv$$</p>
+                <p>El flujo eléctrico total a través de una superficie cerrada es igual a la carga encerrada.</p>
+            </div>
+
+            <div class="math-block">
+                <h4 class="highlight">Ley de Ampere:</h4>
+                <p>$$\oint_C \mathbf{H} \cdot d\mathbf{l} = I_{enc}$$</p>
+                <p>La circulación del campo magnético es proporcional a la corriente que atraviesa el contorno.</p>
+            </div>
+        </section>
+
+        <section id="unidad-2" class="glass card" style="margin-bottom: 40px; padding: 40px;">
+            <div class="badge">UNIDAD II</div>
+            <h3>Operadores Diferenciales & Condiciones de Borde</h3>
+            <p>Para medios inhomogéneos o fronteras entre materiales, usamos las formas diferenciales y las condiciones de salto.</p>
+            
+            <div class="math-block">
+                <h4 class="highlight">Ecuaciones de Maxwell (Forma Diferencial):</h4>
+                <p>$$\nabla \cdot \mathbf{D} = \rho_v$$</p>
+                <p>$$\nabla \times \mathbf{E} = -\frac{\partial \mathbf{B}}{\partial t}$$</p>
+            </div>
+
+            <h4 style="margin-top: 20px;">Condiciones de Borde:</h4>
+            <p>Componente tangencial de E: $$E_{1t} = E_{2t}$$</p>
+            <p>Componente normal de D: $$D_{1n} - D_{2n} = \rho_s$$</p>
+        </section>
+
+        <section id="unidad-3" class="glass card" style="margin-bottom: 40px; padding: 40px;">
+            <div class="badge">UNIDAD III</div>
+            <h3>Electrostática & Potencial</h3>
+            <p>En el estado estacionario (DC), el campo eléctrico es conservativo y deriva de un potencial escalar.</p>
+            
+            <div class="math-block">
+                <h4 class="highlight">Ecuación de Poisson:</h4>
+                <p>$$\nabla^2 V = -\frac{\rho}{\epsilon}$$</p>
+                <p>Permite hallar el potencial V dada una distribución de carga.</p>
+            </div>
+            
+            <div class="math-block">
+                <h4 class="highlight">Relación Campo-Potencial:</h4>
+                <p>$$\mathbf{E} = -\nabla V$$</p>
+            </div>
+        </section>
+
+        <section id="unidad-4" class="glass card" style="margin-bottom: 40px; padding: 40px;">
+            <div class="badge">UNIDAD IV</div>
+            <h3>Magnetostática & Circuitos Magnéticos</h3>
+            <p>Corrientes estacionarias producen campos magnéticos estables. La analogía con circuitos eléctricos es clave en ingeniería.</p>
+            
+            <div class="math-block">
+                <h4 class="highlight">Ley de Biot-Savart:</h4>
+                <p>$$\mathbf{B} = \frac{\mu_0 I}{4\pi} \int \frac{d\mathbf{l} \times \mathbf{a}_r}{r^2}$$</p>
+            </div>
+
+            <div class="math-block">
+                <h4 class="highlight">Circuito Magnético (Ohm Magnético):</h4>
+                <p>$$\mathcal{F} = \Phi \mathcal{R}$$</p>
+                <p>Fuerza magnetomotriz es igual al flujo por la reluctancia.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 SARGAS PRO ENGINEERING | ELECTRODYNAMICS THEORY</p>
+        </div>
+    </footer>
+
+</body>
+</html>

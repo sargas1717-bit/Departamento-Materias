@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tips & Fenomenología | Electrodinámica I</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+    <style>
+        .tip-box {
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0 15px 15px 0;
+            transition: var(--transition);
+        }
+        .tip-box:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateX(10px);
+        }
+        .icon-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body class="fade-in">
+
+    <nav class="container glass" style="margin-top: 20px;">
+        <a href="../index.html">Inicio</a>
+        <a href="Teoria.html">Teoría</a>
+        <a href="Tips_Phenomena.html" class="active">Tips & Fenómenos</a>
+    </nav>
+
+    <main class="container">
+        <header>
+            <h1 class="main-title">Fenomenología Aplicada</h1>
+            <p class="subtitle">¿POR QUÉ LAS COSAS SUCEDEN DE ESTA MANERA?</p>
+        </header>
+
+        <section class="glass card">
+            <div class="badge">CONCEPTO CLAVE</div>
+            <h3>La Ley del Inverso del Cuadrado ($1/r^2$)</h3>
+            <p>Muchas fórmulas en electromagnetismo dependen de $1/r^2$. Esto no es una coincidencia arbitraria.</p>
+            
+            <div class="tip-box">
+                <div class="icon-circle">?</div>
+                <h4 class="highlight">La Explicación Geométrica</h4>
+                <p>Imagina una carga puntual como una fuente de luz que emite "líneas de flujo" en todas direcciones. A medida que te alejas, esas líneas se dispersan sobre la superficie de una esfera. Como el área de la esfera es $4\pi r^2$, la densidad de líneas (es decir, la intensidad del campo) disminuye proporcionalmente a esa área.</p>
+                <p><strong>Dato:</strong> Si el universo tuviera 4 dimensiones espaciales, la ley sería $1/r^3$.</p>
+            </div>
+        </section>
+
+        <section class="glass card" style="margin-top: 40px;">
+            <div class="badge">DATO CURIOSO</div>
+            <h3>¿Por qué la Permatividad $(\epsilon)$ importa?</h3>
+            <p>La permatividad describe cómo un material "se permite" ser polarizado por un campo eléctrico.</p>
+            
+            <div class="tip-box" style="border-color: var(--secondary);">
+                <div class="icon-circle" style="background: var(--secondary);">!</div>
+                <h4 class="highlight">El Efecto del Medio</h4>
+                <p>En el vacío, los campos viajan sin resistencia. En un material (dieléctrico), los átomos se estiran y crean sus propios microcampos opuestos. Este fenómeno reduce la fuerza total del campo original. Por eso la fuerza de Coulomb es menor en el agua que en el aire.</p>
+            </div>
+        </section>
+
+        <section class="glass card" style="margin-top: 40px;">
+            <div class="badge">TÉCNICA DE SIMULACIÓN</div>
+            <h3>Simetría: El Superpoder de Gauss</h3>
+            <div class="math-block">
+                <p>¿Cuándo usar la Ley de Gauss en lugar de la Integral Directa?</p>
+            </div>
+            <div class="tip-box" style="border-color: var(--accent);">
+                <h4 class="highlight">El Truco Maestro</h4>
+                <p>Usa Gauss solo cuando el campo $\mathbf{E}$ sea constante sobre la superficie que elijas. Si la superficie "envuelve" la carga de tal manera que cada punto esté a la misma distancia, la integral se convierte en una simple multiplicación. ¡Magia matemática!</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 SARGAS PRO ENGINEERING | CONCEPTUAL PHYSICS GUIDE</p>
+        </div>
+    </footer>
+
+</body>
+</html>

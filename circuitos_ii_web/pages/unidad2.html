@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidad II: Circuitos RLC - Circuitos II</title>
+    <!-- Tailwind CSS para utilidades rápidas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos, Gráficos y Matemáticas -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        /* Estilos base (Heredados del diseño principal) */
+        :root {
+            --bg-color: #0f172a; /* Slate 900 */
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #6366f1; /* Indigo 500 */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%);
+            background-attachment: fixed;
+        }
+        .app-container { max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #94a3b8; font-weight: 500; text-decoration: none;
+            margin-bottom: 2rem; transition: color 0.3s;
+        }
+        .back-btn:hover { color: white; }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .theory-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .theory-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
+        }
+
+        .simulator-layout { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        @media (min-width: 1024px) { .simulator-layout { grid-template-columns: 350px 1fr; } }
+        
+        .control-group { margin-bottom: 1.5rem; }
+        .control-group label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 600; color: #cbd5e1; }
+        .input-with-value { display: flex; align-items: center; gap: 1rem; }
+        .value-display { 
+            font-family: 'Courier New', Courier, monospace; 
+            background: rgba(0,0,0,0.4); 
+            padding: 0.35rem 0.75rem; 
+            border-radius: 0.5rem; 
+            font-size: 0.875rem; 
+            min-width: 90px; 
+            text-align: right;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            transition: background 0.3s;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        /* Dynamic Theme Colors for States */
+        .theme-under { --accent: #3b82f6; } /* Blue */
+        .theme-critical { --accent: #10b981; } /* Green */
+        .theme-over { --accent: #f97316; } /* Orange */
+
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <main class="main-content">
+            <a href="../index.html" class="back-btn">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+            </a>
+
+            <header class="mb-10">
+                <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+                    Ingeniería Eléctrica - Circuitos II
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Unidad II: Circuitos RLC</h1>
+                <p class="text-slate-400 text-lg max-w-3xl">
+                    Análisis de circuitos de segundo orden. Estudio del comportamiento oscilatorio, cálculo de raíces características y determinación de la respuesta subamortiguada, sobreamortiguada y críticamente amortiguada.
+                </p>
+            </header>
+
+            <!-- Sección de Teoría -->
+            <section class="theory-section mb-10">
+                <div class="glass-panel">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                        <i data-lucide="book-open" class="text-indigo-400"></i> Fundamentos de Segundo Orden
+                    </h2>
+                    
+                    <div class="mb-6 text-slate-300 text-sm md:text-base leading-relaxed">
+                        <p>Los circuitos RLC (que contienen resistores, inductores y capacitores) se describen mediante una <strong>ecuación diferencial lineal de segundo orden</strong>. La naturaleza de su respuesta transitoria depende enteramente de dos parámetros fundamentales del sistema.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Tarjeta de Parámetros -->
+                        <div class="theory-card">
+                            <h3 class="text-xl font-bold mb-4 text-indigo-300 flex items-center gap-2">
+                                <i data-lucide="settings-2" class="w-5 h-5"></i> Parámetros del Sistema
+                            </h3>
+                            <div class="space-y-4 text-sm text-slate-300">
+                                <div class="bg-black/30 p-4 rounded-lg border border-white/5">
+                                    <p class="font-bold text-white mb-2">Frecuencia de Neper o Amortiguamiento (\(\alpha\)):</p>
+                                    <p class="mb-2">Mide qué tan rápido decae la respuesta transitoria del circuito. Para un RLC en <strong>serie</strong>:</p>
+                                    <div class="text-center font-mono text-lg text-indigo-200">\[ \alpha = \frac{R}{2L} \text{ [rad/s]} \]</div>
+                                </div>
+                                <div class="bg-black/30 p-4 rounded-lg border border-white/5">
+                                    <p class="font-bold text-white mb-2">Frecuencia Natural de Resonancia (\(\omega_0\)):</p>
+                                    <p class="mb-2">Es la frecuencia a la que el sistema oscilaría si no hubiera resistencia (amortiguamiento nulo).</p>
+                                    <div class="text-center font-mono text-lg text-indigo-200">\[ \omega_0 = \frac{1}{\sqrt{LC}} \text{ [rad/s]} \]</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta de Casos -->
+                        <div class="theory-card">
+                            <h3 class="text-xl font-bold mb-4 text-purple-300 flex items-center gap-2">
+                                <i data-lucide="activity-square" class="w-5 h-5"></i> Tipos de Respuesta
+                            </h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="border-l-4 border-orange-500 pl-4 py-1">
+                                    <h4 class="font-bold text-orange-400">Sobreamortiguado (\(\alpha > \omega_0\))</h4>
+                                    <p class="text-slate-400">Raíces reales y distintas. El sistema regresa lentamente al equilibrio sin oscilar.</p>
+                                    <p class="font-mono text-xs mt-1 text-slate-500">\( s_{1,2} = -\alpha \pm \sqrt{\alpha^2 - \omega_0^2} \)</p>
+                                </div>
+                                <div class="border-l-4 border-green-500 pl-4 py-1">
+                                    <h4 class="font-bold text-green-400">Críticamente Amortiguado (\(\alpha = \omega_0\))</h4>
+                                    <p class="text-slate-400">Raíces reales e iguales. Es el retorno más rápido al equilibrio sin llegar a oscilar.</p>
+                                    <p class="font-mono text-xs mt-1 text-slate-500">\( s_1 = s_2 = -\alpha \)</p>
+                                </div>
+                                <div class="border-l-4 border-blue-500 pl-4 py-1">
+                                    <h4 class="font-bold text-blue-400">Subamortiguado (\(\alpha < \omega_0\))</h4>
+                                    <p class="text-slate-400">Raíces complejas conjugadas. El sistema oscila mientras decae exponencialmente.</p>
+                                    <p class="font-mono text-xs mt-1 text-slate-500">\( s_{1,2} = -\alpha \pm j\omega_d \) (donde \(\omega_d = \sqrt{\omega_0^2 - \alpha^2}\))</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Simulador Interactivo -->
+            <section class="simulator-section mb-10" id="simulatorContainer">
+                <div class="glass-panel">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-white/10 pb-4">
+                        <h2 class="text-2xl font-bold flex items-center gap-3">
+                            <i data-lucide="waves" class="text-indigo-400"></i> Osciloscopio Virtual: RLC Serie
+                        </h2>
+                        <div class="flex gap-2 items-center bg-black/30 px-3 py-1.5 rounded-full border border-white/10">
+                            <span class="flex h-2.5 w-2.5 relative">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+                            </span>
+                            <span class="text-xs text-slate-300 font-mono tracking-wider">RESPUESTA AL ESCALÓN (CARGA)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="simulator-layout">
+                        <!-- Panel de Controles -->
+                        <aside class="controls-panel bg-black/20 p-6 rounded-xl border border-white/5">
+                            <div class="control-group">
+                                <label>Voltaje de Fuente (\(V_s\)) [V]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="vsRange" min="1" max="50" step="1" value="20">
+                                    <span class="value-display" id="vsVal">20 V</span>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label>Resistencia (\(R\)) [\(\Omega\)]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="rRange" min="10" max="1000" step="5" value="100">
+                                    <span class="value-display" id="rVal">100 \(\Omega\)</span>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label>Inductancia (\(L\)) [mH]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="lRange" min="1" max="500" step="1" value="50">
+                                    <span class="value-display" id="lVal">50 mH</span>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label>Capacitancia (\(C\)) [\(\mu F\)]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="cRange" min="0.1" max="200" step="0.1" value="10">
+                                    <span class="value-display" id="cVal">10 \(\mu F\)</span>
+                                </div>
+                            </div>
+
+                            <!-- Resultados en vivo -->
+                            <div id="resultsCard" class="p-4 bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-xl mt-6 shadow-inner transition-colors duration-500">
+                                <h4 class="text-white font-bold mb-3 text-sm uppercase tracking-wider flex items-center justify-between">
+                                    Estado del Sistema
+                                    <span id="dampingState" class="px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-widest bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">---</span>
+                                </h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center border-b border-white/5 pb-1">
+                                        <span class="text-sm text-slate-400">\(\alpha\) (Amortiguamiento):</span>
+                                        <span id="alphaVal" class="text-white font-mono font-bold">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center border-b border-white/5 pb-1">
+                                        <span class="text-sm text-slate-400">\(\omega_0\) (Frec. Natural):</span>
+                                        <span id="omegaVal" class="text-white font-mono font-bold">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-1">
+                                        <span class="text-sm text-slate-400">Relación (\(\zeta = \alpha/\omega_0\)):</span>
+                                        <span id="zetaVal" class="text-white font-mono font-bold">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <!-- Panel de Visualización -->
+                        <div class="viz-panel flex flex-col h-full">
+                            <div class="h-[350px] md:h-[400px] w-full bg-black/30 rounded-t-xl p-4 border border-white/5 relative">
+                                <canvas id="rlcChart"></canvas>
+                            </div>
+                            
+                            <!-- Explicación Paso a Paso Dinámica -->
+                            <div class="flex-1 p-6 border border-t-0 border-white/5 bg-slate-900/50 rounded-b-xl">
+                                <h4 class="text-slate-300 font-bold mb-3 flex items-center gap-2 text-sm uppercase tracking-wider">
+                                    <i data-lucide="calculator" class="w-4 h-4"></i> Análisis y Ecuación de la Respuesta
+                                </h4>
+                                <div id="proceduralText" class="text-sm md:text-base text-slate-300 bg-black/20 p-4 rounded-lg border border-white/5 overflow-x-auto font-mono leading-relaxed min-h-[120px]">
+                                    Cargando solución...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Configuración Inicial de Chart.js
+        const ctx = document.getElementById('rlcChart').getContext('2d');
+        
+        let rlcChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Voltaje en Capacitor v_c(t)',
+                    data: [],
+                    borderColor: '#6366f1',
+                    borderWidth: 3,
+                    fill: true,
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    x: { 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false }, 
+                        ticks: { color: '#94a3b8', maxTicksLimit: 8 },
+                        title: { display: true, text: 'Tiempo (ms)', color: '#cbd5e1', font: {size: 13} }
+                    },
+                    y: { 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false }, 
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: 'Voltaje (V)', color: '#cbd5e1', font: {size: 13} }
+                    }
+                },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Voltaje: ${context.parsed.y.toFixed(3)} V`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // DOM Elements
+        const simulatorContainer = document.getElementById('simulatorContainer');
+        const resultsCard = document.getElementById('resultsCard');
+        const dampingStateBadge = document.getElementById('dampingState');
+        const alphaValNode = document.getElementById('alphaVal');
+        const omegaValNode = document.getElementById('omegaVal');
+        const zetaValNode = document.getElementById('zetaVal');
+        const proceduralText = document.getElementById('proceduralText');
+
+        function solveRLC() {
+            // Leer Valores
+            const Vs = parseFloat(document.getElementById('vsRange').value);
+            const R = parseFloat(document.getElementById('rRange').value);
+            const L = parseFloat(document.getElementById('lRange').value) * 1e-3; // mH a H
+            const C = parseFloat(document.getElementById('cRange').value) * 1e-6; // uF a F
+
+            // Actualizar UI de Rangos
+            document.getElementById('vsVal').innerText = Vs + ' V';
+            document.getElementById('rVal').innerText = R + ' Ω';
+            document.getElementById('lVal').innerText = (L * 1000).toFixed(0) + ' mH';
+            document.getElementById('cVal').innerText = (C * 1e6).toFixed(1) + ' μF';
+
+            // Cálculos del Sistema
+            const alpha = R / (2 * L);
+            const omega0 = 1 / Math.sqrt(L * C);
+            const zeta = alpha / omega0;
+            
+            // Actualizar panel de parámetros
+            alphaValNode.innerText = alpha.toFixed(1) + ' rad/s';
+            omegaValNode.innerText = omega0.toFixed(1) + ' rad/s';
+            zetaValNode.innerText = zeta.toFixed(3);
+
+            let state, colorHex, rgbColor, themeClass, solveText;
+            const labels = [];
+            const data = [];
+            const steps = 300;
+            
+            // Tiempo dinámico para la gráfica dependiendo de qué tan lento decae
+            // Si alpha es muy bajo, tomará mucho tiempo en decaer. Limitamos tMax.
+            let tMax = 6 / Math.min(alpha, omega0); 
+            if (tMax > 0.5) tMax = 0.5; // Limitar a 500ms maximo de visualización
+            if (tMax < 0.01) tMax = 0.01; // Mínimo 10ms
+
+            // Tolerancia para considerarlo "Crítico" ya que los sliders saltan números
+            const tolerance = 0.05; 
+
+            if (Math.abs(zeta - 1) < tolerance) {
+                // --- CRÍTICAMENTE AMORTIGUADO ---
+                state = "Crítico";
+                colorHex = '#10b981'; // Emerald 500
+                rgbColor = '16, 185, 129';
+                themeClass = 'theme-critical';
+                
+                const D2 = -Vs;
+                const D1 = -alpha * Vs;
+                
+                solveText = `
+                    <div class="text-green-300 font-bold mb-2">1. Condición: \\( \\alpha \\approx \\omega_0 \\) (Críticamente Amortiguado)</div>
+                    2. Raíz doble: \\( s_1 = s_2 = -\\alpha = -${alpha.toFixed(1)} \\)<br>
+                    3. Ecuación General: \\( v_c(t) = V_s + (D_1 t + D_2)e^{-\\alpha t} \\)<br>
+                    4. Ecuación Final: \\( v_c(t) = ${Vs} + (${D1.toFixed(1)}t - ${Vs})e^{-${alpha.toFixed(1)}t} \\)
+                `;
+
+                for(let i=0; i<=steps; i++) {
+                    let t = (tMax * i) / steps;
+                    labels.push((t*1000).toFixed(2));
+                    data.push(Vs + (D1*t + D2)*Math.exp(-alpha*t));
+                }
+
+            } else if (zeta > 1) {
+                // --- SOBREAMORTIGUADO ---
+                state = "Sobreamortiguado";
+                colorHex = '#f97316'; // Orange 500
+                rgbColor = '249, 115, 22';
+                themeClass = 'theme-over';
+
+                const s1 = -alpha + Math.sqrt(alpha**2 - omega0**2);
+                const s2 = -alpha - Math.sqrt(alpha**2 - omega0**2);
+                const A2 = Vs * s1 / (s2 - s1);
+                const A1 = -Vs - A2;
+
+                solveText = `
+                    <div class="text-orange-300 font-bold mb-2">1. Condición: \\( \\alpha > \\omega_0 \\) (Sobreamortiguado)</div>
+                    2. Raíces reales distintas: \\( s_1 = ${s1.toFixed(1)} \\) y \\( s_2 = ${s2.toFixed(1)} \\)<br>
+                    3. Ecuación General: \\( v_c(t) = V_s + A_1 e^{s_1 t} + A_2 e^{s_2 t} \\)<br>
+                    4. Ecuación Final: \\( v_c(t) = ${Vs} ${A1>=0?'+':''} ${A1.toFixed(2)}e^{${s1.toFixed(1)}t} ${A2>=0?'+':''} ${A2.toFixed(2)}e^{${s2.toFixed(1)}t} \\)
+                `;
+
+                for(let i=0; i<=steps; i++) {
+                    let t = (tMax * i) / steps;
+                    labels.push((t*1000).toFixed(2));
+                    data.push(Vs + A1*Math.exp(s1*t) + A2*Math.exp(s2*t));
+                }
+
+            } else {
+                // --- SUBAMORTIGUADO ---
+                state = "Subamortiguado";
+                colorHex = '#3b82f6'; // Blue 500
+                rgbColor = '59, 130, 246';
+                themeClass = 'theme-under';
+
+                const wd = Math.sqrt(omega0**2 - alpha**2);
+                const B1 = -Vs;
+                const B2 = -(alpha * Vs) / wd;
+
+                solveText = `
+                    <div class="text-blue-300 font-bold mb-2">1. Condición: \\( \\alpha < \\omega_0 \\) (Subamortiguado)</div>
+                    2. Frec. amortiguada: \\( \\omega_d = \\sqrt{\\omega_0^2 - \\alpha^2} = ${wd.toFixed(1)} \\text{ rad/s} \\)<br>
+                    3. Raíces complejas: \\( s_{1,2} = -${alpha.toFixed(1)} \\pm j${wd.toFixed(1)} \\)<br>
+                    4. Ecuación Final: \\( v_c(t) = ${Vs} + e^{-${alpha.toFixed(1)}t}[-${Vs}\\cos(${wd.toFixed(1)}t) ${B2>=0?'+':''} ${B2.toFixed(2)}\\sin(${wd.toFixed(1)}t)] \\)
+                `;
+
+                for(let i=0; i<=steps; i++) {
+                    let t = (tMax * i) / steps;
+                    labels.push((t*1000).toFixed(2));
+                    data.push(Vs + Math.exp(-alpha*t)*(B1*Math.cos(wd*t) + B2*Math.sin(wd*t)));
+                }
+            }
+
+            // Actualizar UI con colores dinámicos
+            simulatorContainer.className = `simulator-section mb-10 ${themeClass}`;
+            
+            dampingStateBadge.innerText = state;
+            resultsCard.className = `p-4 border rounded-xl mt-6 shadow-inner transition-colors duration-500 bg-black/40`;
+            resultsCard.style.borderColor = `rgba(${rgbColor}, 0.3)`;
+            
+            dampingStateBadge.style.backgroundColor = `rgba(${rgbColor}, 0.2)`;
+            dampingStateBadge.style.color = colorHex;
+            dampingStateBadge.style.borderColor = `rgba(${rgbColor}, 0.4)`;
+            
+            zetaValNode.style.color = colorHex;
+            proceduralText.innerHTML = solveText;
+
+            // Renderizar matemáticas
+            if (window.MathJax) {
+                MathJax.typesetPromise([proceduralText, alphaValNode, omegaValNode]);
+            }
+
+            // Actualizar Gráfico
+            let newGradient = ctx.createLinearGradient(0, 0, 0, 400);
+            newGradient.addColorStop(0, `rgba(${rgbColor}, 0.3)`);
+            newGradient.addColorStop(1, `rgba(${rgbColor}, 0.0)`);
+
+            rlcChart.data.labels = labels;
+            rlcChart.data.datasets[0].data = data;
+            rlcChart.data.datasets[0].borderColor = colorHex;
+            rlcChart.data.datasets[0].backgroundColor = newGradient;
+            
+            // Ajustar escala Y dinámicamente si hay sobreimpulso
+            const maxY = Math.max(...data);
+            rlcChart.options.scales.y.max = maxY > Vs * 1.2 ? maxY * 1.1 : Vs * 1.5;
+            rlcChart.options.scales.y.min = 0;
+
+            rlcChart.update();
+        }
+
+        // Listeners de eventos
+        ['vsRange', 'rRange', 'lRange', 'cRange'].forEach(id => {
+            document.getElementById(id).addEventListener('input', solveRLC);
+        });
+
+        // Inicio
+        window.addEventListener('load', () => {
+            setTimeout(solveRLC, 500); 
+        });
+    </script>
+</body>
+</html>

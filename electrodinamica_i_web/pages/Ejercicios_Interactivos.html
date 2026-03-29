@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Dynamics Pro Solver | Sargas Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        :root { --sidebar-width: 280px; }
+        .app-layout { display: flex; min-height: 100vh; margin-top: 20px; gap: 20px; }
+        .sidebar { width: var(--sidebar-width); height: fit-content; position: sticky; top: 20px; display: flex; flex-direction: column; gap: 5px; padding: 15px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 0.85rem; color: var(--text-muted); border: 1px solid transparent; }
+        .nav-item.active { background: rgba(0, 242, 254, 0.1); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+        .main-content { flex: 1; min-width: 0; }
+        .solver-card { display: none; }
+        .solver-card.active { display: block; animation: fadeIn 0.4s ease; }
+        
+        /* Graphics & Viz */
+        .viz-canvas { width: 100%; height: 450px; background: rgba(0, 0, 0, 0.2); border-radius: 15px; margin-bottom: 20px; overflow: hidden; }
+        
+        .controls-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .control-group { background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 10px; }
+        
+        /* Pedagogy Styles */
+        .procedural-steps { background: rgba(0, 0, 0, 0.2); border-radius: 15px; padding: 30px; border-left: 5px solid var(--primary); }
+        .pedagogy-step { margin-bottom: 30px; }
+        .pedagogy-step h4 { color: var(--primary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; border-bottom: 1px solid rgba(0, 242, 254, 0.2); padding-bottom: 5px; }
+        .pedagogy-step p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px; }
+        .math-result { background: rgba(0, 242, 254, 0.05); padding: 15px; border-radius: 8px; margin: 10px 0; }
+
+        .btn-action { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 10px 25px; border-radius: 30px; cursor: pointer; transition: 0.3s; width: 100%; font-family: 'Orbitron'; font-size: 0.8rem; }
+        .btn-action.active { background: var(--primary); color: black; box-shadow: 0 0 20px var(--primary); }
+
+        @media (max-width: 950px) { .app-layout { flex-direction: column; } .sidebar { width: 100%; position: static; flex-direction: row; overflow-x: auto; } }
+    </style>
+</head>
+<body class="fade-in">
+
+    <main class="container">
+        <header style="margin-top: 40px;">
+            <h1 class="main-title">E-Dynamics Pro Hub</h1>
+            <p class="subtitle uppercase tracking-widest">Suite de Resolución Avanzada & Análisis Físico</p>
+        </header>
+
+        <div class="app-layout">
+            <aside class="sidebar glass">
+                <div class="nav-item active" onclick="switchSolver('coulomb', this)">Ley de Coulomb</div>
+                <div class="nav-item" onclick="switchSolver('gauss', this)">Leyes de Gauss</div>
+                <div class="nav-item" onclick="switchSolver('potential', this)">Potencial Eléctrico</div>
+                <div class="nav-item" onclick="switchSolver('faraday', this)">Ley de Faraday-Lenz</div>
+                <div class="nav-item" onclick="switchSolver('ampere', this)">Leyes de Ampere-Maxwell</div>
+                <div class="nav-item" onclick="switchSolver('biotsavart', this)">Ley de Biot-Savart</div>
+            </aside>
+
+            <section class="main-content">
+                <!-- COULOMB SECTION -->
+                <div id="solver-coulomb" class="solver-card active glass card">
+                    <div class="badge">ESTÁTICA VECTORIAL</div>
+                    <h3>Interacción entre Cargas</h3>
+                    <div class="controls-panel">
+                        <div class="control-group"><label>$q_1$ [nC]: <span id="c-q1-val">10</span></label><input type="range" id="c-q1" min="-100" max="100" value="10" oninput="updateCoulomb()"></div>
+                        <div class="control-group"><label>$q_2$ [nC]: <span id="c-q2-val">-10</span></label><input type="range" id="c-q2" min="-100" max="100" value="-10" oninput="updateCoulomb()"></div>
+                        <div class="control-group"><label>Separación $r$ [m]: <span id="c-r-val">3</span></label><input type="range" id="c-r" min="1" max="10" step="0.5" value="3" oninput="updateCoulomb()"></div>
+                    </div>
+                    <div class="viz-canvas" id="viz-coulomb"></div>
+                    <div id="math-coulomb" class="procedural-steps"></div>
+                </div>
+
+                <!-- GAUSS SECTION -->
+                <div id="solver-gauss" class="solver-card glass card">
+                    <div class="badge">ANÁLISIS DE FLUJO</div>
+                    <h3>Simetrías Gaussianas</h3>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <label>Geometría:</label>
+                            <select id="g-type" onchange="updateGauss()">
+                                <option value="spherical">Spherica (Esfera)</option>
+                                <option value="cylindrical">Cilíndrica (Hilo)</option>
+                                <option value="planar">Planar (Plano)</option>
+                            </select>
+                        </div>
+                        <div class="control-group"><label>Carga $Q$ / Densidad: <span id="g-q-val">50</span></label><input type="range" id="g-q" min="1" max="500" value="50" oninput="updateGauss()"></div>
+                        <div class="control-group"><label>Radio de análisis $r$: <span id="g-r-val">2.0</span></label><input type="range" id="g-r" min="0.5" max="10" step="0.1" value="2" oninput="updateGauss()"></div>
+                    </div>
+                    <div class="viz-canvas" id="viz-gauss"></div>
+                    <div id="math-gauss" class="procedural-steps"></div>
+                </div>
+
+                <!-- POTENTIAL SECTION -->
+                <div id="solver-potential" class="solver-card glass card">
+                    <div class="badge">ENERGÍA & TRABAJO</div>
+                    <h3>Mapa de Potencial</h3>
+                    <div class="controls-panel">
+                        <div class="control-group"><label>Carga $Q$ [nC]: <span id="p-q-val">100</span></label><input type="range" id="p-q" min="1" max="500" value="100" oninput="updatePotential()"></div>
+                    </div>
+                    <div class="viz-canvas" id="viz-potential"></div>
+                    <div id="math-potential" class="procedural-steps"></div>
+                </div>
+
+                <!-- FARADAY SECTION -->
+                <div id="solver-faraday" class="solver-card glass card">
+                    <div class="badge">INDUCCIÓN DINÁMICA</div>
+                    <h3>Ley de Faraday-Lenz</h3>
+                    <button id="f-anim-btn" class="btn-action" onclick="toggleFaraday()">Iniciar Simulación Dinámica</button>
+                    <div class="controls-panel" style="margin-top: 20px;">
+                        <div class="control-group"><label>Velocidad Imán $v$: <span id="f-v-val">1.0</span></label><input type="range" id="f-v" min="0.1" max="5" step="0.1" value="1" oninput="updateFaraday()"></div>
+                    </div>
+                    <div class="viz-canvas" id="viz-faraday"></div>
+                    <div id="math-faraday" class="procedural-steps"></div>
+                </div>
+
+                <!-- AMPERE-MAXWELL SECTION -->
+                <div id="solver-ampere" class="solver-card glass card">
+                    <div class="badge">MAGNETISMO AC/DC</div>
+                    <h3>Ley de Ampere-Maxwell</h3>
+                    <div class="controls-panel">
+                        <div class="control-item"><label>Corriente $I$ [A]: <span id="a-i-val">10</span></label><input type="range" id="a-i" min="1" max="50" value="10" oninput="updateAmpere()"></div>
+                        <div class="control-item"><label>Desplazamiento $\partial D/\partial t$: <span id="a-d-val">5</span></label><input type="range" id="a-d" min="0" max="20" value="5" oninput="updateAmpere()"></div>
+                    </div>
+                    <div class="viz-canvas" id="viz-ampere"></div>
+                    <div id="math-ampere" class="procedural-steps"></div>
+                </div>
+
+                <!-- BIOT-SAVART SECTION -->
+                <div id="solver-biotsavart" class="solver-card glass card">
+                    <div class="badge">FUENTES DE CAMPO B</div>
+                    <h3>Ley de Biot-Savart</h3>
+                    <div class="controls-panel">
+                        <div class="control-item"><label>Corriente de Línea $I$: <span id="b-i-val">20</span></label><input type="range" id="b-i" min="1" max="100" value="20" oninput="updateBiotSavart()"></div>
+                        <div class="control-item"><label>Radio $\rho$ [m]: <span id="b-r-val">2.5</span></label><input type="range" id="b-r" min="0.5" max="10" step="0.5" value="2.5" oninput="updateBiotSavart()"></div>
+                    </div>
+                    <div class="viz-canvas" id="viz-biotsavart"></div>
+                    <div id="math-biotsavart" class="procedural-steps"></div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const K = 8.99e9, MU0 = 4e-7 * Math.PI;
+        let animationFrame = null, time = 0, faradayActive = false;
+
+        function switchSolver(id, el) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.solver-card').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById(`solver-${id}`).classList.add('active');
+            stopAllAnimations();
+            initSolver(id);
+        }
+
+        function stopAllAnimations() {
+            faradayActive = false;
+            cancelAnimationFrame(animationFrame);
+            const btn = document.getElementById('f-anim-btn');
+            if(btn) { btn.classList.remove('active'); btn.innerText = "Iniciar Simulación Dinámica"; }
+        }
+
+        function initSolver(id) {
+            if(id === 'coulomb') updateCoulomb();
+            if(id === 'gauss') updateGauss();
+            if(id === 'potential') updatePotential();
+            if(id === 'faraday') updateFaraday();
+            if(id === 'ampere') updateAmpere();
+            if(id === 'biotsavart') updateBiotSavart();
+        }
+
+        function renderMath() {
+            renderMathInElement(document.body, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
+        }
+
+        // --- 1. LEY DE COULOMB ---
+        function updateCoulomb() {
+            const q1 = parseFloat(document.getElementById('c-q1').value), q2 = parseFloat(document.getElementById('c-q2').value), r = parseFloat(document.getElementById('c-r').value);
+            document.getElementById('c-q1-val').innerText = q1; document.getElementById('c-q2-val').innerText = q2; document.getElementById('c-r-val').innerText = r;
+            const F = K * Math.abs(q1 * q2 * 1e-18) / (r*r);
+            
+            document.getElementById('math-coulomb').innerHTML = `
+                <div class="pedagogy-step">
+                    <h4>Paso 1: Identificación Física</h4>
+                    <p>Tenemos dos cargas puntuales $q_1$ y $q_2$ separadas por una distancia $r$. Dado que sus signos son ${q1*q2 < 0 ? 'opuestos' : 'iguales'}, la fuerza será de **${q1*q2 < 0 ? 'atracción' : 'repulsión'}**.</p>
+                </div>
+                <div class="pedagogy-step">
+                    <h4>Paso 2: Aplicación de la Forma Vectorial</h4>
+                    <div class="math-result">$$\\mathbf{F}_{12} = \\frac{1}{4\\pi\\epsilon_0} \\frac{q_1 q_2}{r^2} \\mathbf{a}_r$$</div>
+                </div>
+                <div class="pedagogy-step">
+                    <h4>Paso 3: Cálculo de Magnitud</h4>
+                    <p>Sustituyendo magnitudes: $F = (8.99 \\times 10^9) \\frac{|(${q1}\\text{nC})(${q2}\\text{nC})|}{${r}^2} = ${F.toExponential(4)} \\text{ N}$.</p>
+                </div>
+            `;
+            renderMath();
+
+            // Visualization with Cones
+            const trace1 = { type:'scatter3d', x:[0], y:[0], z:[0], mode:'markers', marker:{size:10, color:q1>0?'red':'blue'}, name:'q1' };
+            const trace2 = { type:'scatter3d', x:[r], y:[0], z:[0], mode:'markers', marker:{size:10, color:q2>0?'red':'blue'}, name:'q2' };
+            
+            // Force arrows (direction based on repulsion/attraction)
+            const dir = q1*q2 > 0 ? 1 : -1;
+            const cone = {
+                type: 'cone', x: [r], y: [0], z: [0], u: [dir * 1], v: [0], w: [0],
+                sizemode: 'absolute', sizeref: 2, anchor: 'tail', colorscale: [['0','cyan'],['1','cyan']], showscale: false
+            };
+
+            Plotly.newPlot('viz-coulomb', [trace1, trace2, cone], getCommonLayout(range=10));
+        }
+
+        // --- 2. LEYES DE GAUSS ---
+        function updateGauss() {
+            const sym = document.getElementById('g-type').value, Q = parseFloat(document.getElementById('g-q').value), r = parseFloat(document.getElementById('g-r').value);
+            document.getElementById('g-q-val').innerText = Q; document.getElementById('g-r-val').innerText = r;
+            
+            let D = 0, surfaceText = "", formula = "";
+            if(sym === 'spherical') { D = (Q*1e-9)/(4*Math.PI*r*r); surfaceText = "Esfera ($4\\pi r^2$)"; formula = "D = \\frac{Q}{4\\pi r^2}"; }
+            else if(sym === 'cylindrical') { D = (Q*1e-9)/(2*Math.PI*r); surfaceText = "Cilindro ($2\\pi r L$)"; formula = "D = \\frac{\\lambda}{2\\pi r}"; }
+            else { D = (Q*1e-9)/2; surfaceText = "Caja ($2A$)"; formula = "D = \\frac{\\sigma}{2}"; }
+
+            document.getElementById('math-gauss').innerHTML = `
+                <div class="pedagogy-step">
+                    <h4>Paso 1: Elección de Superficie</h4>
+                    <p>Por simetría ${sym}, elegimos una superficie gaussiana de tipo **${surfaceText}**. Aquí el campo $\\mathbf{D}$ es paralelo al diferencial de área $d\\mathbf{s}$.</p>
+                </div>
+                <div class="pedagogy-step">
+                    <h4>Paso 2: Evaluación del Flujo Eléctrico</h4>
+                    <p>$\\oint_S \\mathbf{D} \\cdot d\\mathbf{s} = D \\oint ds = D(${surfaceText.split(' ')[1].replace(/[()]/g,'')}) = Q_{enc}$</p>
+                </div>
+                <div class="pedagogy-step">
+                    <h4>Paso 3: Resultado de Densidad de Desplazamiento</h4>
+                    <div class="math-result">$$${formula} = ${D.toExponential(4)} \\text{ C/m}^2$$</div>
+                </div>
+            `;
+            renderMath();
+            Plotly.newPlot('viz-gauss', [getGaussTrace(sym, r)], getCommonLayout(range=10));
+        }
+
+        // --- 3. POTENCIAL ---
+        function updatePotential() {
+            const Q = parseFloat(document.getElementById('p-q').value);
+            document.getElementById('p-q-val').innerText = Q;
+            document.getElementById('math-potential').innerHTML = `
+                <div class="pedagogy-step">
+                    <h4>Paso 1: Definición de Trabajo</h4>
+                    <p>El potencial es el trabajo por unidad de carga necesario para mover una carga de prueba desde el infinito hasta $r$.</p>
+                </div>
+                <div class="pedagogy-step">
+                    <h4>Paso 2: Derivación de la Integral</h4>
+                    <p>$$V = -\\int_{\\infty}^r \\mathbf{E} \\cdot d\\mathbf{l} = \\frac{Q}{4\\pi\\epsilon_0 r}$$</p>
+                </div>
+            `;
+            renderMath();
+
+            // 3D Potential Mountain
+            let z = [];
+            for(let x=-5; x<=5; x+=0.5) {
+                let row = [];
+                for(let y=-5; y<=5; y+=0.5) {
+                    let r = Math.sqrt(x*x + y*y) + 0.1;
+                    row.push( (Q * 1e-9) / (r) );
+                }
+                z.push(row);
+            }
+            Plotly.newPlot('viz-potential', [{type:'surface', z:z, colorscale:'Viridis'}], {margin:{l:0,r:0,b:0,t:0}, paper_bgcolor:'rgba(0,0,0,0)'});
+        }
+
+        // --- 4. FARADAY (DYNAMIC) ---
+        function toggleFaraday() {
+            faradayActive = !faradayActive;
+            const btn = document.getElementById('f-anim-btn');
+            btn.classList.toggle('active');
+            btn.innerText = faradayActive ? "Detener Animación" : "Iniciar Simulación Dinámica";
+            if(faradayActive) animateFaraday();
+        }
+
+        function animateFaraday() {
+            if(!faradayActive) return;
+            const v = parseFloat(document.getElementById('f-v').value);
+            time += 0.05 * v;
+            const zMag = 4 * Math.sin(time);
+            const flux = Math.exp(-Math.pow(zMag, 2)); // Gaussian flux model
+            const emf = 2 * zMag * flux; // Simplified dPhi/dt
+            
+            document.getElementById('math-faraday').innerHTML = `
+                <div class="pedagogy-step">
+                    <h4>Estado Dinámico de Inducción</h4>
+                    <p>El imán se encuentra en $z = ${zMag.toFixed(2)}$, cambiando el flujo $\\Phi_B$.</p>
+                    <div class="math-result">$$\\varepsilon = -\\frac{d\\Phi_B}{dt} = ${emf.toFixed(4)} \\text{ V}$$</div>
+                </div>
+            `;
+            renderMath();
+
+            const traceCoil = { type:'scatter3d', x:Array(40).fill(0).map((_,i)=>Math.cos(i*0.5)), y:Array(40).fill(0).map((_,i)=>Math.sin(i*0.5)), z:Array(40).fill(0).map((_,i)=>(i-20)*0.1), mode:'lines', line:{color:'cyan', width:6} };
+            const traceMagnet = { type:'scatter3d', x:[0], y:[0], z:[zMag], mode:'markers', marker:{size:25, symbol:'diamond', color:zMag>0?'red':'blue'} };
+            Plotly.newPlot('viz-faraday', [traceCoil, traceMagnet], getCommonLayout(range=5));
+            animationFrame = requestAnimationFrame(animateFaraday);
+        }
+
+        function updateFaraday() { if(!faradayActive) animateFaraday(); }
+
+        // --- 5. AMPERE-MAXWELL ---
+        function updateAmpere() {
+            const I = parseFloat(document.getElementById('a-i').value), dD = parseFloat(document.getElementById('a-d').value);
+            document.getElementById('a-i-val').innerText = I; document.getElementById('a-d-val').innerText = dD;
+            document.getElementById('math-ampere').innerHTML = `
+                <div class="pedagogy-step">
+                    <h4>Resumen de Corrientes</h4>
+                    <p>La circulación de $\\mathbf{H}$ se debe tanto a la corriente real de electrones ($I_{cond}$) como a la variación del campo eléctrico ($I_{despl}$).</p>
+                    <div class="math-result">$$\\oint_C \\mathbf{H} \\cdot d\\mathbf{l} = I_{enc} + \\int_S \\frac{\\partial \\mathbf{D}}{\\partial t} \\cdot d\\mathbf{s} = ${(I + dD).toFixed(2)} \\text{ A}$$</div>
+                </div>
+            `;
+            renderMath();
+            const wire = { type:'scatter3d', x:[0,0], y:[0,0], z:[-5,5], mode:'lines', line:{color:'orange', width:10} };
+            const loop = { type:'scatter3d', x:Array(20).fill(0).map((_,i)=>2*Math.cos(i*0.4)), y:Array(20).fill(0).map((_,i)=>2*Math.sin(i*0.4)), z:[0], mode:'lines', line:{color:'cyan', dash:'dash'} };
+            Plotly.newPlot('viz-ampere', [wire, loop], getCommonLayout(range=6));
+        }
+
+        // --- 6. BIOT-SAVART ---
+        function updateBiotSavart() {
+            const I = parseFloat(document.getElementById('b-i').value), rho = parseFloat(document.getElementById('b-r').value);
+            document.getElementById('b-i-val').innerText = I; document.getElementById('b-r-val').innerText = rho;
+            const B = (MU0 * I) / (2 * Math.PI * rho);
+            document.getElementById('math-biotsavart').innerHTML = `
+                <div class="pedagogy-step">
+                    <h4>Análisis de Contribución Differential</h4>
+                    <p>Integramos el efecto de infinitos segmentos $dl$. Para un hilo infinito:</p>
+                    <div class="math-result">$$B = \\frac{\\mu_0 I}{2\\pi\\rho} = ${B.toExponential(4)} \\text{ T}$$</div>
+                </div>
+            `;
+            renderMath();
+            // Field Rings
+            let rings = [];
+            for(let rIdx=1; rIdx<=5; rIdx++) {
+                rings.push({ type:'scatter3d', x:Array(30).fill(0).map((_,i)=>rIdx*Math.cos(i*0.22)), y:Array(30).fill(0).map((_,i)=>rIdx*Math.sin(i*0.22)), z:[0], mode:'lines', line:{color:'rgba(0,242,254,0.3)'} });
+            }
+            const wire = { type:'scatter3d', x:[0,0], y:[0,0], z:[-5,5], mode:'lines', line:{color:'gold', width:8} };
+            const probe = { type:'scatter3d', x:[rho], y:[0], z:[0], mode:'markers', marker:{size:10, color:'white'} };
+            Plotly.newPlot('viz-biotsavart', [...rings, wire, probe], getCommonLayout(6));
+        }
+
+        // UTILITIES
+        function getCommonLayout(range) {
+            return { scene: { xaxis:{range:[-range,range], showgrid:false}, yaxis:{range:[-range,range], showgrid:false}, zaxis:{range:[-range,range], showgrid:false}, aspectmode:'cube' }, margin:{l:0,r:0,b:0,t:0}, paper_bgcolor:'rgba(0,0,0,0)', showlegend:false };
+        }
+
+        function getGaussTrace(type, r) {
+            let x = [], y = [], z = [];
+            if(type === 'spherical') {
+                for(let i=0; i<=2*Math.PI; i+=0.4) {
+                    let xr = [], yr = [], zr = [];
+                    for(let j=0; j<=Math.PI; j+=0.4) {
+                        xr.push(r * Math.sin(j) * Math.cos(i));
+                        yr.push(r * Math.sin(j) * Math.sin(i));
+                        zr.push(r * Math.cos(j));
+                    }
+                    x.push(xr); y.push(yr); z.push(zr);
+                }
+            } else if(type === 'cylindrical') {
+                for(let theta=0; theta<=2*Math.PI; theta+=0.4) {
+                    let xr = [], yr = [], zr = [];
+                    for(let l=-5; l<=5; l+=1) {
+                        xr.push(r * Math.cos(theta));
+                        yr.push(r * Math.sin(theta));
+                        zr.push(l);
+                    }
+                    x.push(xr); y.push(yr); z.push(zr);
+                }
+            } else {
+                x = [[-5, 5], [-5, 5]];
+                y = [[-5, -5], [5, 5]];
+                z = [[0, 0], [0, 0]];
+            }
+            return { type: 'surface', x:x, y:y, z:z, opacity:0.3, colorscale:[['0','#00f2fe'],['1','#00f2fe']], showscale:false };
+        }
+
+        window.onload = () => initSolver('coulomb');
+    </script>
+</body>
+</html>

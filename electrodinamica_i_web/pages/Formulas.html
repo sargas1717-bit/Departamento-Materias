@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Dinámico | Electrodinámica I</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+    <style>
+        .grid-formulas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body class="fade-in">
+
+    <nav class="container glass" style="margin-top: 20px;">
+        <a href="../index.html">Inicio</a>
+        <a href="Teoria.html">Teoría</a>
+        <a href="Formulas.html" class="active">Fórmulas</a>
+    </nav>
+
+    <main class="container">
+        <header>
+            <h1 class="main-title">Prontuario de Fórmulas</h1>
+            <p class="subtitle">RENDERIZADO EN TIEMPO REAL CON KATEX</p>
+        </header>
+
+        <div class="grid-formulas">
+            <!-- Vector Calculus Section -->
+            <section class="glass card">
+                <div class="badge">ANÁLISIS VECTORIAL</div>
+                <h3>Operadores Diferenciales</h3>
+                <div class="math-block">
+                    <p>$$\nabla V = \frac{\partial V}{\partial x} \mathbf{a}_x + \frac{\partial V}{\partial y} \mathbf{a}_y + \frac{\partial V}{\partial z} \mathbf{a}_z$$</p>
+                    <p>$$\nabla \cdot \mathbf{A} = \frac{\partial A_x}{\partial x} + \frac{\partial A_y}{\partial y} + \frac{\partial A_z}{\partial z}$$</p>
+                    <p>$$\nabla \times \mathbf{A} = \text{det}\begin{vmatrix} \mathbf{a}_x & \mathbf{a}_y & \mathbf{a}_z \\ \frac{\partial}{\partial x} & \frac{\partial}{\partial y} & \frac{\partial}{\partial z} \\ A_x & A_y & A_z \end{vmatrix}$$</p>
+                </div>
+            </section>
+
+            <!-- Maxwells Equations -->
+            <section class="glass card">
+                <div class="badge">MAXWELL</div>
+                <h3>Ecuaciones Fundamentales</h3>
+                <div class="math-block">
+                    <p>Integral: $$\oint_S \mathbf{D} \cdot d\mathbf{s} = Q$$</p>
+                    <p>Diferencial: $$\nabla \cdot \mathbf{D} = \rho_v$$</p>
+                    <p>Ley de Faraday: $$\nabla \times \mathbf{E} = -\frac{\partial \mathbf{B}}{\partial t}$$</p>
+                    <p>Ley de Ampere-Maxwell: $$\nabla \times \mathbf{H} = \mathbf{J} + \frac{\partial \mathbf{D}}{\partial t}$$</p>
+                </div>
+            </section>
+
+            <!-- Electrostatics -->
+            <section class="glass card">
+                <div class="badge">ELECTROSTÁTICA</div>
+                <h3>Potencial y Campo</h3>
+                <div class="math-block">
+                    <p>LEY DE COULOMB: $$\mathbf{F} = \frac{1}{4\pi\epsilon_0} \frac{q_1 q_2}{r^2} \mathbf{a}_r$$</p>
+                    <p>POTENCIAL: $$V = \frac{1}{4\pi\epsilon_0} \int \frac{\rho dv}{R}$$</p>
+                    <p>ENERGÍA: $$W_E = \frac{1}{2} \int \mathbf{G} \cdot \mathbf{D} dv$$</p>
+                </div>
+            </section>
+
+            <!-- Magnetostatics -->
+            <section class="glass card">
+                <div class="badge">MAGNETOSTÁTICA</div>
+                <h3>Corriente y Magnetismo</h3>
+                <div class="math-block">
+                    <p>BIOT-SAVART: $$d\mathbf{B} = \frac{\mu_0 I}{4\pi} \frac{d\mathbf{l} \times \mathbf{a}_r}{r^2}$$</p>
+                    <p>TORQUE: $$\mathbf{T} = \mathbf{m} \times \mathbf{B}$$</p>
+                    <p>INDUCCIÓN: $$V_{emf} = -N \frac{d\Phi}{dt}$$</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 SARGAS PRO ENGINEERING | ELECTRODYNAMICS FORMULARY</p>
+        </div>
+    </footer>
+
+</body>
+</html>

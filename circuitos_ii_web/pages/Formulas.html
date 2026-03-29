@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoja de Fórmulas - Circuitos II</title>
+    <!-- Tailwind CSS para utilidades rápidas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos y Matemáticas -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        /* Estilos base consistentes con el resto del proyecto */
+        :root {
+            --bg-color: #0f172a; /* Slate 900 */
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 50%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.1), transparent 50%);
+            background-attachment: fixed;
+        }
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #94a3b8; font-weight: 500; text-decoration: none;
+            margin-bottom: 2rem; transition: color 0.3s;
+        }
+        .back-btn:hover { color: white; }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            break-inside: avoid; /* Para el layout Masonry */
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Layout Masonry (Columnas tipo Pinterest) */
+        .masonry-grid {
+            column-count: 1;
+            column-gap: 1.5rem;
+        }
+        @media (min-width: 768px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
+
+        .formula-card {
+            background: rgba(0, 0, 0, 0.25);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            margin-bottom: 1rem;
+        }
+        .formula-card:last-child { margin-bottom: 0; }
+
+        .math-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; }
+        .math-scroll::-webkit-scrollbar { height: 4px; }
+        .math-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <main class="main-content">
+            <a href="../index.html" class="back-btn">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+            </a>
+
+            <header class="mb-10 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-yellow-300 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
+                        <i data-lucide="zap" class="w-3 h-3 inline mr-1"></i> Referencia Rápida
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-extrabold mb-2 tracking-tight">Compendio de Fórmulas</h1>
+                    <p class="text-slate-400 text-lg">Resumen matemático completo de las Unidades I a VI.</p>
+                </div>
+                <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center gap-2 border border-slate-600 transition-colors">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Imprimir / PDF
+                </button>
+            </header>
+
+            <div class="masonry-grid">
+                
+                <!-- UNIDAD 1 -->
+                <div class="glass-panel border-t-4 border-t-indigo-500">
+                    <h2 class="text-xl font-bold mb-5 text-indigo-400 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-5 h-5"></i> U-I: Transitorios 1er Orden
+                    </h2>
+                    <div class="formula-card border-indigo-500/20">
+                        <span class="text-xs text-indigo-300 font-bold tracking-widest uppercase block mb-2">Ecuación General (Carga/Descarga)</span>
+                        <div class="math-scroll text-sm">\[ x(t) = x(\infty) + [x(0) - x(\infty)]e^{-t/\tau} \]</div>
+                    </div>
+                    <div class="formula-card border-indigo-500/20">
+                        <span class="text-xs text-indigo-300 font-bold tracking-widest uppercase block mb-2">Constantes de Tiempo</span>
+                        <div class="grid grid-cols-2 gap-2 text-sm text-center">
+                            <div>RC: \[ \tau = R_{eq}C \]</div>
+                            <div>RL: \[ \tau = L/R_{eq} \]</div>
+                        </div>
+                    </div>
+                    <div class="formula-card border-indigo-500/20">
+                        <span class="text-xs text-indigo-300 font-bold tracking-widest uppercase block mb-2">Comportamiento en DC (Rég. Perm.)</span>
+                        <ul class="text-sm text-slate-300 space-y-1">
+                            <li>• Capacitor \((C)\): Circuito Abierto</li>
+                            <li>• Inductor \((L)\): Cortocircuito</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 2 -->
+                <div class="glass-panel border-t-4 border-t-purple-500">
+                    <h2 class="text-xl font-bold mb-5 text-purple-400 flex items-center gap-2">
+                        <i data-lucide="waves" class="w-5 h-5"></i> U-II: Sistemas RLC (2do Orden)
+                    </h2>
+                    <div class="formula-card border-purple-500/20">
+                        <span class="text-xs text-purple-300 font-bold tracking-widest uppercase block mb-2">Ecuación Característica</span>
+                        <div class="math-scroll text-sm">\[ s^2 + 2\alpha s + \omega_0^2 = 0 \]</div>
+                    </div>
+                    <div class="formula-card border-purple-500/20">
+                        <span class="text-xs text-purple-300 font-bold tracking-widest uppercase block mb-2">Parámetros Fundamentales</span>
+                        <div class="grid grid-cols-2 gap-4 text-xs text-center border-b border-white/10 pb-2 mb-2">
+                            <div><strong class="text-slate-300 block mb-1">Serie</strong> \(\alpha = \frac{R}{2L}\)</div>
+                            <div><strong class="text-slate-300 block mb-1">Paralelo</strong> \(\alpha = \frac{1}{2RC}\)</div>
+                        </div>
+                        <div class="text-center text-xs">Frecuencia Natural: \( \omega_0 = \frac{1}{\sqrt{LC}} \)</div>
+                    </div>
+                    <div class="formula-card border-purple-500/20">
+                        <span class="text-xs text-purple-300 font-bold tracking-widest uppercase block mb-2">Raíces y Amortiguamiento</span>
+                        <div class="math-scroll text-xs mb-2">\[ s_{1,2} = -\alpha \pm \sqrt{\alpha^2 - \omega_0^2} \]</div>
+                        <ul class="text-[11px] text-slate-300 space-y-1 font-mono">
+                            <li>\(\alpha > \omega_0\) : Sobreamortiguado</li>
+                            <li>\(\alpha = \omega_0\) : Críticamente Amort.</li>
+                            <li>\(\alpha < \omega_0\) : Subamortiguado (\(\omega_d\))</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 3 -->
+                <div class="glass-panel border-t-4 border-t-cyan-500">
+                    <h2 class="text-xl font-bold mb-5 text-cyan-400 flex items-center gap-2">
+                        <i data-lucide="square-dashed-bottom" class="w-5 h-5"></i> U-III: Variables de Estado
+                    </h2>
+                    <div class="formula-card border-cyan-500/20">
+                        <span class="text-xs text-cyan-300 font-bold tracking-widest uppercase block mb-2">Representación Matricial</span>
+                        <p class="text-[10px] text-slate-400 mb-1">Ecuación de Estado:</p>
+                        <div class="math-scroll text-sm mb-3">\[ \dot{\mathbf{x}}(t) = \mathbf{A}\mathbf{x}(t) + \mathbf{B}\mathbf{u}(t) \]</div>
+                        <p class="text-[10px] text-slate-400 mb-1">Ecuación de Salida:</p>
+                        <div class="math-scroll text-sm">\[ \mathbf{y}(t) = \mathbf{C}\mathbf{x}(t) + \mathbf{D}\mathbf{u}(t) \]</div>
+                    </div>
+                    <div class="formula-card border-cyan-500/20">
+                        <span class="text-xs text-cyan-300 font-bold tracking-widest uppercase block mb-2">Componentes</span>
+                        <ul class="text-[11px] text-slate-300 space-y-1">
+                            <li>\(\mathbf{x}(t)\): Vector Estado (ej. \(v_C, i_L\))</li>
+                            <li>\(\mathbf{A}\): Matriz del Sistema (Dinámica)</li>
+                            <li>\(\mathbf{B}\): Matriz de Entrada</li>
+                            <li>\(\mathbf{u}(t)\): Entradas (Fuentes)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 4 -->
+                <div class="glass-panel border-t-4 border-t-pink-500">
+                    <h2 class="text-xl font-bold mb-5 text-pink-400 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-5 h-5"></i> U-IV: F. de Transferencia & Bode
+                    </h2>
+                    <div class="formula-card border-pink-500/20">
+                        <span class="text-xs text-pink-300 font-bold tracking-widest uppercase block mb-2">Función de Transferencia</span>
+                        <div class="math-scroll text-sm">\[ H(s) = \frac{Y(s)}{X(s)} = \frac{N(s) \rightarrow \text{Ceros}}{D(s) \rightarrow \text{Polos}} \]</div>
+                    </div>
+                    <div class="formula-card border-pink-500/20">
+                        <span class="text-xs text-pink-300 font-bold tracking-widest uppercase block mb-2">Respuesta en Frecuencia (s = jω)</span>
+                        <p class="text-[10px] text-slate-400 mb-1">Magnitud en Decibeles (Bode):</p>
+                        <div class="math-scroll text-sm mb-3">\[ |H(j\omega)|_{\text{dB}} = 20 \log_{10}|H(j\omega)| \]</div>
+                        <p class="text-[10px] text-slate-400 mb-1">Ángulo de Fase:</p>
+                        <div class="math-scroll text-sm">\[ \phi(\omega) = \angle H(j\omega) \]</div>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 5 -->
+                <div class="glass-panel border-t-4 border-t-teal-500">
+                    <h2 class="text-xl font-bold mb-5 text-teal-400 flex items-center gap-2">
+                        <i data-lucide="compass" class="w-5 h-5"></i> U-V: Transf. de Laplace
+                    </h2>
+                    <div class="formula-card border-teal-500/20">
+                        <span class="text-xs text-teal-300 font-bold tracking-widest uppercase block mb-2">Modelos de Impedancia Z(s)</span>
+                        <ul class="text-sm text-slate-300 space-y-2 font-mono">
+                            <li>Resistor: \( V = R \cdot I \)</li>
+                            <li>Inductor: \( V = sL \cdot I - L i(0) \)</li>
+                            <li>Capacitor: \( V = \frac{1}{sC} \cdot I + \frac{v(0)}{s} \)</li>
+                        </ul>
+                    </div>
+                    <div class="formula-card border-teal-500/20">
+                        <span class="text-xs text-teal-300 font-bold tracking-widest uppercase block mb-2">Teoremas de Valor</span>
+                        <div class="grid grid-cols-1 gap-2 text-xs">
+                            <div><strong class="text-slate-400">Inicial:</strong> \( f(0^+) = \lim_{s \to \infty} s F(s) \)</div>
+                            <div><strong class="text-slate-400">Final:</strong> \( f(\infty) = \lim_{s \to 0} s F(s) \)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 6 -->
+                <div class="glass-panel border-t-4 border-t-blue-500">
+                    <h2 class="text-xl font-bold mb-5 text-blue-400 flex items-center gap-2">
+                        <i data-lucide="box" class="w-5 h-5"></i> U-VI: Redes de Dos Puertos
+                    </h2>
+                    <div class="formula-card border-blue-500/20">
+                        <span class="text-xs text-blue-300 font-bold tracking-widest uppercase block mb-2">Matrices Principales</span>
+                        <div class="space-y-3 text-[11px] font-mono overflow-hidden">
+                            <div class="flex justify-between border-b border-white/5 pb-1">
+                                <span class="text-slate-400">Z (Imp.)</span>
+                                <span>\([V_1, V_2]^T = \mathbf{Z} \cdot [I_1, I_2]^T\)</span>
+                            </div>
+                            <div class="flex justify-between border-b border-white/5 pb-1">
+                                <span class="text-slate-400">Y (Adm.)</span>
+                                <span>\([I_1, I_2]^T = \mathbf{Y} \cdot [V_1, V_2]^T\)</span>
+                            </div>
+                            <div class="flex justify-between border-b border-white/5 pb-1">
+                                <span class="text-slate-400">h (Híbrida)</span>
+                                <span>\([V_1, I_2]^T = \mathbf{h} \cdot [I_1, V_2]^T\)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">ABCD</span>
+                                <span>\([V_1, I_1]^T = \mathbf{T} \cdot [V_2, -I_2]^T\)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="formula-card border-blue-500/20">
+                        <span class="text-xs text-blue-300 font-bold tracking-widest uppercase block mb-2">Interconexiones</span>
+                        <ul class="text-[11px] text-slate-300 space-y-1">
+                            <li><strong class="text-white">Serie:</strong> \(\mathbf{Z}_{eq} = \mathbf{Z}_A + \mathbf{Z}_B\)</li>
+                            <li><strong class="text-white">Paralelo:</strong> \(\mathbf{Y}_{eq} = \mathbf{Y}_A + \mathbf{Y}_B\)</li>
+                            <li><strong class="text-white">Cascada:</strong> \(\mathbf{T}_{eq} = \mathbf{T}_A \times \mathbf{T}_B\)</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // Renderizado explícito de MathJax si es necesario
+        window.addEventListener('load', () => {
+            if(window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        });
+    </script>
+</body>
+</html>

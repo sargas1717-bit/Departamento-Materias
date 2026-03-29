@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidad III: Variables de Estado - Circuitos II</title>
+    <!-- Tailwind CSS para utilidades rápidas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos, Gráficos y Matemáticas -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        /* Estilos base (Heredados del diseño principal) */
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #6366f1;
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%);
+            background-attachment: fixed;
+        }
+        .app-container { max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #94a3b8; font-weight: 500; text-decoration: none;
+            margin-bottom: 2rem; transition: color 0.3s;
+        }
+        .back-btn:hover { color: white; }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .theory-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .simulator-layout { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        @media (min-width: 1024px) { .simulator-layout { grid-template-columns: 380px 1fr; } }
+        
+        .control-group { margin-bottom: 1.25rem; }
+        .control-group label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 600; color: #cbd5e1; }
+        .input-with-value { display: flex; align-items: center; gap: 1rem; }
+        .value-display { 
+            font-family: 'Courier New', Courier, monospace; 
+            background: rgba(0,0,0,0.4); 
+            padding: 0.35rem 0.75rem; 
+            border-radius: 0.5rem; 
+            font-size: 0.875rem; 
+            min-width: 90px; 
+            text-align: right;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            transition: background 0.3s;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        /* Dynamic Theme Colors */
+        .theme-under { --accent: #3b82f6; } /* Blue */
+        .theme-critical { --accent: #10b981; } /* Green */
+        .theme-over { --accent: #f97316; } /* Orange */
+
+        /* MathJax Container Scroll */
+        .math-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 10px; }
+        .math-scroll::-webkit-scrollbar { height: 6px; }
+        .math-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <main class="main-content">
+            <a href="../index.html" class="back-btn">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+            </a>
+
+            <header class="mb-10">
+                <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+                    Ingeniería Eléctrica - Circuitos II
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Unidad III: Variables de Estado</h1>
+                <p class="text-slate-400 text-lg max-w-3xl">
+                    Representación matricial de sistemas dinámicos. Análisis del espacio de estados y mapeo de trayectorias físicas (Voltaje vs. Corriente).
+                </p>
+            </header>
+
+            <!-- Sección de Teoría -->
+            <section class="theory-section mb-10">
+                <div class="glass-panel">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                        <i data-lucide="square-dashed-bottom" class="text-indigo-400"></i> Modelo de Espacio de Estados
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <!-- Tarjeta Ecuación de Estado -->
+                        <div class="theory-card bg-gradient-to-br from-indigo-900/20 to-transparent">
+                            <h3 class="text-xl font-bold mb-4 text-indigo-300">Ecuación de Estado</h3>
+                            <div class="text-xl p-4 bg-black/40 rounded-xl text-center font-mono border border-indigo-500/20 mb-4 math-scroll">
+                                \[ \dot{\mathbf{x}}(t) = \mathbf{A}\mathbf{x}(t) + \mathbf{B}\mathbf{u}(t) \]
+                            </div>
+                            <ul class="space-y-2 text-sm text-slate-300">
+                                <li><span class="text-indigo-400 font-bold">\(\mathbf{x}(t)\)</span>: Vector de Estado (variables que almacenan energía: \(v_c\), \(i_L\)).</li>
+                                <li><span class="text-indigo-400 font-bold">\(\mathbf{A}\)</span>: Matriz del Sistema (Dinámica interna y autovalores).</li>
+                                <li><span class="text-indigo-400 font-bold">\(\mathbf{B}\)</span>: Matriz de Entrada (Acoplamiento de las fuentes).</li>
+                                <li><span class="text-indigo-400 font-bold">\(\mathbf{u}(t)\)</span>: Vector de Entradas (Fuentes \(V_s\), \(I_s\)).</li>
+                            </ul>
+                        </div>
+
+                        <!-- Tarjeta Ecuación de Salida -->
+                        <div class="theory-card bg-gradient-to-br from-purple-900/20 to-transparent">
+                            <h3 class="text-xl font-bold mb-4 text-purple-300">Ecuación de Salida</h3>
+                            <div class="text-xl p-4 bg-black/40 rounded-xl text-center font-mono border border-purple-500/20 mb-4 math-scroll">
+                                \[ \mathbf{y}(t) = \mathbf{C}\mathbf{x}(t) + \mathbf{D}\mathbf{u}(t) \]
+                            </div>
+                            <ul class="space-y-2 text-sm text-slate-300">
+                                <li><span class="text-purple-400 font-bold">\(\mathbf{y}(t)\)</span>: Vector de Salida (lo que queremos medir).</li>
+                                <li><span class="text-purple-400 font-bold">\(\mathbf{C}\)</span>: Matriz de Observación.</li>
+                                <li><span class="text-purple-400 font-bold">\(\mathbf{D}\)</span>: Matriz de Transmisión Directa.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/20 p-6 rounded-xl border border-white/5">
+                        <h3 class="text-lg font-bold mb-4 text-slate-200 flex items-center gap-2">
+                            <i data-lucide="git-branch" class="w-5 h-5 text-slate-400"></i> Caso de Estudio: RLC Serie
+                        </h3>
+                        <p class="text-sm text-slate-400 mb-4">Eligiendo las variables físicas de energía: \(x_1 = i_L(t)\) y \(x_2 = v_C(t)\). Aplicando LKV y LKC obtenemos la matriz fundamental:</p>
+                        <div class="text-lg p-4 bg-black/40 rounded-xl text-center border border-white/5 math-scroll">
+                            \[ \begin{bmatrix} \dot{i}_L \\ \dot{v}_C \end{bmatrix} = \begin{bmatrix} -R/L & -1/L \\ 1/C & 0 \end{bmatrix} \begin{bmatrix} i_L \\ v_C \end{bmatrix} + \begin{bmatrix} 1/L \\ 0 \end{bmatrix} V_s(t) \]
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Simulador Interactivo: Espacio de Estados -->
+            <section class="simulator-section mb-10" id="simulatorContainer">
+                <div class="glass-panel">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-white/10 pb-4">
+                        <h2 class="text-2xl font-bold flex items-center gap-3">
+                            <i data-lucide="scatter-chart" class="text-indigo-400"></i> Simulador: Retrato de Fase
+                        </h2>
+                        <div class="flex gap-2 items-center bg-black/30 px-3 py-1.5 rounded-full border border-white/10">
+                            <span class="text-xs text-slate-300 font-mono tracking-wider">TRAYECTORIA DINÁMICA</span>
+                        </div>
+                    </div>
+                    
+                    <div class="simulator-layout">
+                        <!-- Panel de Controles -->
+                        <aside class="controls-panel bg-black/20 p-6 rounded-xl border border-white/5 flex flex-col h-full">
+                            <div class="flex-none">
+                                <div class="control-group">
+                                    <label>Voltaje Escalón (\(V_s\)) [V]</label>
+                                    <div class="input-with-value">
+                                        <input type="range" id="vsRange" min="5" max="50" step="1" value="20">
+                                        <span class="value-display" id="vsVal">20 V</span>
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label>Resistencia (\(R\)) [\(\Omega\)]</label>
+                                    <div class="input-with-value">
+                                        <input type="range" id="rRange" min="10" max="1000" step="10" value="100">
+                                        <span class="value-display" id="rVal">100 \(\Omega\)</span>
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label>Inductancia (\(L\)) [mH]</label>
+                                    <div class="input-with-value">
+                                        <input type="range" id="lRange" min="10" max="500" step="10" value="100">
+                                        <span class="value-display" id="lVal">100 mH</span>
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label>Capacitancia (\(C\)) [\(\mu F\)]</label>
+                                    <div class="input-with-value">
+                                        <input type="range" id="cRange" min="1" max="100" step="1" value="10">
+                                        <span class="value-display" id="cVal">10 \(\mu F\)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Matriz A Calculada -->
+                            <div class="mt-auto pt-6 border-t border-white/10">
+                                <h4 class="text-slate-300 font-bold mb-3 text-xs uppercase tracking-widest">Matriz del Sistema \(\mathbf{A}\) en Vivo</h4>
+                                <div id="matrixDisplay" class="p-4 bg-black/50 rounded-lg font-mono text-center border border-indigo-500/20 text-sm math-scroll min-h-[100px] flex items-center justify-center">
+                                    Cargando matriz...
+                                </div>
+                                
+                                <div id="eigenDisplay" class="mt-4 p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-lg transition-colors duration-500">
+                                    <div class="text-xs text-slate-400 mb-1 font-bold">Autovalores (\(s_1, s_2\)) & Tipo de Nodo:</div>
+                                    <div id="eigenText" class="text-sm font-mono text-white">---</div>
+                                    <div id="nodeState" class="mt-2 text-xs font-black uppercase tracking-widest">---</div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <!-- Panel de Visualización Gráfica -->
+                        <div class="viz-panel flex flex-col h-full bg-black/30 rounded-xl p-4 border border-white/5 relative min-h-[450px]">
+                            <h3 class="absolute top-4 left-6 text-sm font-bold text-slate-400 tracking-wider flex items-center gap-2 z-10">
+                                Espacio de Estados <span class="text-xs font-normal">(Voltaje vs Corriente)</span>
+                            </h3>
+                            <!-- Contenedor del Gráfico -->
+                            <div class="flex-1 w-full h-full mt-6">
+                                <canvas id="stateSpaceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Utilidad para formatear números de forma limpia (enteros o expo si son muy grandes/pequeños)
+        function formatNumber(num) {
+            if (Math.abs(num) === 0) return "0";
+            if (Math.abs(num) >= 10000 || Math.abs(num) < 0.01) {
+                return num.toExponential(1);
+            }
+            return Number.isInteger(num) ? num.toString() : num.toFixed(1);
+        }
+
+        // Configuración de Chart.js para Retrato de Fase (Scatter)
+        const ctx = document.getElementById('stateSpaceChart').getContext('2d');
+        let stateSpaceChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Trayectoria',
+                    data: [],
+                    borderColor: '#6366f1',
+                    borderWidth: 2.5,
+                    showLine: true, // Conecta los puntos
+                    pointRadius: 0, // Oculta los puntos individuales
+                    tension: 0.1 // Suaviza un poco las líneas
+                },
+                {
+                    label: 'Equilibrio',
+                    data: [{x: 0, y: 0}],
+                    backgroundColor: '#fff',
+                    pointRadius: 6,
+                    pointStyle: 'crossRot',
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 }, // Para actualización instantánea
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: 'Voltaje de Capacitor v_C (V)', color: '#cbd5e1', font: {size: 13, weight: 'bold'} }
+                    },
+                    y: {
+                        type: 'linear',
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: 'Corriente de Inductor i_L (A)', color: '#cbd5e1', font: {size: 13, weight: 'bold'} }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `vC: ${context.parsed.x.toFixed(2)}V, iL: ${context.parsed.y.toFixed(3)}A`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Elementos del DOM
+        const simulatorContainer = document.getElementById('simulatorContainer');
+        const matrixDisplay = document.getElementById('matrixDisplay');
+        const eigenDisplay = document.getElementById('eigenDisplay');
+        const eigenText = document.getElementById('eigenText');
+        const nodeState = document.getElementById('nodeState');
+
+        function updateStateSpace() {
+            // 1. Obtener Valores Físicos
+            const Vs = parseFloat(document.getElementById('vsRange').value);
+            const R = parseFloat(document.getElementById('rRange').value);
+            const L = parseFloat(document.getElementById('lRange').value) * 1e-3; // H
+            const C = parseFloat(document.getElementById('cRange').value) * 1e-6; // F
+
+            // Actualizar Etiquetas
+            document.getElementById('vsVal').innerText = Vs + ' V';
+            document.getElementById('rVal').innerText = R + ' Ω';
+            document.getElementById('lVal').innerText = (L * 1000).toFixed(0) + ' mH';
+            document.getElementById('cVal').innerText = (C * 1e6).toFixed(0) + ' μF';
+
+            // 2. Cálculo de Matriz A y Parámetros
+            const A11 = -R / L;
+            const A12 = -1 / L;
+            const A21 = 1 / C;
+            const A22 = 0;
+
+            const alpha = R / (2 * L);
+            const omega0 = 1 / Math.sqrt(L * C);
+            const zeta = alpha / omega0;
+
+            // 3. Renderizar Matriz A con MathJax
+            const matrixTex = `\\mathbf{A} = \\begin{bmatrix} ${formatNumber(A11)} & ${formatNumber(A12)} \\\\ ${formatNumber(A21)} & ${formatNumber(A22)} \\end{bmatrix}`;
+            matrixDisplay.innerHTML = `\\[ ${matrixTex} \\]`;
+
+            // 4. Lógica de Trayectoria y Autovalores
+            let dataPoints = [];
+            const steps = 600;
+            let tMax = 6 / Math.min(alpha, omega0); 
+            if (tMax > 0.5) tMax = 0.5;
+            
+            let colorHex, rgbColor, themeClass, nodeName, eigenStr;
+            const tolerance = 0.05;
+
+            // Ecuaciones Analíticas Exactas para (vC, iL)
+            if (Math.abs(zeta - 1) < tolerance) {
+                // Críticamente Amortiguado
+                colorHex = '#10b981'; rgbColor = '16, 185, 129'; themeClass = 'theme-critical';
+                nodeName = "Nodo Degenerado Estable";
+                eigenStr = `s_1 = s_2 = -${formatNumber(alpha)}`;
+                
+                const D2 = -Vs;
+                const D1 = -alpha * Vs;
+
+                for(let i=0; i<=steps; i++) {
+                    let t = (tMax * i) / steps;
+                    let vc = Vs + (D1*t + D2)*Math.exp(-alpha*t);
+                    let il = (Vs/L)*t*Math.exp(-alpha*t); // Derivada analítica
+                    dataPoints.push({x: vc, y: il});
+                }
+            } else if (zeta > 1) {
+                // Sobreamortiguado
+                colorHex = '#f97316'; rgbColor = '249, 115, 22'; themeClass = 'theme-over';
+                nodeName = "Nodo Estable";
+                
+                const s1 = -alpha + Math.sqrt(alpha**2 - omega0**2);
+                const s2 = -alpha - Math.sqrt(alpha**2 - omega0**2);
+                eigenStr = `s_1 = ${formatNumber(s1)},\\ s_2 = ${formatNumber(s2)}`;
+                
+                const A2 = Vs * s1 / (s2 - s1);
+                const A1 = -Vs - A2;
+
+                for(let i=0; i<=steps; i++) {
+                    let t = (tMax * i) / steps;
+                    let vc = Vs + A1*Math.exp(s1*t) + A2*Math.exp(s2*t);
+                    let il = (Vs / (L * (s2 - s1))) * (Math.exp(s2*t) - Math.exp(s1*t)); // Derivada analítica
+                    dataPoints.push({x: vc, y: il});
+                }
+            } else {
+                // Subamortiguado
+                colorHex = '#3b82f6'; rgbColor = '59, 130, 246'; themeClass = 'theme-under';
+                nodeName = "Foco Estable (Espiral)";
+                
+                const wd = Math.sqrt(omega0**2 - alpha**2);
+                eigenStr = `s_{1,2} = -${formatNumber(alpha)} \\pm j${formatNumber(wd)}`;
+                
+                const B1 = -Vs;
+                const B2 = -(alpha * Vs) / wd;
+
+                for(let i=0; i<=steps; i++) {
+                    let t = (tMax * i) / steps;
+                    let vc = Vs + Math.exp(-alpha*t)*(B1*Math.cos(wd*t) + B2*Math.sin(wd*t));
+                    let il = (Vs / (L * wd)) * Math.exp(-alpha*t) * Math.sin(wd*t); // Derivada analítica simplificada
+                    dataPoints.push({x: vc, y: il});
+                }
+            }
+
+            // 5. Actualizar UI
+            simulatorContainer.className = `simulator-section mb-10 ${themeClass}`;
+            eigenDisplay.className = `mt-4 p-4 border rounded-lg transition-colors duration-500 bg-black/40`;
+            eigenDisplay.style.borderColor = `rgba(${rgbColor}, 0.3)`;
+            
+            eigenText.innerHTML = `\\[ ${eigenStr} \\]`;
+            nodeState.innerText = nodeName;
+            nodeState.style.color = colorHex;
+
+            if (window.MathJax) {
+                MathJax.typesetPromise([matrixDisplay, eigenText]);
+            }
+
+            // 6. Actualizar Gráfico Chart.js
+            stateSpaceChart.data.datasets[0].data = dataPoints;
+            stateSpaceChart.data.datasets[0].borderColor = colorHex;
+            
+            // Punto de Equilibrio
+            stateSpaceChart.data.datasets[1].data = [{x: Vs, y: 0}];
+            stateSpaceChart.data.datasets[1].borderColor = colorHex;
+
+            // Escalar ejes dinámicamente
+            const maxVc = Math.max(...dataPoints.map(p => p.x));
+            const maxIl = Math.max(...dataPoints.map(p => p.y));
+            const minIl = Math.min(...dataPoints.map(p => p.y));
+
+            stateSpaceChart.options.scales.x.max = maxVc > Vs * 1.1 ? maxVc * 1.1 : Vs * 1.2;
+            stateSpaceChart.options.scales.x.min = 0;
+            
+            // Hacer el eje Y simétrico visualmente si hay oscilación
+            const absMaxIl = Math.max(Math.abs(maxIl), Math.abs(minIl));
+            stateSpaceChart.options.scales.y.max = absMaxIl * 1.2 || 0.1;
+            stateSpaceChart.options.scales.y.min = -absMaxIl * 1.2 || -0.1;
+
+            stateSpaceChart.update();
+        }
+
+        // Listeners
+        ['vsRange', 'rRange', 'lRange', 'cRange'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateStateSpace);
+        });
+
+        // Init
+        window.addEventListener('load', () => {
+            setTimeout(updateStateSpace, 300); 
+        });
+    </script>
+</body>
+</html>

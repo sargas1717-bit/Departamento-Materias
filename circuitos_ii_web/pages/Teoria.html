@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conceptos y Analogías - Circuitos II</title>
+    <!-- Tailwind CSS para utilidades rápidas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos y Matemáticas -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        /* Estilos base consistentes con el resto del proyecto */
+        :root {
+            --bg-color: #0f172a; /* Slate 900 */
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 50%),
+                radial-gradient(circle at bottom left, rgba(234, 179, 8, 0.1), transparent 50%);
+            background-attachment: fixed;
+        }
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #94a3b8; font-weight: 500; text-decoration: none;
+            margin-bottom: 2rem; transition: color 0.3s;
+        }
+        .back-btn:hover { color: white; }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            break-inside: avoid; /* Para el layout Masonry */
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Layout Masonry (Columnas tipo Pinterest) */
+        .masonry-grid {
+            column-count: 1;
+            column-gap: 1.5rem;
+        }
+        @media (min-width: 768px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
+
+        .concept-card {
+            background: rgba(0, 0, 0, 0.25);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            margin-bottom: 1rem;
+        }
+        .concept-card:last-child { margin-bottom: 0; }
+        
+        .analogy-box {
+            background: rgba(234, 179, 8, 0.1);
+            border-left: 4px solid #eab308;
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <main class="main-content">
+            <a href="../index.html" class="back-btn">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+            </a>
+
+            <header class="mb-10 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                        <i data-lucide="lightbulb" class="w-3 h-3 inline mr-1"></i> Intuición Física
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-extrabold mb-2 tracking-tight">Conceptos y Analogías</h1>
+                    <p class="text-slate-400 text-lg">La teoría detrás de las matemáticas. Entiende el "por qué" de cada circuito.</p>
+                </div>
+                <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center gap-2 border border-slate-600 transition-colors">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Imprimir / PDF
+                </button>
+            </header>
+
+            <div class="masonry-grid">
+                
+                <!-- UNIDAD 1 -->
+                <div class="glass-panel border-t-4 border-t-indigo-500">
+                    <h2 class="text-xl font-bold mb-5 text-indigo-400 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-5 h-5"></i> U-I: Transitorios 1er Orden
+                    </h2>
+                    <div class="concept-card border-indigo-500/20">
+                        <span class="text-xs text-indigo-300 font-bold tracking-widest uppercase block mb-2">Concepto Teórico</span>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Un <strong>Régimen Transitorio</strong> es la respuesta temporal que ocurre cuando un circuito con elementos que almacenan energía (L o C) experimenta un cambio brusco (como accionar un interruptor). El circuito tarda un tiempo \(5\tau\) en alcanzar su nuevo estado de equilibrio (permanente).
+                        </p>
+                        <div class="analogy-box">
+                            <span class="text-xs text-amber-400 font-bold uppercase flex items-center gap-1 mb-1"><i data-lucide="droplet" class="w-3 h-3"></i> Analogía del Tanque y el Molino</span>
+                            <p class="text-sm text-slate-300 italic">
+                                <strong>El Capacitor</strong> es como un tanque de agua: su nivel (voltaje) no puede cambiar de golpe porque toma tiempo llenarlo o vaciarlo.<br><br>
+                                <strong>El Inductor</strong> es como una pesada rueda de molino de agua: una vez que el agua la hace girar (corriente), la inercia impide que se detenga o arranque instantáneamente.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 2 -->
+                <div class="glass-panel border-t-4 border-t-purple-500">
+                    <h2 class="text-xl font-bold mb-5 text-purple-400 flex items-center gap-2">
+                        <i data-lucide="waves" class="w-5 h-5"></i> U-II: Sistemas RLC (2do Orden)
+                    </h2>
+                    <div class="concept-card border-purple-500/20">
+                        <span class="text-xs text-purple-300 font-bold tracking-widest uppercase block mb-2">Concepto Teórico</span>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Ocurre cuando hay Inductores y Capacitores en el mismo circuito. La energía "rebota" entre el campo eléctrico (C) y el magnético (L). La resistencia (R) determina qué tan rápido se disipa esta energía, definiendo si el sistema oscila o no.
+                        </p>
+                        <div class="analogy-box">
+                            <span class="text-xs text-amber-400 font-bold uppercase flex items-center gap-1 mb-1"><i data-lucide="activity" class="w-3 h-3"></i> Analogía del Columpio</span>
+                            <ul class="text-sm text-slate-300 italic space-y-2">
+                                <li><strong>Subamortiguado:</strong> Como empujar a un niño en un columpio en el parque. Oscila varias veces antes de detenerse por la fricción del aire.</li>
+                                <li><strong>Sobreamortiguado:</strong> Como intentar balancear ese mismo columpio bajo el agua (o miel). La resistencia es tanta que no logra oscilar ni una vez y regresa muy lento al centro.</li>
+                                <li><strong>Crítico:</strong> Como los amortiguadores de un auto deportivo. Regresa al centro lo más rápido posible sin rebotar.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 3 -->
+                <div class="glass-panel border-t-4 border-t-cyan-500">
+                    <h2 class="text-xl font-bold mb-5 text-cyan-400 flex items-center gap-2">
+                        <i data-lucide="square-dashed-bottom" class="w-5 h-5"></i> U-III: Variables de Estado
+                    </h2>
+                    <div class="concept-card border-cyan-500/20">
+                        <span class="text-xs text-cyan-300 font-bold tracking-widest uppercase block mb-2">Concepto Teórico</span>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Es un modelo matemático que describe un sistema basándose en su "estado actual" (energía almacenada en inductores y capacitores). Si conocemos este estado \(\mathbf{x}(t)\) y las entradas que le aplicamos \(\mathbf{u}(t)\), podemos predecir el futuro exacto del sistema usando matrices.
+                        </p>
+                        <div class="analogy-box">
+                            <span class="text-xs text-amber-400 font-bold uppercase flex items-center gap-1 mb-1"><i data-lucide="map" class="w-3 h-3"></i> Analogía del GPS</span>
+                            <p class="text-sm text-slate-300 italic">
+                                No importa qué ruta tomaste hace 2 horas para llegar a donde estás ahora (historia pasada). Para predecir dónde estarás en 10 minutos, el GPS solo necesita saber: <strong>1) Tu ubicación y velocidad actual (Tu Estado)</strong> y <strong>2) Cuánto estás pisando el acelerador en este momento (Tus Entradas)</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 4 -->
+                <div class="glass-panel border-t-4 border-t-pink-500">
+                    <h2 class="text-xl font-bold mb-5 text-pink-400 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-5 h-5"></i> U-IV: F. de Transferencia & Bode
+                    </h2>
+                    <div class="concept-card border-pink-500/20">
+                        <span class="text-xs text-pink-300 font-bold tracking-widest uppercase block mb-2">Concepto Teórico</span>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            La Función de Transferencia \(H(s)\) nos dice cómo el circuito "reacciona" ante diferentes frecuencias. Un diagrama de Bode grafica esta reacción, mostrando qué frecuencias se dejan pasar (ganancia) y cuáles se bloquean (atenuación).
+                        </p>
+                        <div class="analogy-box">
+                            <span class="text-xs text-amber-400 font-bold uppercase flex items-center gap-1 mb-1"><i data-lucide="sliders-horizontal" class="w-3 h-3"></i> Analogía del Ecualizador</span>
+                            <p class="text-sm text-slate-300 italic">
+                                Piensa en el circuito como si fueran <strong>lentes de sol polarizados</strong> o un <strong>ecualizador de sonido</strong>. Un filtro "Pasa-Bajos" es como la pared gruesa de tu habitación: deja pasar el "boom boom" (bajas frecuencias de los graves del vecino) pero bloquea las voces agudas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 5 -->
+                <div class="glass-panel border-t-4 border-t-teal-500">
+                    <h2 class="text-xl font-bold mb-5 text-teal-400 flex items-center gap-2">
+                        <i data-lucide="compass" class="w-5 h-5"></i> U-V: Transf. de Laplace
+                    </h2>
+                    <div class="concept-card border-teal-500/20">
+                        <span class="text-xs text-teal-300 font-bold tracking-widest uppercase block mb-2">Concepto Teórico</span>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Es un operador matemático que lleva una función del difícil "Dominio del Tiempo" (que usa derivadas e integrales complejas) al "Dominio de la Frecuencia Compleja \(s\)" (donde todo se convierte en sumas, restas y multiplicaciones simples).
+                        </p>
+                        <div class="analogy-box">
+                            <span class="text-xs text-amber-400 font-bold uppercase flex items-center gap-1 mb-1"><i data-lucide="languages" class="w-3 h-3"></i> Analogía del Traductor</span>
+                            <p class="text-sm text-slate-300 italic">
+                                Imagina que te dan un problema muy difícil en Ruso (Ecuación Diferencial). Usas un diccionario para traducirlo al Español (Plano \(s\)), lo resuelves fácilmente en Español con matemáticas básicas, y luego traduces la respuesta de vuelta al Ruso (Laplace Inversa).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNIDAD 6 -->
+                <div class="glass-panel border-t-4 border-t-blue-500">
+                    <h2 class="text-xl font-bold mb-5 text-blue-400 flex items-center gap-2">
+                        <i data-lucide="box" class="w-5 h-5"></i> U-VI: Redes de Dos Puertos
+                    </h2>
+                    <div class="concept-card border-blue-500/20">
+                        <span class="text-xs text-blue-300 font-bold tracking-widest uppercase block mb-2">Concepto Teórico</span>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            En lugar de analizar cada resistencia y capacitor dentro de un sistema complejo (como una red eléctrica o un amplificador), lo tratamos como una caja sellada con dos terminales de entrada y dos de salida. Usamos matrices (Z, Y, ABCD) para definir cómo la entrada afecta a la salida.
+                        </p>
+                        <div class="analogy-box">
+                            <span class="text-xs text-amber-400 font-bold uppercase flex items-center gap-1 mb-1"><i data-lucide="package" class="w-3 h-3"></i> Analogía de la Caja Negra</span>
+                            <p class="text-sm text-slate-300 italic">
+                                Imagina una <strong>consola de videojuegos</strong> o el "cargador" de tu laptop. No necesitas saber el esquema interno de los miles de chips que tiene adentro. Solo te importa saber qué pasa si le metes 110V a la entrada (Puerto 1), qué voltaje saldrá para cargar tu batería (Puerto 2) y cuánta corriente consume.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // Renderizado explícito de MathJax si es necesario
+        window.addEventListener('load', () => {
+            if(window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        });
+    </script>
+</body>
+</html>

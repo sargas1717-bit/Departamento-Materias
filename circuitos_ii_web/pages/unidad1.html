@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidad I: Transitorios RC y RL - Circuitos II</title>
+    <!-- Tailwind CSS para utilidades rápidas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos, Gráficos y Matemáticas -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        /* Estilos base para mantener tu diseño de proyecto */
+        :root {
+            --bg-color: #0f172a; /* Slate 900 */
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #6366f1; /* Indigo 500 */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%);
+            background-attachment: fixed;
+        }
+        .app-container { max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #94a3b8; font-weight: 500; text-decoration: none;
+            margin-bottom: 2rem; transition: color 0.3s;
+        }
+        .back-btn:hover { color: white; }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .theory-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .theory-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
+        }
+
+        .simulator-layout { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        @media (min-width: 1024px) { .simulator-layout { grid-template-columns: 350px 1fr; } }
+        
+        .control-group { margin-bottom: 1.5rem; }
+        .control-group label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 600; color: #cbd5e1; }
+        .input-with-value { display: flex; align-items: center; gap: 1rem; }
+        .value-display { 
+            font-family: 'Courier New', Courier, monospace; 
+            background: rgba(0,0,0,0.4); 
+            padding: 0.35rem 0.75rem; 
+            border-radius: 0.5rem; 
+            font-size: 0.875rem; 
+            min-width: 90px; 
+            text-align: right;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <main class="main-content">
+            <a href="../index.html" class="back-btn">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+            </a>
+
+            <header class="mb-10">
+                <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+                    Ingeniería Eléctrica - Circuitos II
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Unidad I: Transitorios RC y RL</h1>
+                <p class="text-slate-400 text-lg max-w-3xl">
+                    Análisis detallado del régimen transitorio y permanente. Estudio de la respuesta natural (sin fuentes) y forzada (al escalón) en circuitos de primer orden.
+                </p>
+            </header>
+
+            <!-- Sección de Teoría Mejorada -->
+            <section class="theory-section mb-10">
+                <div class="glass-panel">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                        <i data-lucide="book-open" class="text-indigo-400"></i> Fundamentos Teóricos
+                    </h2>
+                    
+                    <div class="mb-8 text-slate-300 text-sm md:text-base leading-relaxed">
+                        <p class="mb-4">El <strong>régimen transitorio</strong> ocurre cuando un circuito experimenta un cambio brusco (como la apertura o cierre de un interruptor en \(t=0\)). Durante este período, las variables de voltaje y corriente se ajustan exponencialmente desde su condición inicial hasta alcanzar un nuevo estado estable llamado <strong>régimen permanente</strong>.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div class="bg-black/20 p-4 rounded-lg border border-white/5">
+                                <h4 class="font-bold text-indigo-300 mb-2 flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4"></i> Condensador (C)</h4>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                                    <li>Se opone a cambios bruscos de <strong>voltaje</strong>: \(v_c(0^-) = v_c(0^+)\).</li>
+                                    <li>En régimen permanente (DC), actúa como un <strong>circuito abierto</strong>.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-black/20 p-4 rounded-lg border border-white/5">
+                                <h4 class="font-bold text-purple-300 mb-2 flex items-center gap-2"><i data-lucide="magnet" class="w-4 h-4"></i> Inductor (L)</h4>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                                    <li>Se opone a cambios bruscos de <strong>corriente</strong>: \(i_l(0^-) = i_l(0^+)\).</li>
+                                    <li>En régimen permanente (DC), actúa como un <strong>cortocircuito</strong>.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Tarjeta RC -->
+                        <div class="theory-card">
+                            <h3 class="text-xl font-bold mb-4 text-indigo-300 flex items-center justify-between">
+                                Circuito RC (Primer Orden)
+                                <span class="text-xs font-mono bg-indigo-500/20 px-2 py-1 rounded text-indigo-200">\(\tau = RC\)</span>
+                            </h3>
+                            <div class="space-y-4 text-sm">
+                                <div>
+                                    <p class="text-slate-400 mb-1">Ecuación Diferencial (Nodos):</p>
+                                    <div class="text-center p-3 bg-black/40 rounded-lg font-mono">
+                                        \[ C\frac{dv_c(t)}{dt} + \frac{v_c(t)}{R} = I_s \]
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <p class="text-slate-400 mb-1 text-xs">Respuesta Natural (Descarga):</p>
+                                        <div class="text-center p-2 bg-black/40 rounded-lg">\[ v(t) = V_0 e^{-t/\tau} \]</div>
+                                    </div>
+                                    <div>
+                                        <p class="text-slate-400 mb-1 text-xs">Respuesta al Escalón (Carga):</p>
+                                        <div class="text-center p-2 bg-black/40 rounded-lg">\[ v(t) = V_s(1 - e^{-t/\tau}) \]</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta RL -->
+                        <div class="theory-card">
+                            <h3 class="text-xl font-bold mb-4 text-purple-300 flex items-center justify-between">
+                                Circuito RL (Primer Orden)
+                                <span class="text-xs font-mono bg-purple-500/20 px-2 py-1 rounded text-purple-200">\(\tau = L/R\)</span>
+                            </h3>
+                            <div class="space-y-4 text-sm">
+                                <div>
+                                    <p class="text-slate-400 mb-1">Ecuación Diferencial (Mallas):</p>
+                                    <div class="text-center p-3 bg-black/40 rounded-lg font-mono">
+                                        \[ L\frac{di_l(t)}{dt} + R i_l(t) = V_s \]
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <p class="text-slate-400 mb-1 text-xs">Respuesta Natural (Descarga):</p>
+                                        <div class="text-center p-2 bg-black/40 rounded-lg">\[ i(t) = I_0 e^{-t/\tau} \]</div>
+                                    </div>
+                                    <div>
+                                        <p class="text-slate-400 mb-1 text-xs">Respuesta al Escalón (Carga):</p>
+                                        <div class="text-center p-2 bg-black/40 rounded-lg">\[ i(t) = \frac{V_s}{R}(1 - e^{-t/\tau}) \]</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Simulador Interactivo -->
+            <section class="simulator-section mb-10">
+                <div class="glass-panel border-indigo-500/20">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-white/10 pb-4">
+                        <h2 class="text-2xl font-bold flex items-center gap-3">
+                            <i data-lucide="activity" class="text-indigo-400"></i> Laboratorio Virtual
+                        </h2>
+                        <div class="flex gap-2">
+                            <span class="flex h-3 w-3 relative mt-1">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                            </span>
+                            <span class="text-sm text-green-400 font-mono">Simulación Activa</span>
+                        </div>
+                    </div>
+                    
+                    <div class="simulator-layout">
+                        <!-- Panel de Controles -->
+                        <aside class="controls-panel bg-black/20 p-6 rounded-xl border border-white/5">
+                            <div class="control-group">
+                                <label>Tipo de Circuito</label>
+                                <select id="circuitType" class="w-full bg-slate-800 border border-slate-600 text-white p-3 rounded-lg outline-none focus:border-indigo-400 font-bold mb-2 transition-colors">
+                                    <option value="RC">Circuito RC (Análisis de Voltaje)</option>
+                                    <option value="RL">Circuito RL (Análisis de Corriente)</option>
+                                </select>
+                            </div>
+
+                            <div class="control-group">
+                                <label>Tipo de Respuesta</label>
+                                <select id="responseType" class="w-full bg-slate-800 border border-slate-600 text-white p-3 rounded-lg outline-none focus:border-indigo-400 font-bold mb-4 transition-colors">
+                                    <option value="step">Respuesta al Escalón (Carga)</option>
+                                    <option value="natural">Respuesta Natural (Descarga)</option>
+                                </select>
+                            </div>
+
+                            <div class="control-group border-t border-white/10 pt-4">
+                                <label id="vsLabel">Voltaje de Fuente (\(V_s\)) [V]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="vsRange" min="1" max="50" step="1" value="20">
+                                    <span class="value-display" id="vsVal">20 V</span>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label>Resistencia Equivalente (\(R\)) [\(\Omega\)]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="rRange" min="10" max="2000" step="10" value="760">
+                                    <span class="value-display" id="rVal">760 \(\Omega\)</span>
+                                </div>
+                            </div>
+
+                            <div id="cControl" class="control-group">
+                                <label>Capacitancia (\(C\)) [\(\mu F\)]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="cRange" min="1" max="1000" step="1" value="100">
+                                    <span class="value-display" id="cVal">100 \(\mu F\)</span>
+                                </div>
+                            </div>
+
+                            <div id="lControl" class="control-group" style="display: none;">
+                                <label>Inductancia (\(L\)) [mH]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="lRange" min="1" max="1000" step="1" value="76">
+                                    <span class="value-display" id="lVal">76 mH</span>
+                                </div>
+                            </div>
+
+                            <!-- Resultados en vivo -->
+                            <div class="p-4 bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-xl mt-6 shadow-inner">
+                                <h4 class="text-indigo-300 font-bold mb-3 text-sm uppercase tracking-wider">Parámetros Calculados</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center border-b border-white/5 pb-1">
+                                        <span class="text-sm text-slate-400">Constante de tiempo (\(\tau\)):</span>
+                                        <span id="tauResult" class="text-white font-mono font-bold">0.010 s</span>
+                                    </div>
+                                    <div class="flex justify-between items-center border-b border-white/5 pb-1">
+                                        <span class="text-sm text-slate-400">Régimen Permanente (\(5\tau\)):</span>
+                                        <span id="stableResult" class="text-white font-mono font-bold">0.050 s</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-1">
+                                        <span class="text-sm text-slate-400" id="maxValLabel">Valor Máximo:</span>
+                                        <span id="maxResult" class="text-indigo-300 font-mono font-bold">20.0 V</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <!-- Panel de Visualización -->
+                        <div class="viz-panel flex flex-col h-full">
+                            <div class="h-[350px] md:h-[400px] w-full bg-black/30 rounded-t-xl p-4 border border-white/5 relative">
+                                <canvas id="transientChart"></canvas>
+                            </div>
+                            
+                            <!-- Explicación Paso a Paso Dinámica -->
+                            <div class="flex-1 p-6 border border-t-0 border-white/5 bg-slate-900/50 rounded-b-xl">
+                                <h4 class="text-indigo-400 font-bold mb-3 flex items-center gap-2">
+                                    <i data-lucide="calculator" class="w-4 h-4"></i> Análisis Matemático
+                                </h4>
+                                <div id="derivationText" class="text-sm md:text-base text-slate-300 bg-black/20 p-4 rounded-lg border border-white/5 overflow-x-auto font-mono leading-relaxed">
+                                    Cargando solución...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Inicializar iconos
+        lucide.createIcons();
+
+        // Configuración de Chart.js
+        const ctx = document.getElementById('transientChart').getContext('2d');
+        
+        // Gradiente para el área del gráfico
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+        let transientChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Respuesta del Circuito',
+                    data: [],
+                    borderColor: '#818cf8', // Indigo 400
+                    borderWidth: 3,
+                    fill: true,
+                    backgroundColor: gradient,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    tension: 0.4 // Curva suave
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                        ticks: { color: '#94a3b8', maxTicksLimit: 8 },
+                        title: { display: true, text: 'Tiempo (segundos)', color: '#cbd5e1', font: {size: 13} }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: 'Magnitud', color: '#cbd5e1', font: {size: 13} }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#818cf8',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toFixed(3) + (document.getElementById('circuitType').value === 'RC' ? ' V' : ' A');
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Elementos del DOM
+        const circuitType = document.getElementById('circuitType');
+        const responseType = document.getElementById('responseType');
+        const vsRange = document.getElementById('vsRange');
+        const rRange = document.getElementById('rRange');
+        const cRange = document.getElementById('cRange');
+        const lRange = document.getElementById('lRange');
+        const cControl = document.getElementById('cControl');
+        const lControl = document.getElementById('lControl');
+        const vsVal = document.getElementById('vsVal');
+        const rVal = document.getElementById('rVal');
+        const cVal = document.getElementById('cVal');
+        const lVal = document.getElementById('lVal');
+        const vsLabel = document.getElementById('vsLabel');
+        const tauResult = document.getElementById('tauResult');
+        const stableResult = document.getElementById('stableResult');
+        const maxResult = document.getElementById('maxResult');
+        const maxValLabel = document.getElementById('maxValLabel');
+        const derivationText = document.getElementById('derivationText');
+
+        function updateSimulation() {
+            const type = circuitType.value;
+            const resType = responseType.value;
+            const Vs = parseFloat(vsRange.value);
+            const R = parseFloat(rRange.value);
+            let tau, maxValue, unitY, colorCode, rgbColor;
+
+            // Actualizar etiquetas visuales de los inputs
+            vsVal.innerText = Vs + ' V';
+            rVal.innerText = R + ' Ω';
+            
+            // Lógica RC vs RL
+            if (type === 'RC') {
+                const C = parseFloat(cRange.value) * 1e-6; // uF to F
+                cControl.style.display = 'block';
+                lControl.style.display = 'none';
+                cVal.innerText = cRange.value + ' μF';
+                
+                tau = R * C;
+                maxValue = Vs;
+                unitY = 'Voltaje del Condensador v_c(t) [V]';
+                vsLabel.innerHTML = resType === 'step' ? 'Voltaje de Fuente (\\(V_s\\)) [V]' : 'Voltaje Inicial (\\(V_0\\)) [V]';
+                maxValLabel.innerText = 'Voltaje Máximo:';
+                maxResult.innerText = maxValue.toFixed(2) + ' V';
+                
+                colorCode = '#818cf8'; // Indigo
+                rgbColor = '99, 102, 241';
+                
+                // Texto de derivación RC
+                if(resType === 'step') {
+                    derivationText.innerHTML = `
+                        1. Condición inicial: Condensador descargado, \\( v_c(0) = 0\\text{ V} \\).<br>
+                        2. Régimen permanente (\\(t \\to \\infty\\)): Condensador se comporta como circuito abierto, \\( v_c(\\infty) = V_s = ${Vs}\\text{ V} \\).<br>
+                        3. Constante de tiempo: \\( \\tau = R \\cdot C = (${R}) \\cdot (${cRange.value} \\times 10^{-6}) = ${tau.toFixed(4)}\\text{ s} \\).<br><br>
+                        Ecuación final: \\( v_c(t) = ${Vs}(1 - e^{-t/${tau.toFixed(4)}})\\text{ V} \\)
+                    `;
+                } else {
+                    derivationText.innerHTML = `
+                        1. Condición inicial: Condensador cargado, \\( v_c(0) = V_0 = ${Vs}\\text{ V} \\).<br>
+                        2. Régimen permanente (\\(t \\to \\infty\\)): Condensador se descarga por completo, \\( v_c(\\infty) = 0\\text{ V} \\).<br>
+                        3. Constante de tiempo: \\( \\tau = R \\cdot C = (${R}) \\cdot (${cRange.value} \\times 10^{-6}) = ${tau.toFixed(4)}\\text{ s} \\).<br><br>
+                        Ecuación final: \\( v_c(t) = ${Vs} \\cdot e^{-t/${tau.toFixed(4)}}\\text{ V} \\)
+                    `;
+                }
+
+            } else {
+                const L = parseFloat(lRange.value) * 1e-3; // mH to H
+                cControl.style.display = 'none';
+                lControl.style.display = 'block';
+                lVal.innerText = lRange.value + ' mH';
+                
+                tau = L / R;
+                maxValue = Vs / R;
+                unitY = 'Corriente del Inductor i_L(t) [A]';
+                vsLabel.innerHTML = resType === 'step' ? 'Voltaje de Fuente (\\(V_s\\)) [V]' : 'Voltaje Equivalente Inicial [V]';
+                maxValLabel.innerText = 'Corriente Máxima:';
+                maxResult.innerText = maxValue.toFixed(3) + ' A';
+                
+                colorCode = '#c084fc'; // Purple
+                rgbColor = '168, 85, 247';
+
+                // Texto de derivación RL
+                if(resType === 'step') {
+                    derivationText.innerHTML = `
+                        1. Condición inicial: Inductor sin energía, \\( i_L(0) = 0\\text{ A} \\).<br>
+                        2. Régimen permanente (\\(t \\to \\infty\\)): Inductor es cortocircuito, \\( i_L(\\infty) = \\frac{V_s}{R} = \\frac{${Vs}}{${R}} = ${maxValue.toFixed(3)}\\text{ A} \\).<br>
+                        3. Constante de tiempo: \\( \\tau = \\frac{L}{R} = \\frac{${lRange.value} \\times 10^{-3}}{${R}} = ${tau.toFixed(4)}\\text{ s} \\).<br><br>
+                        Ecuación final: \\( i_L(t) = ${maxValue.toFixed(3)}(1 - e^{-t/${tau.toFixed(4)}})\\text{ A} \\)
+                    `;
+                } else {
+                    derivationText.innerHTML = `
+                        1. Condición inicial: Inductor energizado, \\( i_L(0) = I_0 = \\frac{${Vs}}{${R}} = ${maxValue.toFixed(3)}\\text{ A} \\).<br>
+                        2. Régimen permanente (\\(t \\to \\infty\\)): La energía se disipa en R, \\( i_L(\\infty) = 0\\text{ A} \\).<br>
+                        3. Constante de tiempo: \\( \\tau = \\frac{L}{R} = \\frac{${lRange.value} \\times 10^{-3}}{${R}} = ${tau.toFixed(4)}\\text{ s} \\).<br><br>
+                        Ecuación final: \\( i_L(t) = ${maxValue.toFixed(3)} \\cdot e^{-t/${tau.toFixed(4)}}\\text{ A} \\)
+                    `;
+                }
+            }
+
+            // Renderizar matemáticas
+            if (window.MathJax) {
+                MathJax.typesetPromise([derivationText, vsLabel, maxValLabel]);
+            }
+
+            // Actualizar panel de resultados
+            tauResult.innerText = tau.toFixed(4) + ' s';
+            stableResult.innerText = (5 * tau).toFixed(4) + ' s';
+            maxResult.style.color = colorCode;
+
+            // Generar datos para el gráfico
+            const labels = [];
+            const data = [];
+            const steps = 150;
+            const tMax = 6 * tau; // Mostrar un poco más allá de 5 tau para ver la línea plana
+
+            for (let i = 0; i <= steps; i++) {
+                const t = (tMax * i) / steps;
+                labels.push(t.toFixed(4));
+                
+                let val;
+                if(resType === 'step') {
+                    val = maxValue * (1 - Math.exp(-t / tau)); // Carga
+                } else {
+                    val = maxValue * Math.exp(-t / tau); // Descarga
+                }
+                data.push(val);
+            }
+
+            // Actualizar Chart.js
+            let newGradient = ctx.createLinearGradient(0, 0, 0, 400);
+            newGradient.addColorStop(0, `rgba(${rgbColor}, 0.5)`);
+            newGradient.addColorStop(1, `rgba(${rgbColor}, 0.0)`);
+
+            transientChart.data.labels = labels;
+            transientChart.data.datasets[0].data = data;
+            transientChart.data.datasets[0].label = unitY;
+            transientChart.data.datasets[0].borderColor = colorCode;
+            transientChart.data.datasets[0].backgroundColor = newGradient;
+            
+            transientChart.options.scales.y.title.text = unitY;
+            
+            // Ajustar el límite Y para que la gráfica no toque el borde superior
+            transientChart.options.scales.y.max = resType === 'step' ? maxValue * 1.1 : maxValue * 1.1;
+            transientChart.options.scales.y.min = 0;
+
+            transientChart.update();
+        }
+
+        // Listeners de eventos
+        [circuitType, responseType, vsRange, rRange, cRange, lRange].forEach(el => {
+            el.addEventListener('input', updateSimulation);
+        });
+
+        // Ejecución inicial al cargar la página
+        window.addEventListener('load', () => {
+            setTimeout(updateSimulation, 500); // Pequeño delay para asegurar que MathJax cargó
+        });
+    </script>
+</body>
+</html>

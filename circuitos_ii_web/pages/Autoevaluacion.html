@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoevaluación - Circuitos II</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos y Gráficos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- MathJax -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #f43f5e; /* Rose/Red accent for testing */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(244, 63, 94, 0.1), transparent 50%),
+                radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.1), transparent 50%);
+            background-attachment: fixed;
+        }
+        .app-container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .option-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+        .option-btn.correct { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399; }
+        .option-btn.incorrect { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #f87171; }
+        
+        .math-scroll { overflow-x: auto; overflow-y: hidden; }
+
+        /* Progress Bar */
+        .progress-container { width: 100%; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container flex flex-col min-h-[90vh]">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors w-max">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+        </a>
+
+        <header class="mb-8 text-center">
+            <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-full">
+                <i data-lucide="brain-circuit" class="w-3 h-3 inline mr-1"></i> Ponte a Prueba
+            </div>
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight">Autoevaluación Final</h1>
+            <p class="text-slate-400">Demuestra tu dominio sobre las 6 unidades de Circuitos II.</p>
+        </header>
+
+        <!-- Contenedor del Quiz -->
+        <div id="quizContainer" class="glass-panel flex-1 flex flex-col relative overflow-hidden">
+            
+            <!-- Pantalla de Inicio -->
+            <div id="startScreen" class="flex-1 flex flex-col items-center justify-center text-center py-10">
+                <div class="w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mb-6 border border-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.3)]">
+                    <i data-lucide="rocket" class="w-10 h-10 text-rose-400"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-4">¿Listo para el reto?</h2>
+                <p class="text-slate-400 mb-8 max-w-md">Este test consta de 6 preguntas seleccionadas estratégicamente (una por cada unidad del pensum). No hay límite de tiempo.</p>
+                <button onclick="startQuiz()" class="px-8 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2">
+                    Iniciar Evaluación <i data-lucide="play" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Pantalla de Preguntas -->
+            <div id="questionScreen" class="hidden flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="unitBadge" class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-xs font-bold uppercase tracking-widest border border-white/10">Unidad I</span>
+                    <span id="questionCount" class="text-sm font-bold text-slate-400 font-mono">1 / 6</span>
+                </div>
+                
+                <div class="progress-container mb-8">
+                    <div id="progressBar" class="progress-bar" style="width: 16.6%;"></div>
+                </div>
+
+                <div class="flex-1">
+                    <h3 id="questionText" class="text-xl md:text-2xl font-bold text-white mb-6 leading-relaxed math-scroll min-h-[80px]">
+                        Cargando pregunta...
+                    </h3>
+
+                    <div id="optionsContainer" class="flex flex-col gap-3 mb-8">
+                        <!-- Botones de opciones generados por JS -->
+                    </div>
+
+                    <div id="feedbackContainer" class="hidden p-4 rounded-xl mb-6 math-scroll text-sm">
+                        <!-- Explicación generada por JS -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-auto pt-4 border-t border-white/10">
+                    <button id="nextBtn" onclick="nextQuestion()" disabled class="px-6 py-2.5 bg-slate-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2 opacity-50 cursor-not-allowed">
+                        Siguiente <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pantalla de Resultados -->
+            <div id="resultScreen" class="hidden flex-1 flex flex-col items-center justify-center py-6">
+                <h2 class="text-3xl font-bold text-white mb-2">¡Evaluación Completada!</h2>
+                <p id="resultMsg" class="text-slate-400 mb-8">Calculando tus resultados...</p>
+                
+                <div class="w-48 h-48 relative mb-8">
+                    <canvas id="scoreChart"></canvas>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col">
+                        <span id="scoreText" class="text-3xl font-black text-white">0%</span>
+                        <span class="text-xs text-slate-400 uppercase tracking-widest">Aciertos</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 w-full max-w-sm mb-8 text-center">
+                    <div class="bg-black/30 p-4 rounded-xl border border-emerald-500/20">
+                        <div class="text-2xl font-bold text-emerald-400" id="correctCount">0</div>
+                        <div class="text-xs text-slate-400 uppercase tracking-widest">Correctas</div>
+                    </div>
+                    <div class="bg-black/30 p-4 rounded-xl border border-rose-500/20">
+                        <div class="text-2xl font-bold text-rose-400" id="incorrectCount">0</div>
+                        <div class="text-xs text-slate-400 uppercase tracking-widest">Incorrectas</div>
+                    </div>
+                </div>
+
+                <button onclick="location.reload()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg border border-white/10 transition-colors flex items-center gap-2">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reintentar Test
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Base de Datos de Preguntas (Cubriendo Unidades I a VI)
+        const questions = [
+            {
+                unit: 'Unidad I: Transitorios',
+                text: 'En un circuito RC serie donde \\(R = 2\\text{ k}\\Omega\\) y \\(C = 500\\text{ }\\mu\\text{F}\\), ¿cuál es el valor de la constante de tiempo \\(\\tau\\)?',
+                options: [
+                    '\\(1\\text{ ms}\\)',
+                    '\\(1\\text{ s}\\)',
+                    '\\(10\\text{ s}\\)',
+                    '\\(0.1\\text{ s}\\)'
+                ],
+                correct: 1,
+                explanation: 'Correcto. La fórmula es \\(\\tau = R \\cdot C\\). Calculando: \\( (2000\\text{ }\\Omega) \\times (500 \\times 10^{-6}\\text{ F}) = 1\\text{ segundo}\\).'
+            },
+            {
+                unit: 'Unidad II: RLC 2do Orden',
+                text: 'Si en un circuito RLC se determina que el factor de amortiguamiento \\(\\alpha\\) es estrictamente menor que la frecuencia natural \\(\\omega_0\\), ¿qué tipo de respuesta transitoria tendrá el sistema?',
+                options: [
+                    'Sobreamortiguada',
+                    'Críticamente Amortiguada',
+                    'Subamortiguada (Oscilatoria)',
+                    'Inestable'
+                ],
+                correct: 2,
+                explanation: 'Exacto. Cuando \\(\\alpha < \\omega_0\\), las raíces de la ecuación característica son complejas conjugadas, produciendo una oscilación senoidal que decae en el tiempo (Subamortiguada).'
+            },
+            {
+                unit: 'Unidad III: Variables de Estado',
+                text: 'En la ecuación de estado \\(\\dot{\\mathbf{x}}(t) = \\mathbf{A}\\mathbf{x}(t) + \\mathbf{B}\\mathbf{u}(t)\\), ¿qué representa la matriz \\(\\mathbf{A}\\)?',
+                options: [
+                    'La Matriz de Entrada (Acoplamiento de fuentes)',
+                    'La Matriz del Sistema (Dinámica interna y autovalores)',
+                    'El Vector de Variables de Estado',
+                    'La Matriz de Transmisión Directa'
+                ],
+                correct: 1,
+                explanation: 'Correcto. La matriz \\(\\mathbf{A}\\) define cómo los estados del sistema interactúan entre sí. Sus autovalores determinan directamente la estabilidad del circuito.'
+            },
+            {
+                unit: 'Unidad IV: Función de Transferencia',
+                text: 'En el Diagrama de Bode de Magnitud para un filtro Pasa-Bajos de 1er orden, ¿cuánto cae la ganancia exactamente en la frecuencia de corte \\(\\omega_c\\)?',
+                options: [
+                    'Cae \\(0\\text{ dB}\\)',
+                    'Cae aproximadamente \\(-3\\text{ dB}\\)',
+                    'Cae \\(-20\\text{ dB}\\)',
+                    'Cae a la mitad (\\(0.5\\text{ dB}\\))'
+                ],
+                correct: 1,
+                explanation: 'Muy bien. En la frecuencia de corte \\(\\omega_c\\), la magnitud real es \\(1/\\sqrt{2}\\). En decibeles esto equivale a \\(20\\log_{10}(1/\\sqrt{2}) \\approx -3\\text{ dB}\\).'
+            },
+            {
+                unit: 'Unidad V: Transformada de Laplace',
+                text: '¿Cuál es la transformada de Laplace \\(F(s)\\) de una función de decaimiento exponencial \\(f(t) = e^{-at}u(t)\\)?',
+                options: [
+                    '\\( \\frac{1}{s} \\)',
+                    '\\( \\frac{a}{s^2 + a^2} \\)',
+                    '\\( \\frac{s}{s^2 + a^2} \\)',
+                    '\\( \\frac{1}{s + a} \\)'
+                ],
+                correct: 3,
+                explanation: 'Correcto. Es uno de los pares fundamentales. Un polo real en \\(s = -a\\) en el dominio de la frecuencia se traduce en una envolvente exponencial \\(e^{-at}\\) en el tiempo.'
+            },
+            {
+                unit: 'Unidad VI: Redes de Dos Puertos',
+                text: 'Si tienes dos redes de dos puertos conectadas en <strong>CASCADA</strong> (la salida de una es la entrada de la otra), ¿qué conjunto de parámetros facilita el cálculo de la red equivalente mediante una simple multiplicación de matrices?',
+                options: [
+                    'Parámetros Z (Impedancia)',
+                    'Parámetros Y (Admitancia)',
+                    'Parámetros h (Híbridos)',
+                    'Parámetros ABCD (Transmisión / T)'
+                ],
+                correct: 3,
+                explanation: 'Excelente. Los parámetros de Transmisión (ABCD) se diseñaron específicamente para que, en cascada, la matriz equivalente sea el producto: \\(\\mathbf{T}_{eq} = \\mathbf{T}_A \\times \\mathbf{T}_B\\).'
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+
+        const screens = {
+            start: document.getElementById('startScreen'),
+            question: document.getElementById('questionScreen'),
+            result: document.getElementById('resultScreen')
+        };
+
+        function startQuiz() {
+            screens.start.classList.add('hidden');
+            screens.question.classList.remove('hidden');
+            screens.question.classList.add('flex');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            const q = questions[currentQuestion];
+            
+            // Actualizar UI superior
+            document.getElementById('unitBadge').innerText = q.unit;
+            document.getElementById('questionCount').innerText = `${currentQuestion + 1} / ${questions.length}`;
+            document.getElementById('progressBar').style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+            
+            // Texto Pregunta
+            document.getElementById('questionText').innerHTML = q.text;
+            
+            // Opciones
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full p-4 rounded-xl text-slate-200 font-medium text-sm md:text-base flex items-center gap-3';
+                btn.innerHTML = `<div class="w-6 h-6 rounded border border-slate-500 flex items-center justify-center text-xs text-slate-400 font-mono shrink-0">${String.fromCharCode(65 + index)}</div> <div>${opt}</div>`;
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Reset UI inferior
+            const feedback = document.getElementById('feedbackContainer');
+            feedback.classList.add('hidden');
+            feedback.className = 'hidden p-4 rounded-xl mb-6 math-scroll text-sm';
+            
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.disabled = true;
+            nextBtn.classList.remove('bg-rose-600', 'hover:bg-rose-500');
+            nextBtn.classList.add('bg-slate-700', 'opacity-50', 'cursor-not-allowed');
+            
+            if (currentQuestion === questions.length - 1) {
+                nextBtn.innerHTML = 'Ver Resultados <i data-lucide="flag" class="w-4 h-4"></i>';
+            }
+
+            lucide.createIcons();
+            if (window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('questionScreen')]);
+            }
+        }
+
+        function selectOption(selectedIndex, btnElement) {
+            if (answered) return;
+            answered = true;
+
+            const q = questions[currentQuestion];
+            const isCorrect = (selectedIndex === q.correct);
+            const allBtns = document.querySelectorAll('.option-btn');
+
+            // Deshabilitar botones y mostrar correcta/incorrecta
+            allBtns.forEach((btn, index) => {
+                btn.disabled = true;
+                if (index === q.correct) {
+                    btn.classList.add('correct');
+                    btn.innerHTML = btn.innerHTML.replace('border-slate-500', 'bg-emerald-500/20 border-emerald-500 text-emerald-400').replace(/>[A-D]</, '><i data-lucide="check" class="w-3 h-3"></i><');
+                } else if (index === selectedIndex && !isCorrect) {
+                    btn.classList.add('incorrect');
+                    btn.innerHTML = btn.innerHTML.replace('border-slate-500', 'bg-rose-500/20 border-rose-500 text-rose-400').replace(/>[A-D]</, '><i data-lucide="x" class="w-3 h-3"></i><');
+                } else {
+                    btn.classList.add('opacity-40');
+                }
+            });
+
+            // Feedback Panel
+            const feedback = document.getElementById('feedbackContainer');
+            feedback.classList.remove('hidden');
+            
+            if (isCorrect) {
+                score++;
+                feedback.classList.add('bg-emerald-500/10', 'border', 'border-emerald-500/30', 'text-emerald-200');
+                feedback.innerHTML = `<strong class="text-emerald-400 flex items-center gap-2 mb-2"><i data-lucide="check-circle" class="w-4 h-4"></i> ¡Respuesta Correcta!</strong> ${q.explanation}`;
+            } else {
+                feedback.classList.add('bg-rose-500/10', 'border', 'border-rose-500/30', 'text-rose-200');
+                feedback.innerHTML = `<strong class="text-rose-400 flex items-center gap-2 mb-2"><i data-lucide="x-circle" class="w-4 h-4"></i> Respuesta Incorrecta</strong> ${q.explanation}`;
+            }
+
+            // Habilitar botón Next
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('bg-slate-700', 'opacity-50', 'cursor-not-allowed');
+            nextBtn.classList.add('bg-rose-600', 'hover:bg-rose-500');
+
+            lucide.createIcons();
+            if (window.MathJax) {
+                MathJax.typesetPromise([feedback]);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            screens.question.classList.add('hidden');
+            screens.question.classList.remove('flex');
+            screens.result.classList.remove('hidden');
+            screens.result.classList.add('flex');
+
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            document.getElementById('correctCount').innerText = score;
+            document.getElementById('incorrectCount').innerText = questions.length - score;
+            document.getElementById('scoreText').innerText = `${percentage}%`;
+
+            let msg = "";
+            let color = "";
+            if (percentage === 100) {
+                msg = "¡Excelente! Eres un maestro de Circuitos II.";
+                color = '#10b981'; // Emerald
+                triggerConfetti();
+            } else if (percentage >= 60) {
+                msg = "¡Buen trabajo! Tienes bases sólidas, pero puedes mejorar.";
+                color = '#f59e0b'; // Amber
+            } else {
+                msg = "Sigue practicando. Te recomendamos repasar los simuladores.";
+                color = '#f43f5e'; // Rose
+            }
+            document.getElementById('resultMsg').innerText = msg;
+
+            // Dibujar Donut Chart
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correctas', 'Incorrectas'],
+                    datasets: [{
+                        data: [score, questions.length - score],
+                        backgroundColor: [color, 'rgba(255, 255, 255, 0.05)'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    cutout: '80%',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    animation: { animateScale: true }
+                }
+            });
+        }
+
+        function triggerConfetti() {
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                const particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+    </script>
+</body>
+</html>

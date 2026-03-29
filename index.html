@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sargas Engineering Hub - UDO</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.15), transparent 40%),
+                radial-gradient(circle at center, rgba(139, 92, 246, 0.05), transparent 60%);
+            background-attachment: fixed;
+        }
+
+        /* Particle Background Effect */
+        #particles-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        .glass-header {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .hero-section {
+            padding: 4rem 1.5rem 6rem;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: #64748b;
+            font-weight: 400;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        /* Subject Cards */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem 6rem;
+        }
+
+        .project-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at top right, var(--card-color), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: 0;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(30, 41, 59, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .project-card:hover::before {
+            opacity: 0.15;
+        }
+
+        .card-icon {
+            width: 56px; height: 56px;
+            border-radius: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            color: var(--card-color);
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-desc {
+            color: #94a3b8;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 1.5rem;
+        }
+
+        .launch-btn {
+            padding: 0.625rem 1.25rem;
+            background: var(--card-color);
+            color: #000;
+            font-weight: 700;
+            font-size: 0.875rem;
+            border-radius: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+
+        .launch-btn:hover {
+            filter: brightness(1.1);
+            transform: scale(1.05);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #10b981;
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        footer {
+            padding: 4rem 1.5rem;
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+            color: #475569;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 640px) {
+            .hero-section { padding: 3rem 1rem; }
+            .project-grid { padding: 0 1rem 4rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+
+    <header class="glass-header">
+        <div class="max-w-[1400px] mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center font-bold text-black text-sm">S</div>
+                <span class="font-bold tracking-tight">ENG-HUB</span>
+            </div>
+            <nav class="hidden md:flex gap-8 text-sm font-semibold text-slate-400">
+                <a href="#" class="hover:text-white transition-colors">Portafolio</a>
+                <a href="#" class="hover:text-white transition-colors">UDO-Bolivar</a>
+                <a href="https://github.com/sargas1717-bit/Departamento-Materias" class="text-blue-400 hover:text-blue-300">GitHub Repo</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <h1 class="hero-title">Sargas Engineering Hub</h1>
+        <p class="hero-subtitle">Departamento Electricidad - UDO Anzoátegui</p>
+        <p class="mt-6 text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">
+            Plataforma centralizada de simuladores y recursos académicos interactivos para ingeniería eléctrica. Diseñada para el aprendizaje visual de alta precisión.
+        </p>
+    </section>
+
+    <div class="project-grid">
+        <!-- Electrodinamica II -->
+        <a href="./electrodinamica_ii_web/index.html" class="project-card" style="--card-color: #fbbf24;">
+            <div class="card-icon"><i data-lucide="zap"></i></div>
+            <h3 class="card-title">Electrodinámica II</h3>
+            <p class="card-desc">Simulación avanzada de ondas electromagnéticas, guías de onda rectangulares y teorema de Poynting con visualización 3D.</p>
+            <div class="card-footer">
+                <div class="status-badge">
+                    <div class="status-dot"></div> Online
+                </div>
+                <span class="launch-btn">Explorar</span>
+            </div>
+        </a>
+
+        <!-- Circuitos II -->
+        <a href="./circuitos_ii_web/index.html" class="project-card" style="--card-color: #3b82f6;">
+            <div class="card-icon"><i data-lucide="activity"></i></div>
+            <h3 class="card-title">Circuitos II</h3>
+            <p class="card-desc">Análisis de redes en régimen senoidal, respuesta en frecuencia y simuladores dinámicos de circuitos RLC.</p>
+            <div class="card-footer">
+                <div class="status-badge">
+                    <div class="status-dot"></div> Online
+                </div>
+                <span class="launch-btn">Explorar</span>
+            </div>
+        </a>
+
+        <!-- Electrodinamica I -->
+        <a href="./electrodinamica_i_web/index.html" class="project-card" style="--card-color: #ef4444;">
+            <div class="card-icon"><i data-lucide="magnet"></i></div>
+            <h3 class="card-title">Electrodinámica I</h3>
+            <p class="card-desc">Fundamentos de campos eléctricos y magnéticos estáticos. Leyes de Gauss, Coulomb y potencial eléctrico.</p>
+            <div class="card-footer">
+                <div class="status-badge">
+                    <div class="status-dot"></div> Online
+                </div>
+                <span class="launch-btn">Explorar</span>
+            </div>
+        </a>
+
+        <!-- Electronica I -->
+        <a href="./electronica_i_web/index.html" class="project-card" style="--card-color: #10b981;">
+            <div class="card-icon"><i data-lucide="cpu"></i></div>
+            <h3 class="card-title">Electrónica I</h3>
+            <p class="card-desc">Física de semiconductores, diodos y transistores. Modelado de circuitos electrónicos fundamentales.</p>
+            <div class="card-footer">
+                <div class="status-badge">
+                    <div class="status-dot"></div> v1.2
+                </div>
+                <span class="launch-btn">Explorar</span>
+            </div>
+        </a>
+
+        <!-- EngineeringHub (Electrik Pro) -->
+        <a href="./EngineeringHub/index.html" class="project-card" style="--card-color: #8b5cf6;">
+            <div class="card-icon"><i data-lucide="layout"></i></div>
+            <h3 class="card-title">Electrik Pro Suite</h3>
+            <p class="card-desc">Colección de herramientas profesionales de cálculo e ingeniería eléctrica. Simuladores de PLC y Ladder integrados.</p>
+            <div class="card-footer">
+                <div class="status-badge">
+                    <div class="status-dot"></div> PRO
+                </div>
+                <span class="launch-btn">Abrir</span>
+            </div>
+        </a>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Sargas Engineering Hub. Universidad de Oriente - Núcleo Anzoátegui.</p>
+        <p class="mt-2 text-xs uppercase tracking-widest text-slate-600">Para el avance de la Ingeniería Eléctrica</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Particles System
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(148, 163, 184, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 100; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Draw connecting lines
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

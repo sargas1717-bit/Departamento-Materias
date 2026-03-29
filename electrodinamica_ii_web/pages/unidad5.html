@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidad V: Teorema de Poynting - Electrodinámica II</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax para Fórmulas -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Three.js para gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Chart.js para gráficas 2D -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-s: #f43f5e; /* Rose for Poynting Vector S */
+            --accent-e: #10b981; /* Emerald for E Field */
+            --accent-h: #0ea5e9; /* Cyan for H Field */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(244, 63, 94, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.15), transparent 40%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+        .app-container { max-width: 1500px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .theory-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            height: 100%;
+        }
+        .theory-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(244, 63, 94, 0.4); /* Rose hover */
+        }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; height: 16px; width: 16px;
+            border-radius: 50%; background: #fff; cursor: pointer;
+            margin-top: -6px; box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.2); border-radius: 2px;
+        }
+
+        .math-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 5px; }
+        .math-scroll::-webkit-scrollbar { height: 6px; }
+        .math-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        .view-container { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 0.3s; }
+        .legend-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+        
+        .toggle-btn { transition: all 0.2s ease; }
+        .toggle-btn.active { background-color: rgba(244, 63, 94, 0.2); color: #fb7185; border-color: #f43f5e; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+        </a>
+
+        <header class="mb-10 text-center md:text-left">
+            <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-full uppercase tracking-widest">
+                Electrodinámica II - Unidad V
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Teorema de Poynting</h1>
+            <p class="text-slate-400 text-lg max-w-3xl">La ley de conservación de energía aplicada al electromagnetismo. Estudia cómo la potencia real y reactiva viaja a través de la interacción de los campos.</p>
+        </header>
+
+        <!-- Sección Teórica -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="theory-card border-t-2 border-t-rose-500">
+                <h3 class="text-lg font-bold mb-3 text-rose-300 flex items-center gap-2">
+                    <i data-lucide="zap"></i> Vector de Poynting (\(\mathbf{S}\))
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">Representa la densidad de flujo de potencia direccional (W/m²). Es instantáneo y señala hacia dónde viaja la energía electromagnética en cada punto del espacio.</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll text-sm font-mono text-rose-100">
+                    \[ \mathbf{S}(t) = \mathbf{E}(t) \times \mathbf{H}(t) \]
+                </div>
+            </div>
+
+            <div class="theory-card border-t-2 border-t-emerald-500">
+                <h3 class="text-lg font-bold mb-3 text-emerald-300 flex items-center gap-2">
+                    <i data-lucide="activity"></i> Potencia Promedio (\(S_{prom}\))
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">Dado que la onda oscila rápidamente, la magnitud útil en ingeniería es el promedio temporal. Indica la potencia <strong>real</strong> que fluye y puede ser aprovechada.</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll text-sm font-mono text-emerald-100">
+                    \[ \mathbf{S}_{prom} = \frac{1}{2} \text{Re}\{ \mathbf{E}_s \times \mathbf{H}_s^* \} \]
+                </div>
+            </div>
+
+            <div class="theory-card border-t-2 border-t-amber-500">
+                <h3 class="text-lg font-bold mb-3 text-amber-300 flex items-center gap-2">
+                    <i data-lucide="refresh-cw"></i> Medios con Pérdidas
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">Si la impedancia del medio \(\eta\) es compleja, \(\mathbf{E}\) y \(\mathbf{H}\) se desfasan. Esto genera periodos donde \(\mathbf{S}(t)\) es negativo (energía reactiva devuelta).</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll text-sm font-mono text-amber-100">
+                    \[ S_{prom} = \frac{E_0^2}{2|\eta|} \cos(\theta_\eta) \]
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulador 3D/2D Interactivo -->
+        <section class="glass-panel">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-white/10 pb-4">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <i data-lucide="cpu" class="text-rose-400"></i> Analizador de Flujo de Potencia
+                </h2>
+                
+                <!-- Toggle 2D / 3D -->
+                <div class="flex bg-black/40 p-1 rounded-lg border border-white/10">
+                    <button id="btn3D" onclick="setView('3D')" class="toggle-btn active px-4 py-1.5 text-xs font-bold rounded uppercase tracking-wider border border-transparent">
+                        <i data-lucide="box" class="w-3 h-3 inline mr-1"></i> Espacio 3D
+                    </button>
+                    <button id="btn2D" onclick="setView('2D')" class="toggle-btn px-4 py-1.5 text-xs font-bold rounded uppercase tracking-wider text-slate-400 border border-transparent hover:text-slate-200">
+                        <i data-lucide="activity" class="w-3 h-3 inline mr-1"></i> Oscilograma de Potencia
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[650px]">
+                
+                <!-- Controles Izquierda -->
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                    <div class="bg-black/30 p-6 rounded-2xl border border-white/5 flex-1 flex flex-col">
+                        
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">Variables del Medio y Onda</h4>
+
+                        <div class="space-y-6">
+                            <!-- Amplitud Eléctrica -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-emerald-500/20">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Amplitud Eléctrica (\(E_0\))
+                                    <span id="e0Val" class="text-emerald-400 font-mono">100 V/m</span>
+                                </label>
+                                <input type="range" id="e0Range" min="10" max="500" step="10" value="100">
+                            </div>
+
+                            <!-- Magnitud Impedancia -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-white/5">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Magnitud Impedancia (\(|\eta|\))
+                                    <span id="etaVal" class="text-slate-300 font-mono">377 Ω</span>
+                                </label>
+                                <input type="range" id="etaRange" min="50" max="1000" step="1" value="377">
+                                <p class="text-[10px] text-slate-500 mt-2">377 Ω equivale al vacío/espacio libre.</p>
+                            </div>
+
+                            <!-- Desfase de Impedancia (Pérdidas) -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-amber-500/20">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Ángulo de Desfase (\(\theta_\eta\))
+                                    <span id="thetaVal" class="text-amber-400 font-mono">0°</span>
+                                </label>
+                                <input type="range" id="thetaRange" min="0" max="45" step="1" value="0">
+                                <p class="text-[10px] text-slate-500 mt-2">>0° indica que el medio tiene pérdidas (\(\sigma > 0\)). Máximo 45° (buen conductor).</p>
+                            </div>
+                        </div>
+
+                        <!-- Resultados Dinámicos Calculados -->
+                        <div class="mt-auto pt-6 border-t border-white/10">
+                            <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 text-center">Resultados de Potencia</p>
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="bg-black/40 p-3 rounded-lg border border-cyan-500/20 text-center">
+                                    <p class="text-[9px] uppercase font-black text-cyan-500 mb-1">Amplitud Mag. (\(H_0\))</p>
+                                    <p id="resH0" class="text-xl font-mono text-white font-bold">0.27 A/m</p>
+                                </div>
+                                <div class="bg-black/40 p-3 rounded-lg border border-rose-500/40 text-center shadow-[0_0_15px_rgba(244,63,94,0.15)]">
+                                    <p class="text-[9px] uppercase font-black text-rose-500 mb-1">Pot. Real Promedio (\(S_{prom}\))</p>
+                                    <p id="resSprom" class="text-xl font-mono text-white font-bold">13.26</p>
+                                    <p class="text-[9px] text-slate-400 mt-1">W/m²</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-black/40 rounded-lg border border-white/5 text-center">
+                                <div id="mathLive" class="text-xs font-mono text-slate-300 overflow-x-auto">
+                                    <!-- Generado Dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visores (3D y 2D superpuestos) -->
+                <div class="lg:col-span-8 bg-black/40 rounded-3xl border border-white/5 relative overflow-hidden h-[450px] lg:h-full">
+                    
+                    <!-- LEYENDA -->
+                    <div class="absolute top-4 left-4 z-20 pointer-events-none">
+                        <div class="bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
+                            <div class="space-y-2">
+                                <div class="legend-badge text-emerald-400"><div class="legend-color bg-emerald-500"></div> \(\vec{E}\) (Campo Eléctrico)</div>
+                                <div class="legend-badge text-cyan-400"><div class="legend-color bg-cyan-500"></div> \(\vec{H}\) (Campo Magnético)</div>
+                                <div class="legend-badge text-rose-400"><div class="legend-color bg-rose-500"></div> \(\vec{S}\) (Potencia Instantánea)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VISTA 3D -->
+                    <div id="view3D" class="view-container z-10 opacity-100 flex items-center justify-center">
+                        <div class="absolute bottom-4 right-4 z-20 pointer-events-none text-right">
+                            <div class="bg-black/60 backdrop-blur-sm border border-white/10 p-2 rounded-lg shadow-xl inline-block text-xs text-slate-300">
+                                <i data-lucide="mouse" class="w-3 h-3 inline"></i> Arrastrar: Rotar | Scroll: Zoom
+                            </div>
+                        </div>
+                        <div id="canvas3D-container" class="w-full h-full"></div>
+                        
+                        <!-- Flashing Alert for Negative Power -->
+                        <div id="reverseAlert3D" class="absolute top-6 right-6 px-4 py-2 bg-red-600/80 backdrop-blur border border-red-400 text-white font-bold rounded-lg text-sm uppercase tracking-widest hidden animate-pulse transition-opacity">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1"></i> Flujo Inverso (Reactivo)
+                        </div>
+                    </div>
+
+                    <!-- VISTA 2D (Gráfica Chart.js) -->
+                    <div id="view2D" class="view-container z-0 opacity-0 pointer-events-none bg-[#020617] p-6 pt-24 pb-10">
+                        <div class="w-full h-full relative">
+                            <canvas id="powerChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --------------------------------------------------------
+        // TOGGLE VIEWS (2D / 3D)
+        // --------------------------------------------------------
+        let activeView = '3D';
+        function setView(view) {
+            activeView = view;
+            const btn3D = document.getElementById('btn3D');
+            const btn2D = document.getElementById('btn2D');
+            const view3D = document.getElementById('view3D');
+            const view2D = document.getElementById('view2D');
+
+            if (view === '3D') {
+                btn3D.classList.add('active', 'text-rose-400');
+                btn3D.classList.remove('text-slate-400');
+                btn2D.classList.remove('active', 'text-rose-400');
+                btn2D.classList.add('text-slate-400');
+                
+                view3D.style.opacity = '1';
+                view3D.style.zIndex = '10';
+                view3D.style.pointerEvents = 'auto';
+                
+                view2D.style.opacity = '0';
+                view2D.style.zIndex = '0';
+                view2D.style.pointerEvents = 'none';
+            } else {
+                btn2D.classList.add('active', 'text-rose-400');
+                btn2D.classList.remove('text-slate-400');
+                btn3D.classList.remove('active', 'text-rose-400');
+                btn3D.classList.add('text-slate-400');
+                
+                view2D.style.opacity = '1';
+                view2D.style.zIndex = '10';
+                view2D.style.pointerEvents = 'auto';
+                
+                view3D.style.opacity = '0';
+                view3D.style.zIndex = '0';
+                view3D.style.pointerEvents = 'none';
+                
+                updateChart(); // Force update
+            }
+            window.dispatchEvent(new Event('resize'));
+        }
+
+        // --------------------------------------------------------
+        // CHART.JS 2D SETUP
+        // --------------------------------------------------------
+        const ctxChart = document.getElementById('powerChart').getContext('2d');
+        const numPoints2D = 150;
+
+        const powerChart = new Chart(ctxChart, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: numPoints2D}, (_, i) => ''),
+                datasets: [
+                    {
+                        label: 'E(t) [Normalizado]',
+                        borderColor: '#10b981', // Emerald
+                        borderWidth: 2,
+                        data: [],
+                        pointRadius: 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'H(t) [Normalizado]',
+                        borderColor: '#0ea5e9', // Cyan
+                        borderWidth: 2,
+                        data: [],
+                        pointRadius: 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'S(t) [Potencia Inst.]',
+                        borderColor: '#f43f5e', // Rose
+                        backgroundColor: 'rgba(244, 63, 94, 0.2)',
+                        borderWidth: 3,
+                        fill: true,
+                        data: [],
+                        pointRadius: 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'S_prom',
+                        borderColor: '#fcd34d', // Amber
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        data: [],
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 }, // For smooth live update
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Tiempo (t)', color: '#94a3b8' },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                    },
+                    y: { 
+                        title: { display: true, text: 'Magnitudes Relativas', color: '#94a3b8' },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#64748b' },
+                        min: -1.5,
+                        max: 2.0
+                    }
+                },
+                plugins: { legend: { display: true, labels: { color: '#cbd5e1' } }, tooltip: { enabled: false } }
+            }
+        });
+
+        // --------------------------------------------------------
+        // THREE.JS SCENE SETUP (3D View)
+        // --------------------------------------------------------
+        const container3D = document.getElementById('canvas3D-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020617, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(45, container3D.clientWidth / container3D.clientHeight, 0.1, 1000);
+        camera.position.set(15, 12, 15); 
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container3D.clientWidth, container3D.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container3D.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 0, 0); 
+
+        // Area surface in XY plane (representing a window the power flows through)
+        const areaGeo = new THREE.PlaneGeometry(10, 10);
+        const areaMat = new THREE.MeshBasicMaterial({ 
+            color: 0x334155, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false 
+        });
+        const areaMesh = new THREE.Mesh(areaGeo, areaMat);
+        scene.add(areaMesh);
+
+        // Add a grid for spatial reference
+        const gridHelper = new THREE.GridHelper(20, 20, 0x475569, 0x1e293b);
+        gridHelper.position.y = -5;
+        scene.add(gridHelper);
+
+        // Vectors (ArrowHelpers)
+        const colorE = 0x10b981; // Emerald (E along X)
+        const colorH = 0x0ea5e9; // Cyan (H along Y)
+        const colorS = 0xf43f5e; // Rose (S along Z)
+
+        // Base Vectors originating from center (0,0,0)
+        // Standard convention: wave traveling in +Z. E in +X, H in +Y.
+        const arrowE = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0,0,0), 5, colorE, 0.6, 0.4);
+        const arrowH = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0,0,0), 5, colorH, 0.6, 0.4);
+        const arrowS = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0,0,0), 5, colorS, 1.2, 0.8);
+        
+        scene.add(arrowE);
+        scene.add(arrowH);
+        scene.add(arrowS);
+
+        // --------------------------------------------------------
+        // PHYSICS LOGIC
+        // --------------------------------------------------------
+        const inputs = {
+            e0: document.getElementById('e0Range'),
+            eta: document.getElementById('etaRange'),
+            theta: document.getElementById('thetaRange')
+        };
+        const displays = {
+            e0: document.getElementById('e0Val'),
+            eta: document.getElementById('etaVal'),
+            theta: document.getElementById('thetaVal'),
+            h0: document.getElementById('resH0'),
+            sprom: document.getElementById('resSprom'),
+            math: document.getElementById('mathLive'),
+            alert3D: document.getElementById('reverseAlert3D')
+        };
+
+        // Physical state variables
+        let E0, eta, thetaDeg, thetaRad, H0, Sprom;
+
+        function updatePhysics() {
+            E0 = parseFloat(inputs.e0.value);
+            eta = parseFloat(inputs.eta.value);
+            thetaDeg = parseFloat(inputs.theta.value);
+            thetaRad = thetaDeg * Math.PI / 180;
+
+            displays.e0.innerText = E0 + ' V/m';
+            displays.eta.innerText = eta + ' Ω' + (eta === 377 ? ' (Vacío)' : '');
+            displays.theta.innerText = thetaDeg + '°';
+
+            // Calculations
+            H0 = E0 / eta;
+            Sprom = 0.5 * E0 * H0 * Math.cos(thetaRad);
+
+            // Update Results UI
+            displays.h0.innerText = H0.toFixed(3) + ' A/m';
+            displays.sprom.innerText = Sprom.toFixed(2);
+
+            // MathJax Details
+            let mathTex = `
+                H(t) = ${H0.toFixed(3)} \\cos(\\omega t - ${thetaDeg}^\\circ) \\\\[0.5em]
+                S_{prom} = \\frac{1}{2} (${E0}) (${H0.toFixed(3)}) \\cos(${thetaDeg}^\\circ) = ${Sprom.toFixed(2)} \\text{ W/m}^2
+            `;
+            displays.math.innerHTML = `\\[ \\begin{matrix} ${mathTex} \\end{matrix} \\]`;
+            if (window.MathJax) MathJax.typesetPromise([displays.math]);
+
+            if(activeView === '2D') updateChart();
+        }
+
+        // Add listeners
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updatePhysics);
+            input.addEventListener('change', updatePhysics);
+        });
+
+        // --------------------------------------------------------
+        // UPDATE 2D CHART
+        // --------------------------------------------------------
+        function updateChart() {
+            const dataE = [];
+            const dataH = [];
+            const dataS = [];
+            const dataSprom = [];
+            
+            // We visualize 2 full cycles (4*PI)
+            for (let i = 0; i <= numPoints2D; i++) {
+                let wt = (i / numPoints2D) * 4 * Math.PI; 
+                
+                // Normalized E
+                let e_norm = Math.cos(wt);
+                // Normalized H with phase delay
+                let h_norm = Math.cos(wt - thetaRad);
+                
+                // S(t) normalized relative to max possible S (E0*H0)
+                let s_norm = e_norm * h_norm; 
+                // Average S
+                let s_prom_norm = 0.5 * Math.cos(thetaRad);
+
+                dataE.push(e_norm);
+                dataH.push(h_norm);
+                dataS.push(s_norm);
+                dataSprom.push(s_prom_norm);
+            }
+
+            powerChart.data.datasets[0].data = dataE;
+            powerChart.data.datasets[1].data = dataH;
+            powerChart.data.datasets[2].data = dataS;
+            powerChart.data.datasets[3].data = dataSprom;
+            powerChart.update('none');
+
+            // Update fill color of S dynamically based on negative values
+            // We can't do conditional fills easily in basic Chart.js without plugins, 
+            // so we just keep the base color, the negative dipping visually explains itself.
+        }
+
+        // --------------------------------------------------------
+        // RENDER LOOP
+        // --------------------------------------------------------
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.05; // Animation speed
+
+            if (activeView === '3D') {
+                // Calculate instantaneous fields
+                let e_inst = Math.cos(time);
+                let h_inst = Math.cos(time - thetaRad);
+                let s_inst = e_inst * h_inst;
+
+                // Visual scaling
+                let scaleE = Math.abs(e_inst) * 4;
+                let scaleH = Math.abs(h_inst) * 4;
+                let scaleS = Math.abs(s_inst) * 6; // Make S slightly more prominent
+
+                // E Vector (X-axis)
+                let dirE = e_inst >= 0 ? 1 : -1;
+                arrowE.setDirection(new THREE.Vector3(dirE, 0, 0));
+                arrowE.setLength(scaleE < 0.1 ? 0.1 : scaleE, 0.6, 0.4);
+
+                // H Vector (Y-axis)
+                let dirH = h_inst >= 0 ? 1 : -1;
+                arrowH.setDirection(new THREE.Vector3(0, dirH, 0));
+                arrowH.setLength(scaleH < 0.1 ? 0.1 : scaleH, 0.6, 0.4);
+
+                // S Vector (Z-axis)
+                // If s_inst is negative, it points in -Z (backward energy flow)
+                let dirS = s_inst >= 0 ? 1 : -1;
+                arrowS.setDirection(new THREE.Vector3(0, 0, dirS));
+                arrowS.setLength(scaleS < 0.1 ? 0.1 : scaleS, 1.2, 0.8);
+                
+                // Change S arrow color to red if negative
+                if (s_inst < -0.05) {
+                    arrowS.setColor(0xff0000); // Bright Red
+                    displays.alert3D.classList.remove('hidden');
+                } else {
+                    arrowS.setColor(colorS); // Rose
+                    displays.alert3D.classList.add('hidden');
+                }
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container3D.clientWidth / container3D.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container3D.clientWidth, container3D.clientHeight);
+            if (activeView === '2D') powerChart.resize();
+        });
+
+        // Initialize
+        updatePhysics();
+        animate();
+    </script>
+</body>
+</html>

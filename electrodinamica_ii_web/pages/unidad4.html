@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidad IV: Condiciones de Borde - Electrodinámica II</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax para Fórmulas -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Three.js para gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-m1: #f59e0b; /* Amber for Medium 1 */
+            --accent-m2: #06b6d4; /* Cyan for Medium 2 */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(245, 158, 11, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.15), transparent 40%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+        .app-container { max-width: 1500px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .theory-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            height: 100%;
+        }
+        .theory-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; height: 16px; width: 16px;
+            border-radius: 50%; background: #fff; cursor: pointer;
+            margin-top: -6px; box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.2); border-radius: 2px;
+        }
+
+        .math-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 5px; }
+        .math-scroll::-webkit-scrollbar { height: 6px; }
+        .math-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        .view-container { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 0.3s; }
+        .legend-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+        
+        .toggle-btn { transition: all 0.2s ease; }
+        .toggle-btn.active { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; border-color: #f59e0b; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+        </a>
+
+        <header class="mb-10 text-center md:text-left">
+            <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-full uppercase tracking-widest">
+                Electrodinámica II - Unidad IV
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Condiciones de Borde</h1>
+            <p class="text-slate-400 text-lg max-w-3xl">Análisis del comportamiento físico y matemático de los campos eléctrico (\(\vec{E}\)) y desplazamiento (\(\vec{D}\)) al atravesar la frontera entre dos medios dieléctricos distintos.</p>
+        </header>
+
+        <!-- Sección Teórica -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="theory-card border-t-2 border-t-amber-500">
+                <h3 class="text-lg font-bold mb-3 text-amber-300 flex items-center gap-2">
+                    <i data-lucide="arrow-right-left"></i> Componente Tangencial (E)
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">El trabajo realizado al mover una carga en un lazo cerrado a través de la frontera es cero. Esto obliga a que la componente tangencial del Campo Eléctrico sea <strong>continua</strong>.</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll text-sm font-mono text-amber-100">
+                    \[ E_{1t} = E_{2t} \]
+                </div>
+            </div>
+
+            <div class="theory-card border-t-2 border-t-cyan-500">
+                <h3 class="text-lg font-bold mb-3 text-cyan-300 flex items-center gap-2">
+                    <i data-lucide="arrow-down-up"></i> Componente Normal (D)
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">Aplicando la Ley de Gauss en un cilindro muy pequeño (pastillero) en la interfase, vemos que la componente normal de \(\vec{D}\) es continua (si \(\rho_s = 0\)).</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll text-sm font-mono text-cyan-100">
+                    \[ D_{1n} = D_{2n} \implies \epsilon_1 E_{1n} = \epsilon_2 E_{2n} \]
+                </div>
+            </div>
+
+            <div class="theory-card border-t-2 border-t-emerald-500">
+                <h3 class="text-lg font-bold mb-3 text-emerald-300 flex items-center gap-2">
+                    <i data-lucide="split"></i> Refracción de Campo
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">Al dividir ambas condiciones trigonométricamente (\(\tan\theta = E_t / E_n\)), obtenemos la ley de refracción para las líneas de campo electrostático.</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll text-sm font-mono text-emerald-100">
+                    \[ \frac{\tan \theta_1}{\tan \theta_2} = \frac{\epsilon_{r1}}{\epsilon_{r2}} \]
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulador 3D/2D Interactivo -->
+        <section class="glass-panel">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-white/10 pb-4">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <i data-lucide="layers" class="text-amber-400"></i> Simulador de Interfase Dieléctrica
+                </h2>
+                
+                <!-- Toggle 2D / 3D -->
+                <div class="flex bg-black/40 p-1 rounded-lg border border-white/10">
+                    <button id="btn3D" onclick="setView('3D')" class="toggle-btn active px-4 py-1.5 text-xs font-bold rounded uppercase tracking-wider border border-transparent">
+                        <i data-lucide="box" class="w-3 h-3 inline mr-1"></i> Entorno 3D
+                    </button>
+                    <button id="btn2D" onclick="setView('2D')" class="toggle-btn px-4 py-1.5 text-xs font-bold rounded uppercase tracking-wider text-slate-400 border border-transparent hover:text-slate-200">
+                        <i data-lucide="drafting-compass" class="w-3 h-3 inline mr-1"></i> Geometría 2D
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[650px]">
+                
+                <!-- Controles Izquierda -->
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                    <div class="bg-black/30 p-6 rounded-2xl border border-white/5 flex-1 flex flex-col">
+                        
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">Configuración del Sistema</h4>
+
+                        <div class="space-y-6">
+                            <!-- Ángulo de Incidencia -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-white/5">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Ángulo de Incidencia (\(\theta_1\))
+                                    <span id="angle1Val" class="text-amber-400 font-mono">45.0°</span>
+                                </label>
+                                <input type="range" id="angle1Range" min="0" max="85" step="1" value="45">
+                                <p class="text-[10px] text-slate-500 mt-2">Medido respecto a la normal (línea perpendicular).</p>
+                            </div>
+
+                            <!-- Permitividad Medio 1 -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-amber-500/10">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Permitividad Medio 1 (\(\epsilon_{r1}\))
+                                    <span id="eps1Val" class="text-amber-400 font-mono">1.0</span>
+                                </label>
+                                <input type="range" id="eps1Range" min="1" max="15" step="0.5" value="1">
+                            </div>
+
+                            <!-- Permitividad Medio 2 -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-cyan-500/10">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Permitividad Medio 2 (\(\epsilon_{r2}\))
+                                    <span id="eps2Val" class="text-cyan-400 font-mono">4.0</span>
+                                </label>
+                                <input type="range" id="eps2Range" min="1" max="15" step="0.5" value="4">
+                            </div>
+                        </div>
+
+                        <!-- Resultados Dinámicos Calculados -->
+                        <div class="mt-auto pt-6 border-t border-white/10">
+                            <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 text-center">Resultados de Refracción</p>
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="bg-black/40 p-3 rounded-lg border border-cyan-500/30 text-center shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                                    <p class="text-[9px] uppercase font-black text-cyan-500 mb-1">Ángulo de Salida (\(\theta_2\))</p>
+                                    <p id="resTheta2" class="text-xl font-mono text-white font-bold">14.0°</p>
+                                </div>
+                                <div class="bg-black/40 p-3 rounded-lg border border-emerald-500/20 text-center">
+                                    <p class="text-[9px] uppercase font-black text-emerald-500 mb-1">Magnitud Resultante (\(|\vec{E}_2|\))</p>
+                                    <p id="resMag2" class="text-xl font-mono text-white font-bold">0.73</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">Si \(|E_1| = 1\)</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-black/40 rounded-lg border border-white/5 text-center">
+                                <div id="mathLive" class="text-xs font-mono text-slate-300 overflow-x-auto space-y-2">
+                                    <!-- Generado Dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visores (3D y 2D superpuestos) -->
+                <div class="lg:col-span-8 bg-black/40 rounded-3xl border border-white/5 relative overflow-hidden h-[450px] lg:h-full">
+                    
+                    <!-- LEYENDA -->
+                    <div class="absolute top-4 left-4 z-20 pointer-events-none">
+                        <div class="bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
+                            <div class="space-y-2">
+                                <div class="legend-badge text-amber-400"><div class="legend-color bg-amber-500"></div> Medio 1 (\(\vec{E}_1\))</div>
+                                <div class="legend-badge text-cyan-400"><div class="legend-color bg-cyan-500"></div> Medio 2 (\(\vec{E}_2\))</div>
+                                <div class="legend-badge text-slate-300"><div class="legend-color border-2 border-dashed border-slate-400 bg-transparent"></div> Componentes (\(E_n, E_t\))</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VISTA 3D -->
+                    <div id="view3D" class="view-container z-10 opacity-100">
+                        <div class="absolute bottom-4 right-4 z-20 pointer-events-none text-right">
+                            <div class="bg-black/60 backdrop-blur-sm border border-white/10 p-2 rounded-lg shadow-xl inline-block text-xs text-slate-300">
+                                <i data-lucide="mouse" class="w-3 h-3 inline"></i> Arrastrar: Rotar | Scroll: Zoom
+                            </div>
+                        </div>
+                        <div id="canvas3D-container" class="w-full h-full"></div>
+                    </div>
+
+                    <!-- VISTA 2D (Gráfica Nativa Canvas) -->
+                    <div id="view2D" class="view-container z-0 opacity-0 pointer-events-none bg-[#020617] flex items-center justify-center">
+                        <canvas id="canvas2D" class="w-full h-full"></canvas>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --------------------------------------------------------
+        // TOGGLE VIEWS (2D / 3D)
+        // --------------------------------------------------------
+        let activeView = '3D';
+        function setView(view) {
+            activeView = view;
+            const btn3D = document.getElementById('btn3D');
+            const btn2D = document.getElementById('btn2D');
+            const view3D = document.getElementById('view3D');
+            const view2D = document.getElementById('view2D');
+
+            if (view === '3D') {
+                btn3D.classList.add('active', 'text-amber-400');
+                btn3D.classList.remove('text-slate-400');
+                btn2D.classList.remove('active', 'text-amber-400');
+                btn2D.classList.add('text-slate-400');
+                
+                view3D.style.opacity = '1';
+                view3D.style.zIndex = '10';
+                view3D.style.pointerEvents = 'auto';
+                
+                view2D.style.opacity = '0';
+                view2D.style.zIndex = '0';
+                view2D.style.pointerEvents = 'none';
+            } else {
+                btn2D.classList.add('active', 'text-amber-400');
+                btn2D.classList.remove('text-slate-400');
+                btn3D.classList.remove('active', 'text-amber-400');
+                btn3D.classList.add('text-slate-400');
+                
+                view2D.style.opacity = '1';
+                view2D.style.zIndex = '10';
+                view2D.style.pointerEvents = 'auto';
+                
+                view3D.style.opacity = '0';
+                view3D.style.zIndex = '0';
+                view3D.style.pointerEvents = 'none';
+            }
+            // Trigger a resize to ensure canvas sizes correctly when shown
+            window.dispatchEvent(new Event('resize'));
+        }
+
+        // --------------------------------------------------------
+        // THREE.JS SCENE SETUP (3D View)
+        // --------------------------------------------------------
+        const container3D = document.getElementById('canvas3D-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020617, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(45, container3D.clientWidth / container3D.clientHeight, 0.1, 1000);
+        camera.position.set(15, 10, 25); 
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container3D.clientWidth, container3D.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container3D.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 0, 0); 
+
+        // Material Blocks (Interface is XZ plane, Normal is Y axis)
+        const planeSize = 20;
+        
+        // Medium 2 (Bottom, Y < 0)
+        const med2Geo = new THREE.BoxGeometry(planeSize, 10, planeSize);
+        const med2Mat = new THREE.MeshPhysicalMaterial({
+            color: 0x06b6d4, transparent: true, opacity: 0.15,
+            metalness: 0.1, roughness: 0.5, side: THREE.DoubleSide
+        });
+        const meshMed2 = new THREE.Mesh(med2Geo, med2Mat);
+        meshMed2.position.y = -5;
+        scene.add(meshMed2);
+
+        // Interface Plane (Y=0)
+        const gridHelper = new THREE.GridHelper(planeSize, 20, 0x334155, 0x1e293b);
+        scene.add(gridHelper);
+
+        // Normal Line (Y-axis)
+        const normalMat = new THREE.LineDashedMaterial({ color: 0x94a3b8, dashSize: 0.5, gapSize: 0.5 });
+        const normalGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 10, 0), new THREE.Vector3(0, -10, 0)]);
+        const normalLine = new THREE.Line(normalGeo, normalMat);
+        normalLine.computeLineDistances(); // Required for dashed lines
+        scene.add(normalLine);
+
+        // Vectors (ArrowHelpers)
+        const colorE1 = 0xf59e0b; // Amber
+        const colorE2 = 0x06b6d4; // Cyan
+        const colorComp = 0x64748b; // Slate
+
+        // Incident Vector E1 (Ends at origin)
+        const arrowE1 = new THREE.ArrowHelper(new THREE.Vector3(1, -1, 0).normalize(), new THREE.Vector3(-5, 5, 0), 7.07, colorE1, 0.8, 0.6);
+        scene.add(arrowE1);
+
+        // Refracted Vector E2 (Starts at origin)
+        const arrowE2 = new THREE.ArrowHelper(new THREE.Vector3(1, -1, 0).normalize(), new THREE.Vector3(0, 0, 0), 7.07, colorE2, 0.8, 0.6);
+        scene.add(arrowE2);
+
+        // Components E1t, E1n
+        const arrowE1n = new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(-5, 5, 0), 5, colorComp, 0.5, 0.3);
+        const arrowE1t = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(-5, 0, 0), 5, colorComp, 0.5, 0.3);
+        scene.add(arrowE1n);
+        scene.add(arrowE1t);
+
+        // Components E2t, E2n
+        const arrowE2n = new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 0, 0), 5, colorComp, 0.5, 0.3);
+        const arrowE2t = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, -5, 0), 5, colorComp, 0.5, 0.3);
+        scene.add(arrowE2n);
+        scene.add(arrowE2t);
+
+        // --------------------------------------------------------
+        // NATIVE CANVAS 2D SETUP
+        // --------------------------------------------------------
+        const canvas2D = document.getElementById('canvas2D');
+        const ctx2D = canvas2D.getContext('2d');
+
+        function resizeCanvas2D() {
+            canvas2D.width = canvas2D.parentElement.clientWidth;
+            canvas2D.height = canvas2D.parentElement.clientHeight;
+            draw2DView();
+        }
+
+        // --------------------------------------------------------
+        // PHYSICS LOGIC
+        // --------------------------------------------------------
+        const inputs = {
+            angle1: document.getElementById('angle1Range'),
+            eps1: document.getElementById('eps1Range'),
+            eps2: document.getElementById('eps2Range')
+        };
+        const displays = {
+            angle1: document.getElementById('angle1Val'),
+            eps1: document.getElementById('eps1Val'),
+            eps2: document.getElementById('eps2Val'),
+            theta2: document.getElementById('resTheta2'),
+            mag2: document.getElementById('resMag2'),
+            math: document.getElementById('mathLive')
+        };
+
+        // Physical state variables
+        let theta1, eps1, eps2, theta2, magE2;
+        let e1t, e1n, e2t, e2n;
+        const magE1 = 10; // Base length for visualizations
+
+        function updatePhysics() {
+            theta1 = parseFloat(inputs.angle1.value);
+            eps1 = parseFloat(inputs.eps1.value);
+            eps2 = parseFloat(inputs.eps2.value);
+
+            displays.angle1.innerText = theta1.toFixed(1) + '°';
+            displays.eps1.innerText = eps1.toFixed(1);
+            displays.eps2.innerText = eps2.toFixed(1);
+
+            // Calculations
+            let theta1Rad = theta1 * Math.PI / 180;
+            
+            // E1 Components
+            e1t = magE1 * Math.sin(theta1Rad);
+            e1n = magE1 * Math.cos(theta1Rad);
+
+            // Boundary Conditions
+            e2t = e1t; // Tangential E is continuous
+            e2n = (eps1 / eps2) * e1n; // Normal D is continuous -> eps1*E1n = eps2*E2n
+
+            // E2 Vector
+            magE2 = Math.sqrt(e2t*e2t + e2n*e2n);
+            let theta2Rad = Math.atan2(e2t, e2n);
+            theta2 = theta2Rad * 180 / Math.PI;
+
+            // Handle edge case: if E2 is 0 (can happen if theta1=90 and eps1=0 which is non-physical)
+            if(magE2 === 0) theta2 = 0;
+
+            // Update Results UI
+            displays.theta2.innerText = theta2.toFixed(1) + '°';
+            displays.mag2.innerText = (magE2 / magE1).toFixed(2); // Normalized relative to E1=1
+
+            // MathJax Details
+            let mathTex = `
+                E_{1t} = E_{2t} = ${Math.sin(theta1Rad).toFixed(3)} \\\\[0.5em]
+                E_{2n} = \\frac{\\epsilon_1}{\\epsilon_2} E_{1n} = \\left(\\frac{${eps1.toFixed(1)}}{${eps2.toFixed(1)}}\\right) ${Math.cos(theta1Rad).toFixed(3)} = ${(e2n/magE1).toFixed(3)} \\\\[0.5em]
+                \\tan \\theta_2 = \\frac{E_{2t}}{E_{2n}} \\implies \\theta_2 = ${theta2.toFixed(1)}^\\circ
+            `;
+            displays.math.innerHTML = `\\[ \\begin{matrix} ${mathTex} \\end{matrix} \\]`;
+            if (window.MathJax) MathJax.typesetPromise([displays.math]);
+
+            // Change Medium 2 opacity/color based on permittivity ratio
+            const density = Math.min(1.0, eps2 / 15);
+            med2Mat.opacity = 0.1 + (density * 0.3);
+            
+            update3DView();
+            if(activeView === '2D') draw2DView();
+        }
+
+        function update3DView() {
+            // E1 Vector (Incoming: ends at origin)
+            // Direction from top-left to origin.
+            let dirE1 = new THREE.Vector3(e1t, -e1n, 0).normalize();
+            arrowE1.setDirection(dirE1);
+            arrowE1.setLength(magE1, 1.0, 0.8);
+            // Position it so the tip is at origin
+            arrowE1.position.copy(dirE1).multiplyScalar(-magE1);
+
+            // E2 Vector (Outgoing: starts at origin)
+            let dirE2 = magE2 > 0 ? new THREE.Vector3(e2t, -e2n, 0).normalize() : new THREE.Vector3(0,-1,0);
+            arrowE2.setDirection(dirE2);
+            arrowE2.setLength(magE2 > 0 ? magE2 : 0.01, 1.0, 0.8);
+
+            // Update Components
+            // E1 components
+            arrowE1n.setLength(e1n > 0 ? e1n : 0.01, 0.5, 0.4);
+            arrowE1n.position.set(-e1t, e1n, 0); // starts at top-left, points down
+            
+            arrowE1t.setLength(e1t > 0 ? e1t : 0.01, 0.5, 0.4);
+            arrowE1t.position.set(-e1t, 0, 0); // starts left, points right along interface
+
+            // E2 components
+            arrowE2n.setLength(e2n > 0 ? e2n : 0.01, 0.5, 0.4);
+            arrowE2n.position.set(0, 0, 0); // starts origin, points down
+            
+            arrowE2t.setLength(e2t > 0 ? e2t : 0.01, 0.5, 0.4);
+            arrowE2t.position.set(0, -e2n, 0); // starts bottom, points right
+        }
+
+        function draw2DView() {
+            if(!ctx2D) return;
+            const w = canvas2D.width;
+            const h = canvas2D.height;
+            const cx = w / 2;
+            const cy = h / 2;
+            
+            ctx2D.clearRect(0, 0, w, h);
+
+            // Draw Backgrounds
+            ctx2D.fillStyle = 'rgba(245, 158, 11, 0.02)'; // Amber tint top
+            ctx2D.fillRect(0, 0, w, cy);
+            ctx2D.fillStyle = `rgba(6, 182, 212, ${0.02 + Math.min(eps2/20, 0.15)})`; // Cyan tint bottom
+            ctx2D.fillRect(0, cy, w, h);
+
+            // Interface Line
+            ctx2D.beginPath();
+            ctx2D.moveTo(0, cy);
+            ctx2D.lineTo(w, cy);
+            ctx2D.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx2D.lineWidth = 2;
+            ctx2D.stroke();
+
+            // Normal Line
+            ctx2D.beginPath();
+            ctx2D.setLineDash([5, 5]);
+            ctx2D.moveTo(cx, 0);
+            ctx2D.lineTo(cx, h);
+            ctx2D.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx2D.stroke();
+            ctx2D.setLineDash([]); // Reset
+
+            // Labels
+            ctx2D.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx2D.font = '14px Inter';
+            ctx2D.fillText(`Medio 1 (εr = ${eps1.toFixed(1)})`, 20, 30);
+            ctx2D.fillText(`Medio 2 (εr = ${eps2.toFixed(1)})`, 20, h - 20);
+
+            // Draw Vectors
+            const scale = 15; // pixels per unit
+            
+            // E1 (Incident) - Points to center
+            let startX = cx - e1t * scale;
+            let startY = cy - e1n * scale;
+            drawArrow(ctx2D, startX, startY, cx, cy, '#f59e0b', 3, 'E1');
+
+            // E2 (Refracted) - Starts from center
+            let endX = cx + e2t * scale;
+            let endY = cy + e2n * scale;
+            drawArrow(ctx2D, cx, cy, endX, endY, '#06b6d4', 3, 'E2');
+
+            // Draw Angles
+            const arcRadius = 40;
+            
+            // Theta 1 Arc
+            ctx2D.beginPath();
+            let t1Rad = theta1 * Math.PI / 180;
+            // Arc from -PI/2 (up) to -PI/2 - t1Rad (left of normal)
+            ctx2D.arc(cx, cy, arcRadius, -Math.PI/2 - t1Rad, -Math.PI/2, false);
+            ctx2D.strokeStyle = '#f59e0b';
+            ctx2D.stroke();
+            ctx2D.fillStyle = '#f59e0b';
+            ctx2D.fillText(`θ₁ = ${theta1.toFixed(1)}°`, cx - arcRadius - 20, cy - arcRadius - 10);
+
+            // Theta 2 Arc
+            ctx2D.beginPath();
+            let t2Rad = theta2 * Math.PI / 180;
+            // Arc from PI/2 (down) to PI/2 - t2Rad (right of normal)
+            ctx2D.arc(cx, cy, arcRadius, Math.PI/2 - t2Rad, Math.PI/2, false);
+            ctx2D.strokeStyle = '#06b6d4';
+            ctx2D.stroke();
+            ctx2D.fillStyle = '#06b6d4';
+            ctx2D.fillText(`θ₂ = ${theta2.toFixed(1)}°`, cx + arcRadius - 10, cy + arcRadius + 20);
+        }
+
+        function drawArrow(ctx, fromX, fromY, toX, toY, color, width, label) {
+            const headlen = 10; // length of head in pixels
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.lineTo(toX, toY);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            if (label) {
+                ctx.font = 'bold 14px Inter';
+                // Midpoint for label
+                let mx = fromX + dx/2;
+                let my = fromY + dy/2;
+                ctx.fillText(label, mx - 20, my - 10);
+            }
+        }
+
+        // Add listeners
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updatePhysics);
+            input.addEventListener('change', updatePhysics);
+        });
+
+        // --------------------------------------------------------
+        // RENDER LOOP
+        // --------------------------------------------------------
+        function animate() {
+            requestAnimationFrame(animate);
+            if (activeView === '3D') {
+                controls.update();
+                renderer.render(scene, camera);
+            }
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            // Update 3D
+            camera.aspect = container3D.clientWidth / container3D.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container3D.clientWidth, container3D.clientHeight);
+            
+            // Update 2D
+            resizeCanvas2D();
+        });
+
+        // Initialize
+        updatePhysics();
+        animate();
+        // Delay 2D resize to ensure layout is done
+        setTimeout(resizeCanvas2D, 100);
+    </script>
+</body>
+</html>

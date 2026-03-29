@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrodinámica II - Hub de Ingeniería</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS (CDN para utilidades adicionales si se necesitan) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="css/main.css">
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="logo-large">
+                    <i data-lucide="zap"></i>
+                    <h1>ELECTRODINÁMICA II</h1>
+                </div>
+                <p>Plataforma Interactiva para el Estudio de Campos Electromagnéticos Variables, Ondas y Propagación en Medios Materiales.</p>
+                <div class="mt-4 flex justify-center gap-4">
+                    <span class="px-4 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-bold tracking-widest uppercase">UDO Anzoátegui</span>
+                    <span class="px-4 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400 text-sm font-bold tracking-widest uppercase">Semestre V</span>
+                </div>
+            </header>
+
+            <div class="dash-grid">
+                <!-- Unidad I: Maxwell -->
+                <a href="pages/unidad1.html" class="dash-card">
+                    <i data-lucide="shield-plus" class="text-cyan-400"></i>
+                    <h3>Unidad I: Maxwell</h3>
+                    <p>Las 4 ecuaciones fundamentales y la corriente de desplazamiento en medios dinámicos.</p>
+                </a>
+
+                <!-- Unidad II: Ondas EM -->
+                <a href="pages/unidad2.html" class="dash-card">
+                    <i data-lucide="waves" class="text-purple-400"></i>
+                    <h3>Unidad II: Ondas EM</h3>
+                    <p>Ecuación de onda, soluciones armónicas y propagación de ondas planas uniformes.</p>
+                </a>
+
+                <!-- Laboratorio 3D: Ondas Inmersivas -->
+                <a href="pages/Simulador.html" class="dash-card border-cyan-500/20">
+                    <i data-lucide="box" class="text-cyan-400"></i>
+                    <h3>Laboratorio 3D</h3>
+                    <p>Visualización tridimensional inmersiva de la radiación y propagación de ondas EM.</p>
+                </a>
+
+                <!-- Unidad III: Parámetros -->
+                <a href="pages/unidad3.html" class="dash-card">
+                    <i data-lucide="settings-2" class="text-emerald-400"></i>
+                    <h3>Unidad III: Parámetros</h3>
+                    <p>Impedancia intrínseca, constante de fase, atenuación y efecto pelicular (Skin Effect).</p>
+                </a>
+
+                <!-- Unidad IV: Condiciones de Borde -->
+                <a href="pages/unidad4.html" class="dash-card border-amber-500/20">
+                    <i data-lucide="split" class="text-amber-400"></i>
+                    <h3>Unidad IV: Condiciones de Borde</h3>
+                    <p>Comportamiento de los campos en la interfase entre medios dieléctricos y conductores.</p>
+                </a>
+
+                <!-- Unidad V: Poynting & Potencia -->
+                <a href="pages/unidad5.html" class="dash-card border-rose-500/20">
+                    <i data-lucide="activity" class="text-rose-400"></i>
+                    <h3>Unidad V: Poynting & Potencia</h3>
+                    <p>Teorema de Poynting y flujo de potencia electromagnética en el espacio.</p>
+                </a>
+
+                <!-- Unidad VI: Aplicaciones -->
+                <a href="pages/unidad6.html" class="dash-card border-blue-500/20">
+                    <i data-lucide="box" class="text-blue-400"></i>
+                    <h3>Unidad VI: Aplicaciones</h3>
+                    <p>Introducción a Guías de Onda rectangulares y aplicaciones de la teoría electromagnética.</p>
+                </a>
+
+                <!-- Hoja de Fórmulas -->
+                <a href="pages/Formulas.html" class="dash-card border-yellow-500/10">
+                    <i data-lucide="file-text" class="text-yellow-400"></i>
+                    <h3>Compendio de Fórmulas</h3>
+                    <p>Referencia rápida de identidades vectoriales, gradientes, rotacionales y leyes EM.</p>
+                </a>
+
+                <!-- Teoría y Analogías -->
+                <a href="pages/Teoria.html" class="dash-card border-indigo-500/10">
+                    <i data-lucide="lightbulb" class="text-indigo-400"></i>
+                    <h3>Conceptos y Analogías</h3>
+                    <p>Intuición física sobre la radiación y la interacción campo-materia.</p>
+                </a>
+
+                <!-- Autoevaluación -->
+                <a href="pages/Autoevaluacion.html" class="dash-card border-rose-500/10">
+                    <i data-lucide="brain-circuit" class="text-rose-400"></i>
+                    <h3>Autoevaluación</h3>
+                    <p>Ponte a prueba con retos técnicos sobre los fundamentos de Electrodinámica II.</p>
+                </a>
+
+                <!-- Programa -->
+                <a href="pages/Programa.html" class="dash-card">
+                    <i data-lucide="graduation-cap"></i>
+                    <h3>Programa Académico</h3>
+                    <p>Contenido oficial, objetivos y bibliografía de la asignatura según el Prof. Enrique Serrano.</p>
+                </a>
+            </div>
+
+            <footer>
+                <div class="footer-hub-info">Electrodinámica II - Ingeniería Eléctrica</div>
+                <p class="text-sm italic mb-6">Desarrollo Interactivo: <span class="text-gray-200">Ing. Jose Rojas Dagger</span></p>
+                <p class="text-slate-500 text-xs">© 2026 Universidad de Oriente - Núcleo Anzoátegui</p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Inicializar Iconos
+        lucide.createIcons();
+
+        // Efecto visual de entrada para las tarjetas
+        document.querySelectorAll('.dash-card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100 * index);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuitos Eléctricos II - Hub de Ingeniería</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="dashboard-body">
+    <div class="app-container no-sidebar">
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="logo-large">
+                    <i data-lucide="zap"></i>
+                    <h1>Hub de Circuitos II</h1>
+                </div>
+                <p>Plataforma interactiva para el análisis de transitorios, variables de estado, Laplace y redes de dos puertos.</p>
+            </header>
+
+            <div class="dash-grid">
+                <!-- Unidad I -->
+                <a href="pages/unidad1.html" class="dash-card">
+                    <i data-lucide="activity"></i>
+                    <h3>Unidad I: RC y RL</h3>
+                    <p>Análisis transitorio y régimen permanente en circuitos de primer orden. Respuesta natural y forzada.</p>
+                </a>
+
+                <!-- Unidad II -->
+                <a href="pages/unidad2.html" class="dash-card">
+                    <i data-lucide="waves"></i>
+                    <h3>Unidad II: Circuitos RLC</h3>
+                    <p>Análisis de segundo orden: Respuestas sobreamortiguada, subamortiguada y críticamente amortiguada.</p>
+                </a>
+
+                <!-- Unidad III -->
+                <a href="pages/unidad3.html" class="dash-card">
+                    <i data-lucide="binary"></i>
+                    <h3>Unidad III: Variables de Estado</h3>
+                    <p>Modelado de sistemas dinámicos mediante ecuaciones diferenciales de primer orden acopladas.</p>
+                </a>
+
+                <!-- Unidad IV -->
+                <a href="pages/unidad4.html" class="dash-card">
+                    <i data-lucide="git-branch"></i>
+                    <h3>Unidad IV: Funciones de Transferencia</h3>
+                    <p>Relación entre la salida y la entrada en el dominio de la frecuencia. Ceros y polos.</p>
+                </a>
+
+                <!-- Unidad V -->
+                <a href="pages/unidad5.html" class="dash-card">
+                    <i data-lucide="function-square"></i>
+                    <h3>Unidad V: Transformada de Laplace</h3>
+                    <p>Resolución de circuitos complejos en el dominio s. Teoremas de valor inicial y final.</p>
+                </a>
+
+                <!-- Unidad VI -->
+                <a href="pages/unidad6.html" class="dash-card">
+                    <i data-lucide="layers"></i>
+                    <h3>Unidad VI: Redes de Dos Puertos</h3>
+                    <p>Parámetros Z, Y, h, g y T. Interconexión de redes y transferencia de potencia.</p>
+                </a>
+
+                <!-- Extras -->
+                <a href="pages/Formulas.html" class="dash-card border-indigo-500/20">
+                    <i data-lucide="sigma" class="text-indigo-400"></i>
+                    <h3>Hoja de Fórmulas</h3>
+                    <p>Compendio total de ecuaciones para Circuitos II: Transitorios, Laplace y Matrices.</p>
+                </a>
+
+                <a href="pages/Programa.html" class="dash-card border-purple-500/20">
+                    <i data-lucide="graduation-cap" class="text-purple-400"></i>
+                    <h3>Programa Académico</h3>
+                    <p>Objetivos curriculares, bibliografía y ficha técnica de la asignatura (UDO Anzoátegui).</p>
+                </a>
+
+                <!-- Nuevo: Teoría -->
+                <a href="pages/Teoria.html" class="dash-card border-amber-500/20">
+                    <i data-lucide="lightbulb" class="text-amber-400"></i>
+                    <h3>Conceptos y Analogías</h3>
+                    <p>Intuición física, analogías hidráulicas y fundamentos teóricos de Circuitos II.</p>
+                </a>
+
+                <!-- Nuevo: Simulador RLC -->
+                <a href="pages/Simulador_RLC.html" class="dash-card border-green-500/20">
+                    <i data-lucide="monitor" class="text-green-400"></i>
+                    <h3>Simulador RLC Master</h3>
+                    <p>Laboratorio interactivo de 3 niveles para el estudio de respuestas RLC con energía previa.</p>
+                </a>
+
+                <!-- Nuevo: Autoevaluación -->
+                <a href="pages/Autoevaluacion.html" class="dash-card border-rose-500/20">
+                    <i data-lucide="brain-circuit" class="text-rose-400"></i>
+                    <h3>Autoevaluación Final</h3>
+                    <p>Pon a prueba tus conocimientos con un test técnico de 6 niveles sobre todo el contenido del curso.</p>
+                </a>
+            </div>
+
+            <footer class="bg-[#0b1121]/50 text-gray-400 py-12 text-center mt-12 border-t border-white/5 rounded-t-3xl backdrop-blur-md">
+                <div class="max-w-7xl mx-auto px-4">
+                    <p class="footer-hub-info mb-2 underline tracking-widest uppercase text-[10px]">Universidad de Oriente - Núcleo de Anzoátegui</p>
+                    <p class="text-sm italic">Asignatura: <span class="text-gray-200">Circuitos Eléctricos II (060-2413)</span></p>
+                    <p class="text-sm italic">Elaborado por: <span class="text-gray-200">Prof. Alberto Urbina</span></p>
+                    <p class="text-sm italic mb-6">Desarrollo Interactivo: <span class="text-gray-200">Ing. Jose Rojas Dagger</span></p>
+                    <div class="flex justify-center gap-6 text-[10px] font-medium uppercase tracking-tighter">
+                        <a href="index.html" class="hover:text-indigo-400 transition text-indigo-400">Inicio</a>
+                        <a href="pages/unidad1.html" class="hover:text-indigo-400 transition">Simuladores</a>
+                        <a href="pages/Formulas.html" class="hover:text-indigo-400 transition">Fórmulas</a>
+                        <a href="pages/Teoria.html" class="hover:text-indigo-400 transition">Teoría</a>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

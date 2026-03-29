@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidad IV: Función de Transferencia - Circuitos II</title>
+    <!-- Tailwind CSS para utilidades rápidas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos, Gráficos y Matemáticas -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        /* Estilos base (Heredados del diseño principal) */
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #6366f1; /* Indigo */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%);
+            background-attachment: fixed;
+        }
+        .app-container { max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #94a3b8; font-weight: 500; text-decoration: none;
+            margin-bottom: 2rem; transition: color 0.3s;
+        }
+        .back-btn:hover { color: white; }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .theory-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .simulator-layout { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        @media (min-width: 1024px) { .simulator-layout { grid-template-columns: 380px 1fr; } }
+        
+        .control-group { margin-bottom: 1.25rem; }
+        .control-group label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 600; color: #cbd5e1; }
+        .input-with-value { display: flex; align-items: center; gap: 1rem; }
+        .value-display { 
+            font-family: 'Courier New', Courier, monospace; 
+            background: rgba(0,0,0,0.4); 
+            padding: 0.35rem 0.75rem; 
+            border-radius: 0.5rem; 
+            font-size: 0.875rem; 
+            min-width: 90px; 
+            text-align: right;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            transition: background 0.3s;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        /* Custom Select */
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        /* MathJax Container Scroll */
+        .math-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 5px; }
+        .math-scroll::-webkit-scrollbar { height: 6px; }
+        .math-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        /* Dynamic Themes */
+        .theme-lowpass { --accent: #6366f1; } /* Indigo */
+        .theme-highpass { --accent: #ec4899; } /* Pink */
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <main class="main-content">
+            <a href="../index.html" class="back-btn">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+            </a>
+
+            <header class="mb-10">
+                <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+                    Ingeniería Eléctrica - Circuitos II
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Unidad IV: Función de Transferencia</h1>
+                <p class="text-slate-400 text-lg max-w-3xl">
+                    Modelado en el dominio de la frecuencia compleja \(s\). Análisis de polos y ceros, respuesta en frecuencia y diagramas de Bode (Magnitud y Fase).
+                </p>
+            </header>
+
+            <!-- Sección de Teoría -->
+            <section class="theory-section mb-10">
+                <div class="glass-panel">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                        <i data-lucide="activity" class="text-indigo-400"></i> Definición y Propiedades
+                    </h2>
+                    
+                    <div class="p-8 bg-black/30 rounded-3xl border border-white/5 text-center mb-8 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                        <h3 class="text-slate-300 font-bold mb-4 uppercase tracking-widest text-sm">Transferencia General</h3>
+                        <div class="text-2xl md:text-3xl p-6 bg-indigo-500/5 rounded-2xl mb-4 border border-indigo-500/20 math-scroll">
+                            \[ H(s) = \frac{Y(s)}{X(s)} = \frac{\mathcal{L}\{\text{Salida}\}}{\mathcal{L}\{\text{Entrada}\}} \]
+                        </div>
+                        <p class="text-slate-400 text-sm italic">Asumiendo condiciones iniciales nulas en todos los elementos reactivos.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="theory-card bg-gradient-to-br from-indigo-900/20 to-transparent">
+                            <h3 class="text-xl font-bold mb-3 text-indigo-300 flex items-center gap-2">
+                                <i data-lucide="target" class="w-5 h-5"></i> Ceros y Polos
+                            </h3>
+                            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                                Las raíces del polinomio numerador \(N(s)=0\) son los <strong>Ceros</strong> y anulan la transferencia. Las raíces del denominador \(D(s)=0\) son los <strong>Polos</strong> y dictaminan la estabilidad y la respuesta transitoria.
+                            </p>
+                            <div class="p-3 bg-black/40 rounded-xl border border-white/5 text-center font-mono text-sm text-slate-200">
+                                \[ s = \sigma + j\omega \]
+                            </div>
+                        </div>
+
+                        <div class="theory-card bg-gradient-to-br from-purple-900/20 to-transparent">
+                            <h3 class="text-xl font-bold mb-3 text-purple-300 flex items-center gap-2">
+                                <i data-lucide="bar-chart-2" class="w-5 h-5"></i> Diagramas de Bode
+                            </h3>
+                            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                                Al evaluar \(H(s)\) en el eje imaginario (\(s = j\omega\)), obtenemos la <strong>Respuesta en Frecuencia</strong>. Los diagramas de Bode la representan en dos gráficas superpuestas usando escala logarítmica de frecuencia.
+                            </p>
+                            <ul class="text-xs space-y-2 text-slate-400 font-mono">
+                                <li>• Magnitud: \( |H(j\omega)|_{\text{dB}} = 20\log_{10}|H(j\omega)| \)</li>
+                                <li>• Fase: \( \phi(\omega) = \angle H(j\omega) \) (en grados)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Simulador de Bode -->
+            <section class="simulator-section mb-10" id="simulatorContainer">
+                <div class="glass-panel">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-white/10 pb-4">
+                        <h2 class="text-2xl font-bold flex items-center gap-3">
+                            <i data-lucide="sliders-horizontal" class="text-indigo-400"></i> Analizador de Frecuencia
+                        </h2>
+                        <div class="flex gap-2 items-center bg-black/30 px-3 py-1.5 rounded-full border border-white/10">
+                            <span class="flex h-2.5 w-2.5 relative">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                            </span>
+                            <span class="text-xs text-slate-300 font-mono tracking-wider">BODE PLOT ACTIVO</span>
+                        </div>
+                    </div>
+                    
+                    <div class="simulator-layout">
+                        <!-- Panel de Controles -->
+                        <aside class="controls-panel bg-black/20 p-6 rounded-xl border border-white/5 flex flex-col">
+                            <div class="control-group">
+                                <label>Tipo de Filtro de Primer Orden</label>
+                                <select id="filterType" class="w-full bg-slate-800 border border-slate-600 text-white p-3 rounded-lg outline-none focus:border-indigo-400 font-bold mb-2 transition-colors">
+                                    <option value="lowpass">Filtro Pasa-Bajos (RC)</option>
+                                    <option value="highpass">Filtro Pasa-Altos (CR)</option>
+                                </select>
+                            </div>
+
+                            <div class="control-group mt-4">
+                                <label>Resistencia (\(R\)) [\(\Omega\)]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="filterR" min="10" max="20000" step="10" value="1000">
+                                    <span class="value-display" id="fRVal">1 kΩ</span>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label>Capacitancia (\(C\)) [\(\mu F\)]</label>
+                                <div class="input-with-value">
+                                    <input type="range" id="filterC" min="0.01" max="100" step="0.01" value="1">
+                                    <span class="value-display" id="fCVal">1 μF</span>
+                                </div>
+                            </div>
+
+                            <!-- Resultados en Vivo -->
+                            <div id="resultsCard" class="mt-auto pt-6 border-t border-white/10">
+                                <h4 class="text-slate-300 font-bold mb-3 text-xs uppercase tracking-widest flex justify-between items-center">
+                                    Análisis del Circuito
+                                    <span id="filterBadge" class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">PASA-BAJOS</span>
+                                </h4>
+                                
+                                <div class="p-4 bg-black/40 rounded-lg border border-white/10 space-y-3">
+                                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                                        <span class="text-xs text-slate-400">Frec. de Corte (\(f_c\)):</span>
+                                        <span id="fcResult" class="text-white font-mono font-bold">159.2 Hz</span>
+                                    </div>
+                                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                                        <span class="text-xs text-slate-400">Frec. Angular (\(\omega_c\)):</span>
+                                        <span id="wcResult" class="text-white font-mono font-bold">1000 rad/s</span>
+                                    </div>
+                                    <div class="pt-1 math-scroll text-sm text-center" id="transferFunctionDisplay">
+                                        Cargando \(H(s)\)...
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <!-- Panel de Visualización Gráfica (Bode) -->
+                        <div class="viz-panel flex flex-col gap-4">
+                            <!-- Gráfica de Magnitud -->
+                            <div class="h-[220px] md:h-[250px] bg-black/30 rounded-xl p-3 border border-white/5 relative">
+                                <h3 class="absolute top-2 right-4 text-xs font-bold text-slate-500 tracking-widest z-10">MAGNITUD (dB)</h3>
+                                <canvas id="bodeMagChart"></canvas>
+                            </div>
+                            <!-- Gráfica de Fase -->
+                            <div class="h-[220px] md:h-[250px] bg-black/30 rounded-xl p-3 border border-white/5 relative">
+                                <h3 class="absolute top-2 right-4 text-xs font-bold text-slate-500 tracking-widest z-10">FASE (Grados)</h3>
+                                <canvas id="bodePhaseChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Opciones comunes para los ejes logarítmicos de frecuencia
+        const xAxiLogOptions = {
+            type: 'logarithmic',
+            title: { display: true, text: 'Frecuencia (Hz)', color: '#cbd5e1', font: {size: 11} },
+            grid: { color: 'rgba(255, 255, 255, 0.05)', tickColor: 'transparent' },
+            ticks: { 
+                color: '#64748b',
+                callback: function(value, index, values) {
+                    // Formato limpio para las décadas en el eje logarítmico
+                    if (value === 1 || value === 10 || value === 100 || value === 1000 || value === 10000 || value === 100000 || value === 1000000) {
+                        if (value >= 1000) return (value/1000) + 'k';
+                        return value;
+                    }
+                    return null;
+                }
+            }
+        };
+
+        // --- Inicializar Gráfico de Magnitud ---
+        const ctxMag = document.getElementById('bodeMagChart').getContext('2d');
+        let bodeMagChart = new Chart(ctxMag, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Magnitud',
+                    data: [],
+                    borderColor: '#6366f1', // Indigo
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    tension: 0.1,
+                    fill: true,
+                    backgroundColor: 'rgba(99, 102, 241, 0.05)'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: xAxiLogOptions,
+                    y: {
+                        title: { display: true, text: '|H(jω)| (dB)', color: '#cbd5e1', font: {size: 11} },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8' },
+                        suggestedMax: 5,
+                        suggestedMin: -40
+                    }
+                },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (ctx) => `Frecuencia: ${Number(ctx[0].label).toFixed(1)} Hz`,
+                            label: (ctx) => `Magnitud: ${ctx.parsed.y.toFixed(2)} dB`
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- Inicializar Gráfico de Fase ---
+        const ctxPhase = document.getElementById('bodePhaseChart').getContext('2d');
+        let bodePhaseChart = new Chart(ctxPhase, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Fase',
+                    data: [],
+                    borderColor: '#c084fc', // Purple
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    tension: 0.1,
+                    borderDash: [5, 5] // Línea punteada para diferenciar visualmente
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: xAxiLogOptions,
+                    y: {
+                        title: { display: true, text: '∠H(jω) (°)', color: '#cbd5e1', font: {size: 11} },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', stepSize: 45 },
+                        max: 95,
+                        min: -95
+                    }
+                },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (ctx) => `Frecuencia: ${Number(ctx[0].label).toFixed(1)} Hz`,
+                            label: (ctx) => `Fase: ${ctx.parsed.y.toFixed(1)}°`
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- Elementos DOM ---
+        const filterTypeNode = document.getElementById('filterType');
+        const rRangeNode = document.getElementById('filterR');
+        const cRangeNode = document.getElementById('filterC');
+        const simContainer = document.getElementById('simulatorContainer');
+        const filterBadge = document.getElementById('filterBadge');
+        const tfDisplay = document.getElementById('transferFunctionDisplay');
+
+        // Función Principal de Actualización
+        function updateBode() {
+            const filterType = filterTypeNode.value;
+            const R = parseFloat(rRangeNode.value);
+            const C = parseFloat(cRangeNode.value) * 1e-6; // uF to F
+            
+            // Actualizar textos de UI
+            document.getElementById('fRVal').innerText = R >= 1000 ? (R/1000).toFixed(1) + ' kΩ' : R + ' Ω';
+            document.getElementById('fCVal').innerText = (C*1e6).toFixed(2) + ' μF';
+
+            // Cálculos
+            const wc = 1 / (R * C); // Frecuencia angular de corte rad/s
+            const fc = wc / (2 * Math.PI); // Frecuencia de corte Hz
+            
+            document.getElementById('fcResult').innerText = fc.toFixed(2) + ' Hz';
+            document.getElementById('wcResult').innerText = wc.toFixed(0) + ' rad/s';
+
+            let themeColor, themeClass, badgeText, mathTex;
+
+            if (filterType === 'lowpass') {
+                themeColor = '#6366f1'; // Indigo
+                themeClass = 'theme-lowpass';
+                badgeText = 'PASA-BAJOS';
+                mathTex = `H(s) = \\frac{\\omega_c}{s + \\omega_c} = \\frac{${wc.toFixed(0)}}{s + ${wc.toFixed(0)}}`;
+            } else {
+                themeColor = '#ec4899'; // Pink
+                themeClass = 'theme-highpass';
+                badgeText = 'PASA-ALTOS';
+                mathTex = `H(s) = \\frac{s}{s + \\omega_c} = \\frac{s}{s + ${wc.toFixed(0)}}`;
+            }
+
+            // Actualizar UI Visual
+            simContainer.className = `simulator-section mb-10 ${themeClass}`;
+            filterBadge.innerText = badgeText;
+            if (filterType === 'lowpass') {
+                filterBadge.className = "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+            } else {
+                filterBadge.className = "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-pink-500/20 text-pink-300 border border-pink-500/30";
+            }
+            
+            tfDisplay.innerHTML = `\\[ ${mathTex} \\]`;
+            if (window.MathJax) MathJax.typesetPromise([tfDisplay]);
+
+            // Arrays de datos para el gráfico
+            const labels = [];
+            const magData = [];
+            const phaseData = [];
+            
+            // Centrar la gráfica alrededor de la frecuencia de corte
+            // Generar un rango logarítmico desde fc/1000 hasta fc*1000
+            const startFreq = fc / 1000;
+            const endFreq = fc * 1000;
+            const steps = 150;
+
+            for (let i = 0; i <= steps; i++) {
+                // Escala logarítmica para el eje X
+                const logF = Math.log10(startFreq) + (Math.log10(endFreq) - Math.log10(startFreq)) * (i / steps);
+                const f = Math.pow(10, logF);
+                const w = 2 * Math.PI * f;
+                
+                let mag, phase;
+
+                if (filterType === 'lowpass') {
+                    // H(jw) = 1 / (1 + j(w/wc))
+                    mag = 1 / Math.sqrt(1 + Math.pow(w / wc, 2));
+                    phase = -Math.atan(w / wc) * (180 / Math.PI);
+                } else {
+                    // H(jw) = j(w/wc) / (1 + j(w/wc))
+                    mag = (w / wc) / Math.sqrt(1 + Math.pow(w / wc, 2));
+                    phase = 90 - (Math.atan(w / wc) * (180 / Math.PI));
+                }
+
+                const magDB = 20 * Math.log10(mag);
+
+                labels.push(f.toFixed(2));
+                // Límite visual inferior a -60dB para que el gráfico no se distorsione infinitamente
+                magData.push(Math.max(magDB, -60).toFixed(2)); 
+                phaseData.push(phase.toFixed(2));
+            }
+
+            // Actualizar Gráfico de Magnitud
+            bodeMagChart.data.labels = labels;
+            bodeMagChart.data.datasets[0].data = magData;
+            bodeMagChart.data.datasets[0].borderColor = themeColor;
+            
+            let gradient = ctxMag.createLinearGradient(0, 0, 0, 250);
+            if(filterType === 'lowpass') {
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(236, 72, 153, 0.2)');
+                gradient.addColorStop(1, 'rgba(236, 72, 153, 0.0)');
+            }
+            bodeMagChart.data.datasets[0].backgroundColor = gradient;
+            
+            // Actualizar límites del eje X dinámicamente
+            bodeMagChart.options.scales.x.min = startFreq;
+            bodeMagChart.options.scales.x.max = endFreq;
+            bodeMagChart.update();
+
+            // Actualizar Gráfico de Fase
+            bodePhaseChart.data.labels = labels;
+            bodePhaseChart.data.datasets[0].data = phaseData;
+            // Mantener el color púrpura para fase para distinguir, o usar themeColor
+            // bodePhaseChart.data.datasets[0].borderColor = themeColor;
+            bodePhaseChart.options.scales.x.min = startFreq;
+            bodePhaseChart.options.scales.x.max = endFreq;
+            bodePhaseChart.update();
+        }
+
+        // Listeners
+        [filterTypeNode, rRangeNode, cRangeNode].forEach(el => {
+            el.addEventListener('input', updateBode);
+        });
+
+        // Inicio
+        window.addEventListener('load', () => {
+            setTimeout(updateBode, 300);
+        });
+    </script>
+</body>
+</html>

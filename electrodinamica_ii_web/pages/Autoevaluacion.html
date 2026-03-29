@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoevaluación - Electrodinámica II</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .option-btn {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            transform: translateX(6px);
+            background: rgba(6, 182, 212, 0.1);
+        }
+        .option-btn.correct { background: rgba(16, 185, 129, 0.2); border-color: #10b981; }
+        .option-btn.incorrect { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+        .progress-bar { height: 6px; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container flex flex-col min-h-[90vh]">
+        <a href="../index.html" class="back-btn">
+            <i data-lucide="arrow-left"></i> Menú Principal
+        </a>
+
+        <header class="mb-8 text-center">
+            <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-full">
+                <i data-lucide="brain-circuit" class="w-3 h-3 inline mr-1"></i> Ponte a Prueba
+            </div>
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight">Evaluación Diagnóstica</h1>
+            <p class="text-slate-400">Demuestra tu dominio técnico sobre Electrodinámica II.</p>
+        </header>
+
+        <div id="quizContainer" class="glass-panel flex-1 flex flex-col relative overflow-hidden">
+            <!-- Pantalla Inicio -->
+            <div id="startScreen" class="flex-1 flex flex-col items-center justify-center text-center py-10">
+                <div class="w-20 h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mb-6 border border-cyan-500/30">
+                    <i data-lucide="shield-check" class="w-10 h-10 text-cyan-400"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-4 italic">¿Listo para el reto electromagnético?</h2>
+                <p class="text-slate-400 mb-8 max-w-md">6 preguntas seleccionadas sobre Maxwell, Ondas, Poynting y Guías. Sin límite de tiempo, máxima concentración.</p>
+                <button onclick="startQuiz()" class="px-8 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2">
+                    Iniciar Evaluación <i data-lucide="play" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Pantalla Preguntas -->
+            <div id="questionScreen" class="hidden flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="unitBadge" class="px-2 py-1 bg-slate-800 text-cyan-500 rounded text-xs font-bold uppercase tracking-widest border border-white/10">Unidad I</span>
+                    <span id="questionCount" class="text-sm font-bold text-slate-400 font-mono">1 / 6</span>
+                </div>
+                <div class="w-full bg-white/5 h-2 rounded-full mb-8 overflow-hidden">
+                    <div id="progressBar" class="progress-bar" style="width: 16%"></div>
+                </div>
+                <div class="flex-1">
+                    <h3 id="questionText" class="text-xl md:text-2xl font-bold text-white mb-6 leading-relaxed min-h-[80px]">Cargando...</h3>
+                    <div id="optionsContainer" class="flex flex-col gap-3 mb-8"></div>
+                    <div id="feedbackContainer" class="hidden p-4 rounded-xl mb-6 text-sm font-medium"></div>
+                </div>
+                <div class="flex justify-end pt-4 border-t border-white/5">
+                    <button id="nextBtn" onclick="nextQuestion()" disabled class="px-6 py-2.5 bg-slate-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2 opacity-50 cursor-not-allowed">
+                        Siguiente <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pantalla Resultados -->
+            <div id="resultScreen" class="hidden flex-1 flex flex-col items-center justify-center py-6">
+                <h2 class="text-3xl font-bold text-white mb-2">¡Misión Completada!</h2>
+                <div class="w-48 h-48 relative mb-8">
+                    <canvas id="scoreChart"></canvas>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col">
+                        <span id="scoreText" class="text-3xl font-black text-white">0%</span>
+                        <span class="text-xs text-slate-500 uppercase tracking-widest">Aciertos</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 w-full max-w-sm mb-8 text-center">
+                    <div class="bg-black/30 p-4 rounded-xl border border-emerald-500/20">
+                        <div class="text-2xl font-bold text-emerald-400" id="correctCount">0</div>
+                        <div class="text-xs text-slate-500 uppercase">Correctas</div>
+                    </div>
+                    <div class="bg-black/30 p-4 rounded-xl border border-rose-500/20">
+                        <div class="text-2xl font-bold text-rose-400" id="incorrectCount">0</div>
+                        <div class="text-xs text-slate-500 uppercase">Erróneas</div>
+                    </div>
+                </div>
+                <button onclick="location.reload()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg border border-white/10 transition-colors flex items-center gap-2">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reintentar Test
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const questions = [
+            {
+                unit: 'U-I: Maxwell',
+                text: '¿Qué término añadió James Clerk Maxwell a la Ley de Ampere para que la teoría electromagnética fuera consistente?',
+                options: ['Densidad de carga estática', 'Corriente de desplazamiento', 'Flujo de magnetización', 'Potencial escalar'],
+                correct: 1,
+                explanation: 'Correcto. La corriente de desplazamiento \\(\\partial \\mathbf{D} / \\partial t\\) permite que la ley de Ampere sea válida para campos variantes en el tiempo y circuitos con capacitores.'
+            },
+            {
+                unit: 'U-II: Ondas EM',
+                text: 'En una onda plana uniforme en el vacío, ¿cuál es la relación de fase entre el campo eléctrico (\\(E\\)) y el magnético (\\(H\\))?',
+                options: ['H está retrasado 90°', 'H está adelantado 90°', 'Están en fase (0°)', 'Están en oposición (180°)'],
+                correct: 2,
+                explanation: 'Exacto. En medios sin pérdidas (como el vacío), las componentes tangenciales de E y H vibran sincronizadamente en fase.'
+            },
+            {
+                unit: 'U-III: Medios',
+                text: 'Si la frecuencia se incrementa, ¿qué sucede con la profundidad de penetración (Skin Depth) en un conductor?',
+                options: ['Aumenta linealmente', 'Se mantiene constante', 'Disminuye', 'Se vuelve infinita'],
+                correct: 2,
+                explanation: 'Correcto. Al aumentar la frecuencia \\(f\\), la onda es repelida con más fuerza del interior del conductor, reduciendo la profundidad \\(\\delta \propto 1/\sqrt{f}\\).'
+            },
+            {
+                unit: 'U-IV: Fronteras',
+                text: '¿Qué componente del campo eléctrico \\(E\\) es siempre continua al atravesar la frontera entre dos dieléctricos?',
+                options: ['Solo la Normal', 'Solo la Tangencial', 'Ambas componentes', 'Ninguna es continua'],
+                correct: 1,
+                explanation: 'Muy bien. La Ley de Refracción dicta que \\(E_{t1} = E_{t2}\\) (continuidad tangencial) debido a la naturaleza conservativa del campo electrostático.'
+            },
+            {
+                unit: 'U-V: Poynting',
+                text: 'El vector de Poynting \\(\\mathbf{S} = \\mathbf{E} \\times \\mathbf{H}\\) tiene unidades de:',
+                options: ['Joules / segundo', 'Watts', 'Watts / metro²', 'Newtons / Coulomb'],
+                correct: 2,
+                explanation: 'Correcto. Representa la densidad de flujo de potencia, expresada en vatios por unidad de superficie perpendicular a la propagación.'
+            },
+            {
+                unit: 'U-VI: Guías',
+                text: 'En una guía de onda rectangular, ¿qué sucede si la frecuencia de operación \\(f\\) es menor que la frecuencia de corte \\(f_c\\)?',
+                options: ['La onda viaja más rápido', 'La onda se refleja totalmente', 'La onda es evanescente (se atenúa)', 'La onda cambia de polarización'],
+                correct: 2,
+                explanation: 'Excelente. Por debajo de \\(f_c\\), la guía actúa como un filtro pasa-altos en bloqueo, y la potencia decae exponencialmente sin transportar energía neta.'
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+
+        function startQuiz() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('questionScreen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            const q = questions[currentQuestion];
+            document.getElementById('unitBadge').innerText = q.unit;
+            document.getElementById('questionCount').innerText = `${currentQuestion + 1} / ${questions.length}`;
+            document.getElementById('progressBar').style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+            document.getElementById('questionText').innerHTML = q.text;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full p-4 rounded-xl text-slate-200 font-medium flex items-center gap-4';
+                btn.innerHTML = `<span class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-xs font-mono text-cyan-400 border border-white/5">${String.fromCharCode(65 + index)}</span> <span class="math-scroll">${opt}</span>`;
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('feedbackContainer').classList.add('hidden');
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.disabled = true;
+            nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            if (currentQuestion === questions.length - 1) nextBtn.innerText = 'Ver Resultados';
+            MathJax.typesetPromise();
+        }
+
+        function selectOption(idx, btn) {
+            if (answered) return;
+            answered = true;
+            const q = questions[currentQuestion];
+            const isCorrect = (idx === q.correct);
+            const feedback = document.getElementById('feedbackContainer');
+            
+            btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (isCorrect) score++;
+            
+            feedback.innerHTML = `<p class="flex items-center gap-2 ${isCorrect ? 'text-emerald-400' : 'text-rose-400'} font-bold mb-2">
+                <i data-lucide="${isCorrect ? 'check-circle' : 'alert-circle'}" class="w-4 h-4"></i>
+                ${isCorrect ? '¡Excelente!' : 'Respuesta Incorrecta'}
+            </p><div class="text-slate-400 text-xs">${q.explanation}</div>`;
+            feedback.classList.remove('hidden', 'bg-emerald-500/10', 'bg-rose-500/10');
+            feedback.classList.add(isCorrect ? 'bg-emerald-500/10' : 'bg-rose-500/10');
+            
+            document.querySelectorAll('.option-btn').forEach((b, i) => {
+                b.disabled = true;
+                if (i === q.correct) b.classList.add('correct');
+            });
+
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            nextBtn.classList.add('bg-cyan-600');
+            lucide.createIcons();
+            MathJax.typesetPromise();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) loadQuestion();
+            else showResults();
+        }
+
+        function showResults() {
+            document.getElementById('questionScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+            const pct = Math.round((score / questions.length) * 100);
+            document.getElementById('scoreText').innerText = pct + '%';
+            document.getElementById('correctCount').innerText = score;
+            document.getElementById('incorrectCount').innerText = questions.length - score;
+            
+            if (pct >= 80) triggerConfetti();
+
+            new Chart(document.getElementById('scoreChart'), {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [score, questions.length - score],
+                        backgroundColor: ['#22d3ee', 'rgba(255,255,255,0.05)'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '80%', plugins: { legend: { display: false } } }
+            });
+        }
+
+        function triggerConfetti() {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#22d3ee', '#a855f7', '#10b981'] });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LSC Logic | Simulador Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #f97316;
+            --secondary: #fb923c;
+            --bg-deep: #0b0e14;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text);
+            background-image: radial-gradient(circle at 50% 50%, rgba(249, 115, 22, 0.05) 0%, transparent 70%);
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .toolbox-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+        }
+
+        .gate {
+            cursor: grab;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .gate:hover {
+            border-color: var(--primary);
+            background: rgba(249, 115, 22, 0.1);
+            transform: scale(1.02);
+        }
+
+        .canvas {
+            border: 1px solid var(--border);
+            min-height: 600px;
+            position: relative;
+            background-color: #0d1117;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+        }
+
+        .node {
+            position: absolute;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(5px);
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            min-width: 90px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .node.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+        }
+
+        .port {
+            width: 12px;
+            height: 12px;
+            background-color: var(--text-muted);
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            border: 2px solid #0d1117;
+            transition: all 0.2s;
+        }
+
+        .port:hover {
+            background-color: var(--primary);
+            transform: scale(1.3);
+        }
+
+        .input-port { left: -7px; }
+        .output-port { right: -7px; }
+
+        .wire {
+            stroke: #475569;
+            stroke-width: 3;
+            fill: none;
+            transition: stroke 0.3s;
+        }
+
+        .wire.highlighted {
+            stroke: var(--primary);
+            stroke-width: 4;
+            filter: drop-shadow(0 0 5px var(--primary));
+        }
+
+        .input-toggle {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background-color: #df4a4a;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 800;
+            transition: all 0.3s;
+        }
+
+        .input-toggle.on {
+            background-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .bulb {
+            width: 35px;
+            height: 35px;
+            background-color: #334155;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .bulb.on {
+            background-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        .btn-hub {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-hub:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4);
+        }
+
+        /* Dropdown Estilos */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 45px;
+            left: 0;
+            background: rgba(11, 14, 20, 0.95);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 10px 15px;
+            text-decoration: none;
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dropdown-item:last-child { border-bottom: none; }
+
+        .dropdown-item:hover {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--primary);
+        }
+
+        .dropdown-item.active {
+            color: var(--primary);
+            background: rgba(249, 115, 22, 0.05);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <div class="flex items-center gap-4">
+                <button class="btn-hub flex items-center gap-2" onclick="window.location.href='../../index.html'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Hub
+                </button>
+                <div class="dropdown">
+                    <button class="btn-hub flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        Simuladores
+                    </button>
+                    <div class="dropdown-content text-left">
+                        <a href="../antigravity/index.html" class="dropdown-item">Electrik Pro</a>
+                        <a href="LSC.html" class="dropdown-item active">LSC Logic</a>
+                        <a href="../plc/index.html" class="dropdown-item">PLC Ladder</a>
+                        <a href="../PID.html" class="dropdown-item">Control PID</a>
+                        <a href="../circuitjs.html" class="dropdown-item" style="color: #a855f7;">CircuitJS (Externo)</a>
+                    </div>
+                </div>
+                <h1 class="text-3xl font-bold ml-4">LSC LOGIC HUB</h1>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-5 gap-8">
+            <div class="col-span-1 p-6 toolbox-card">
+                <h2 class="text-xs font-bold text-gray-500 mb-6 uppercase tracking-widest">Componentes</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="gate" draggable="true" data-gate="INPUT">ENTRADA</div>
+                    <div class="gate" draggable="true" data-gate="AND">AND</div>
+                    <div class="gate" draggable="true" data-gate="OR">OR</div>
+                    <div class="gate" draggable="true" data-gate="NOT">NOT</div>
+                    <div class="gate" draggable="true" data-gate="XOR">XOR</div>
+                    <div class="gate" draggable="true" data-gate="NAND">NAND</div>
+                    <div class="gate" draggable="true" data-gate="NOR">NOR</div>
+                    <div class="gate" draggable="true" data-gate="BULB">SALIDA (LUZ)</div>
+                </div>
+            </div>
+
+            <div class="col-span-4 flex flex-col">
+                <div class="canvas relative" id="canvas" tabindex="0">
+                    <p class="text-gray-600 text-center pt-64 font-medium opacity-50" id="canvasPlaceholder">Arrastra bloques aquí para comenzar a construir</p>
+                    <svg id="wires" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg"></svg>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button id="clearBtn" class="bg-red-500/10 text-red-400 border border-red-500/20 px-6 py-2 rounded-xl font-bold hover:bg-red-500/20 transition-all">Limpiar Todo</button>
+                    <button id="saveBtn" class="btn-action">Guardar Circuito</button>
+                    <button id="loadBtn" class="btn-action" style="background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border);">Cargar Backup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reusing existing logic but with minor UI hooks updates -->
+    <script>
+        // === GLOBALS & STATE ===
+        const canvas = document.getElementById('canvas');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const loadBtn = document.getElementById('loadBtn');
+        const wiresSVG = document.getElementById('wires');
+        const canvasPlaceholder = document.getElementById('canvasPlaceholder');
+
+        let idCounter = 0;
+        let nodes = []; 
+        let connections = []; 
+        let wireStart = null; 
+        let dragNode = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // === UTILS ===
+        function createNode(type, x, y) {
+            const id = `node-${idCounter++}`;
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            node.setAttribute('data-id', id);
+            node.setAttribute('data-type', type);
+
+            const label = document.createElement('span');
+            label.className = 'text-xs tracking-tighter opacity-80';
+            label.textContent = type;
+            node.appendChild(label);
+
+            if (type === 'BULB') {
+                const bulbElement = document.createElement('div');
+                bulbElement.className = 'bulb';
+                node.appendChild(bulbElement);
+            } else if (type !== 'INPUT') {
+                const valueDisplay = document.createElement('span');
+                valueDisplay.className = 'output-value ml-2 text-primary font-black';
+                valueDisplay.textContent = '-';
+                node.appendChild(valueDisplay);
+            }
+
+            // Ports
+            const inputCount = getInputCount(type);
+            if (type !== 'BULB') {
+                const outPort = document.createElement('div');
+                outPort.className = 'port output-port';
+                outPort.style.top = '50%';
+                outPort.style.marginTop = '-6px';
+                outPort.setAttribute('data-port', 'output');
+                node.appendChild(outPort);
+            }
+
+            for (let i = 0; i < inputCount; i++) {
+                const inPort = document.createElement('div');
+                inPort.className = 'port input-port';
+                inPort.style.top = inputCount === 1 ? '50%' : `${30 + i * 40}%`;
+                inPort.style.marginTop = '-6px';
+                inPort.setAttribute('data-port', 'input');
+                inPort.setAttribute('data-port-index', i);
+                node.appendChild(inPort);
+            }
+
+            if (type === 'INPUT') {
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'input-toggle';
+                toggleBtn.textContent = '0';
+                toggleBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleBtn.classList.toggle('on');
+                    const val = toggleBtn.classList.contains('on') ? 1 : 0;
+                    toggleBtn.textContent = val;
+                    setNodeValue(id, val);
+                    evaluateCircuit();
+                };
+                node.appendChild(toggleBtn);
+            }
+
+            node.onmousedown = (e) => {
+                if (e.target.classList.contains('port') || e.target.classList.contains('input-toggle')) return;
+                dragNode = node;
+                node.classList.add('selected');
+                dragOffsetX = e.clientX - node.getBoundingClientRect().left;
+                dragOffsetY = e.clientY - node.getBoundingClientRect().top;
+            };
+
+            node.querySelectorAll('.port').forEach(p => {
+                p.onclick = (ev) => { ev.stopPropagation(); handlePortClick(node, p); };
+            });
+
+            canvas.appendChild(node);
+            nodes.push({ id, type, x, y, outputValue: type === 'INPUT' ? 0 : '-' });
+            updateCanvasPlaceholder();
+            return node;
+        }
+
+        function getInputCount(type) {
+            if (type === 'INPUT') return 0;
+            if (type === 'NOT' || type === 'BULB') return 1;
+            return 2;
+        }
+
+        function setNodeValue(id, val) {
+            const node = nodes.find(n => n.id == id);
+            if (!node) return;
+            node.outputValue = val;
+            const elem = document.querySelector(`[data-id="${id}"]`);
+            if (!elem) return;
+            if (node.type === 'BULB') {
+                const b = elem.querySelector('.bulb');
+                val === 1 ? b.classList.add('on') : b.classList.remove('on');
+            } else if (node.type !== 'INPUT') {
+                const s = elem.querySelector('.output-value');
+                if (s) s.textContent = val;
+            }
+        }
+
+        function evaluateCircuit() {
+            const outputMap = {};
+            nodes.forEach(n => outputMap[n.id] = n.type === 'INPUT' ? n.outputValue : '-');
+
+            for (let iter = 0; iter < nodes.length * 2; iter++) {
+                let changed = false;
+                nodes.forEach(node => {
+                    if (node.type === 'INPUT') return;
+                    const inputs = new Array(getInputCount(node.type)).fill('-');
+                    connections.filter(c => c.toId === node.id).forEach(c => {
+                        const from = nodes.find(n => n.id === c.fromId);
+                        inputs[c.toPortIndex] = from.outputValue;
+                    });
+                    const out = calculateGateOutput(node.type, inputs);
+                    if (outputMap[node.id] !== out) { outputMap[node.id] = out; changed = true; }
+                });
+                nodes.forEach(n => n.outputValue = outputMap[n.id]);
+                if (!changed) break;
+            }
+            nodes.forEach(n => setNodeValue(n.id, n.outputValue));
+            drawWires();
+        }
+
+        function calculateGateOutput(type, inputs) {
+            const v = inputs.map(i => i === '-' ? null : Number(i));
+            if (v.some(x => x === null)) return '-';
+            switch(type) {
+                case 'AND': return v[0] && v[1] ? 1 : 0;
+                case 'OR': return v[0] || v[1] ? 1 : 0;
+                case 'NOT': return v[0] === 1 ? 0 : 1;
+                case 'XOR': return v[0] ^ v[1];
+                case 'NAND': return !(v[0] && v[1]) ? 1 : 0;
+                case 'NOR': return !(v[0] || v[1]) ? 1 : 0;
+                case 'BULB': return v[0];
+            }
+        }
+
+        function drawWires() {
+            wiresSVG.innerHTML = '';
+            connections.forEach(c => {
+                const fromEl = document.querySelector(`[data-id="${c.fromId}"]`);
+                const toEl = document.querySelector(`[data-id="${c.toId}"]`);
+                const fromPort = fromEl.querySelector('.output-port');
+                const toPort = toEl.querySelector(`[data-port-index="${c.toPortIndex}"]`);
+                const r1 = fromPort.getBoundingClientRect();
+                const r2 = toPort.getBoundingClientRect();
+                const cr = canvas.getBoundingClientRect();
+                const x1 = r1.left + 6 - cr.left; const y1 = r1.top + 6 - cr.top;
+                const x2 = r2.left + 6 - cr.left; const y2 = r2.top + 6 - cr.top;
+                const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                const mid = (x1 + x2) / 2;
+                p.setAttribute('d', `M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2}`);
+                p.classList.add('wire');
+                if (nodes.find(n => n.id === c.fromId).outputValue === 1) p.classList.add('highlighted');
+                wiresSVG.appendChild(p);
+            });
+        }
+
+        function handlePortClick(node, port) {
+            const id = node.dataset.id;
+            const type = port.dataset.port;
+            if (type === 'output') {
+                wireStart = { id };
+                port.style.boxShadow = '0 0 10px #f97316';
+            } else {
+                if (!wireStart) return;
+                connections.push({ fromId: wireStart.id, toId: id, toPortIndex: parseInt(port.dataset.portIndex) });
+                wireStart = null;
+                document.querySelectorAll('.port').forEach(p => p.style.boxShadow = '');
+                evaluateCircuit();
+            }
+        }
+
+        window.onmousemove = (e) => {
+            if (!dragNode) return;
+            const r = canvas.getBoundingClientRect();
+            let x = e.clientX - r.left - dragOffsetX;
+            let y = e.clientY - r.top - dragOffsetY;
+            dragNode.style.left = `${x}px`;
+            dragNode.style.top = `${y}px`;
+            const n = nodes.find(n => n.id === dragNode.dataset.id);
+            n.x = x; n.y = y;
+            drawWires();
+        };
+
+        window.onmouseup = () => { if (dragNode) dragNode.classList.remove('selected'); dragNode = null; };
+
+        canvas.ondragover = (e) => e.preventDefault();
+        canvas.ondrop = (e) => {
+            const type = e.dataTransfer.getData('gate-type');
+            const r = canvas.getBoundingClientRect();
+            createNode(type, e.clientX - r.left - 40, e.clientY - r.top - 20);
+            evaluateCircuit();
+        };
+
+        document.querySelectorAll('.gate').forEach(g => {
+            g.addEventListener('dragstart', (e) => e.dataTransfer.setData('gate-type', g.dataset.gate));
+        });
+
+        clearBtn.onclick = () => { nodes = []; connections = []; canvas.innerHTML = '<p id="canvasPlaceholder" class="text-gray-600 text-center pt-64 font-medium opacity-50">Arrastra bloques aquí para comenzar a construir</p><svg id="wires" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></svg>'; updateCanvasPlaceholder(); };
+        function updateCanvasPlaceholder() { document.getElementById('canvasPlaceholder').style.display = nodes.length ? 'none' : 'block'; }
+        
+        saveBtn.onclick = () => localStorage.setItem('lsc-circuit', JSON.stringify({nodes, connections}));
+        loadBtn.onclick = () => {
+            const d = JSON.parse(localStorage.getItem('lsc-circuit'));
+            if (!d) return;
+            nodes = []; connections = []; canvas.innerHTML = '<p id="canvasPlaceholder" class="text-gray-600 text-center pt-64 font-medium opacity-50"></p><svg id="wires" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></svg>';
+            d.nodes.forEach(n => createNode(n.type, n.x, n.y));
+            connections = d.connections;
+            evaluateCircuit();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Campos Vectoriales | Electrodinámica I</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        #plot-container {
+            width: 100%;
+            height: 600px;
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        select, input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--primary);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="fade-in">
+
+    <nav class="container glass" style="margin-top: 20px;">
+        <a href="../index.html">Inicio</a>
+        <a href="Teoria.html">Teoría</a>
+        <a href="Simulador_Campos_Vectoriales.html" class="active">Simulador</a>
+    </nav>
+
+    <main class="container">
+        <header>
+            <h1 class="main-title">Explorador de Campos</h1>
+            <p class="subtitle">VISUALIZACIÓN 3D DE VECTORES</p>
+        </header>
+
+        <section class="glass card">
+            <div class="badge">HERRAMIENTA INTERACTIVA</div>
+            <h3>Análisis del Campo</h3>
+            <p>Selecciona una función para visualizar el campo vectorial resultante en un espacio tridimensional. Puedes rotar y hacer zoom sobre el gráfico.</p>
+            
+            <div id="plot-container"></div>
+
+            <div class="controls">
+                <div>
+                    <label>Tipo de Campo:</label>
+                    <select id="field-type" onchange="updatePlot()">
+                        <option value="radial">Radial (1/r²)</option>
+                        <option value="rotation">Rotacional (Vortex)</option>
+                        <option value="gradient">Gradiente Simple</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Densidad de Puntos:</label>
+                    <input type="range" id="density" min="5" max="15" value="10" oninput="updatePlot()">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function updatePlot() {
+            const field = document.getElementById('field-type').value;
+            const N = parseInt(document.getElementById('density').value);
+            
+            let x = [], y = [], z = [];
+            let u = [], v = [], w = [];
+
+            const step = 20 / (N - 1);
+            for(let i = 0; i < N; i++) {
+                for(let j = 0; j < N; j++) {
+                    for(let k = 0; k < N; k++) {
+                        let px = -10 + i * step;
+                        let py = -10 + j * step;
+                        let pz = -10 + k * step;
+                        
+                        x.push(px); y.push(py); z.push(pz);
+
+                        if(field === 'radial') {
+                            const r = Math.sqrt(px*px + py*py + pz*pz) + 0.1;
+                            u.push(px/Math.pow(r, 2)); v.push(py/Math.pow(r, 2)); w.push(pz/Math.pow(r, 2));
+                        } else if(field === 'rotation') {
+                            u.push(-py); v.push(px); w.push(0);
+                        } else {
+                            u.push(px); v.push(py); w.push(pz);
+                        }
+                    }
+                }
+            }
+
+            const data = [{
+                type: 'cone',
+                x: x, y: y, z: z,
+                u: u, v: v, w: w,
+                sizemode: 'scaled',
+                sizeref: 1,
+                colorscale: 'Portland',
+                showscale: false
+            }];
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                scene: {
+                    xaxis: { color: '#94a3b8' },
+                    yaxis: { color: '#94a3b8' },
+                    zaxis: { color: '#94a3b8' },
+                    aspectmode: 'cube'
+                },
+                margin: { l: 0, r: 0, b: 0, t: 0 }
+            };
+
+            Plotly.newPlot('plot-container', data, layout);
+        }
+
+        updatePlot();
+    </script>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 SARGAS PRO ENGINEERING | VECTOR FIELD MODULE</p>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Estudio RLC - Niveles</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos y Gráficos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- MathJax para Fórmulas -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #6366f1;
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.15), transparent 40%);
+            background-attachment: fixed;
+        }
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none; appearance: none; width: 100%; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; height: 16px; width: 16px;
+            border-radius: 50%; background: var(--accent); cursor: pointer;
+            margin-top: -6px; box-shadow: 0 0 10px var(--accent);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.1); border-radius: 2px;
+        }
+
+        .math-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 8px; }
+        .math-scroll::-webkit-scrollbar { height: 6px; }
+        .math-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        .btn-level { transition: all 0.3s; }
+        .btn-level.active { transform: scale(1.05); box-shadow: 0 0 15px currentColor; }
+        
+        /* Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+        .toggle-checkbox { right: 4px; z-index: 1; border-color: #6366f1; transition: all 0.3s; }
+        .toggle-label { background-color: #6366f1; transition: all 0.3s; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+        </a>
+
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight">Estudio RLC Interactivo</h1>
+                <p class="text-slate-400 text-sm md:text-base">Selecciona un nivel de dificultad, ajusta los valores y estudia la resolución paso a paso.</p>
+            </div>
+            
+            <!-- Selector de Nivel -->
+            <div class="flex gap-3 bg-black/40 p-2 rounded-xl border border-white/10">
+                <button onclick="setLevel(1)" id="btnLvl1" class="btn-level active text-green-400 border border-green-400/50 bg-green-400/10 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                    <i data-lucide="circle-check" class="w-4 h-4"></i> Sencillo
+                </button>
+                <button onclick="setLevel(2)" id="btnLvl2" class="btn-level text-yellow-400 border border-yellow-400/50 bg-yellow-400/10 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 opacity-50 hover:opacity-100">
+                    <i data-lucide="triangle-alert" class="w-4 h-4"></i> Medio
+                </button>
+                <button onclick="setLevel(3)" id="btnLvl3" class="btn-level text-red-400 border border-red-400/50 bg-red-400/10 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 opacity-50 hover:opacity-100">
+                    <i data-lucide="flame" class="w-4 h-4"></i> Difícil
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- PANEL IZQUIERDO: Controles y Circuito -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                
+                <!-- Visor del Circuito -->
+                <div class="glass-panel text-center">
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4" id="circuitTitle">RLC Serie (Escalón)</h3>
+                    <div class="bg-black/50 rounded-xl p-4 border border-white/5 flex justify-center items-center min-h-[160px]" id="circuitSvgContainer">
+                        <!-- SVG Inyectado dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Controles -->
+                <div class="glass-panel flex-1">
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i> Parámetros
+                    </h3>
+                    
+                    <div class="space-y-5">
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                <span id="sourceLabel">Fuente (Vs)</span>
+                                <span id="sourceVal" class="text-indigo-300 font-mono">10 V</span>
+                            </label>
+                            <input type="range" id="valSource" min="1" max="50" step="1" value="10" oninput="updateSim()">
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                <span>Resistencia (R)</span>
+                                <span id="rVal" class="text-emerald-300 font-mono">20 Ω</span>
+                            </label>
+                            <input type="range" id="valR" min="1" max="200" step="1" value="20" oninput="updateSim()">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                <span>Inductancia (L)</span>
+                                <span id="lVal" class="text-purple-300 font-mono">100 mH</span>
+                            </label>
+                            <input type="range" id="valL" min="10" max="500" step="10" value="100" oninput="updateSim()">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                <span>Capacitancia (C)</span>
+                                <span id="cVal" class="text-amber-300 font-mono">50 μF</span>
+                            </label>
+                            <input type="range" id="valC" min="1" max="200" step="1" value="50" oninput="updateSim()">
+                        </div>
+
+                        <!-- Controles Extra (Solo Nivel 3) -->
+                        <div id="initialConditionsControls" class="pt-4 border-t border-white/10 hidden space-y-5">
+                            <h4 class="text-xs font-bold text-red-400 uppercase tracking-widest">Condiciones Iniciales</h4>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                    <span>Voltaje Cap. \(v_C(0)\)</span>
+                                    <span id="v0Val" class="text-red-300 font-mono">5 V</span>
+                                </label>
+                                <input type="range" id="valV0" min="-20" max="20" step="1" value="5" oninput="updateSim()">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-slate-400 flex justify-between">
+                                    <span>Corriente Ind. \(i_L(0)\)</span>
+                                    <span id="i0Val" class="text-red-300 font-mono">0.5 A</span>
+                                </label>
+                                <input type="range" id="valI0" min="-5" max="5" step="0.1" value="0.5" oninput="updateSim()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO: Explicación y Gráfica -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                
+                <!-- Panel de Explicación Matemática -->
+                <div class="glass-panel flex-1 flex flex-col">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
+                        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="book-open" class="w-4 h-4 text-indigo-400"></i> Desarrollo Paso a Paso
+                        </h3>
+                        
+                        <!-- Toggle Tiempo / Laplace -->
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-400" id="lblTime">Dominio (t)</span>
+                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="domainToggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer" onchange="updateSim()"/>
+                                <label for="domainToggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                            <span class="text-xs font-bold text-slate-500" id="lblLaplace">Laplace (s)</span>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor del MathJax -->
+                    <div class="bg-black/30 rounded-xl p-6 border border-white/5 flex-1 math-scroll text-sm md:text-base text-slate-300 space-y-4" id="mathExplanation">
+                        Generando ecuaciones...
+                    </div>
+                </div>
+
+                <!-- Panel de Gráfica -->
+                <div class="glass-panel">
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i data-lucide="line-chart" class="w-4 h-4 text-indigo-400"></i> Respuesta en el Tiempo
+                    </h3>
+                    <div class="h-[250px] w-full">
+                        <canvas id="responseChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Estado Global
+        let currentLevel = 1;
+        let chartInstance = null;
+
+        // Elementos DOM
+        const inputs = {
+            src: document.getElementById('valSource'),
+            r: document.getElementById('valR'),
+            l: document.getElementById('valL'),
+            c: document.getElementById('valC'),
+            v0: document.getElementById('valV0'),
+            i0: document.getElementById('valI0')
+        };
+        const labels = {
+            src: document.getElementById('sourceVal'),
+            r: document.getElementById('rVal'),
+            l: document.getElementById('lVal'),
+            c: document.getElementById('cVal'),
+            v0: document.getElementById('v0Val'),
+            i0: document.getElementById('i0Val'),
+            srcName: document.getElementById('sourceLabel')
+        };
+        const toggle = document.getElementById('domainToggle');
+        const mathPanel = document.getElementById('mathExplanation');
+        const circuitTitle = document.getElementById('circuitTitle');
+        const svgContainer = document.getElementById('circuitSvgContainer');
+
+        // SVGs de Circuitos
+        const svgs = {
+            1: `<svg width="200" height="120" viewBox="0 0 200 120" stroke="currentColor" fill="none" stroke-width="2" class="text-slate-300">
+                  <path d="M 40 100 L 40 20 L 70 20" /> <!-- Fuente a R -->
+                  <circle cx="40" cy="60" r="15" stroke="#6366f1" />
+                  <text x="40" y="65" font-size="16" text-anchor="middle" stroke="none" fill="#6366f1">Vs</text>
+                  <path d="M 70 20 L 75 10 L 85 30 L 95 10 L 105 30 L 110 20 L 130 20" stroke="#10b981"/> <!-- R -->
+                  <text x="90" y="45" font-size="12" stroke="none" fill="#10b981">R</text>
+                  <path d="M 130 20 C 135 10, 145 10, 145 20 C 145 10, 155 10, 155 20 C 155 10, 165 10, 165 20 L 180 20 L 180 40" stroke="#c084fc"/> <!-- L -->
+                  <text x="147" y="45" font-size="12" stroke="none" fill="#c084fc">L</text>
+                  <path d="M 180 40 L 180 45 M 170 45 L 190 45 M 170 55 L 190 55 M 180 55 L 180 100 L 40 100" stroke="#fcd34d"/> <!-- C y retorno -->
+                  <text x="195" y="55" font-size="12" stroke="none" fill="#fcd34d">C</text>
+                </svg>`,
+            2: `<svg width="200" height="120" viewBox="0 0 200 120" stroke="currentColor" fill="none" stroke-width="2" class="text-slate-300">
+                  <path d="M 40 100 L 40 20 L 160 20" /> <!-- Linea superior -->
+                  <path d="M 40 100 L 160 100" /> <!-- Linea inferior -->
+                  <circle cx="40" cy="60" r="15" stroke="#6366f1" />
+                  <path d="M 40 68 L 40 52 M 35 57 L 40 52 L 45 57" stroke="#6366f1"/> <!-- Flecha fuente I -->
+                  <text x="20" y="65" font-size="12" text-anchor="middle" stroke="none" fill="#6366f1">Is</text>
+                  <path d="M 80 20 L 80 30 L 70 35 L 90 45 L 70 55 L 90 65 L 80 70 L 80 100" stroke="#10b981"/> <!-- R paralelo -->
+                  <text x="95" y="50" font-size="12" stroke="none" fill="#10b981">R</text>
+                  <path d="M 120 20 L 120 30 C 110 35, 110 45, 120 45 C 110 45, 110 55, 120 55 C 110 55, 110 65, 120 65 L 120 100" stroke="#c084fc"/> <!-- L paralelo -->
+                  <text x="135" y="50" font-size="12" stroke="none" fill="#c084fc">L</text>
+                  <path d="M 160 20 L 160 45 M 150 45 L 170 45 M 150 55 L 170 55 M 160 55 L 160 100" stroke="#fcd34d"/> <!-- C paralelo -->
+                  <text x="175" y="50" font-size="12" stroke="none" fill="#fcd34d">C</text>
+                </svg>`,
+            3: `<svg width="200" height="120" viewBox="0 0 200 120" stroke="currentColor" fill="none" stroke-width="2" class="text-slate-300">
+                  <path d="M 40 100 L 40 20 L 70 20" /> <!-- Fuente a R -->
+                  <circle cx="40" cy="60" r="15" stroke="#6366f1" />
+                  <text x="40" y="65" font-size="16" text-anchor="middle" stroke="none" fill="#6366f1">Vs</text>
+                  <path d="M 70 20 L 75 10 L 85 30 L 95 10 L 105 30 L 110 20 L 130 20" stroke="#10b981"/> <!-- R -->
+                  <path d="M 130 20 C 135 10, 145 10, 145 20 C 145 10, 155 10, 155 20 C 155 10, 165 10, 165 20 L 180 20 L 180 40" stroke="#c084fc"/> <!-- L -->
+                  <text x="147" y="45" font-size="10" stroke="none" fill="#f87171">i(0)≠0</text>
+                  <path d="M 180 40 L 180 45 M 170 45 L 190 45 M 170 55 L 190 55 M 180 55 L 180 100 L 40 100" stroke="#fcd34d"/> <!-- C y retorno -->
+                  <text x="198" y="55" font-size="10" stroke="none" fill="#f87171">v(0)≠0</text>
+                </svg>`
+        };
+
+        // Cambiar Nivel
+        function setLevel(lvl) {
+            currentLevel = lvl;
+            
+            // UI Botones
+            [1,2,3].forEach(i => {
+                const btn = document.getElementById('btnLvl' + i);
+                if(i === lvl) {
+                    btn.classList.add('active');
+                    btn.classList.remove('opacity-50');
+                } else {
+                    btn.classList.remove('active');
+                    btn.classList.add('opacity-50');
+                }
+            });
+
+            // UI Controles
+            if (lvl === 1) {
+                circuitTitle.innerText = "Nivel 1: RLC Serie Básico";
+                labels.srcName.innerText = "Fuente Voltaje (Vs)";
+                document.getElementById('initialConditionsControls').classList.add('hidden');
+                document.documentElement.style.setProperty('--accent', '#4ade80'); // Green
+            } else if (lvl === 2) {
+                circuitTitle.innerText = "Nivel 2: RLC Paralelo";
+                labels.srcName.innerText = "Fuente Corriente (Is)";
+                document.getElementById('initialConditionsControls').classList.add('hidden');
+                document.documentElement.style.setProperty('--accent', '#facc15'); // Yellow
+            } else {
+                circuitTitle.innerText = "Nivel 3: RLC Serie con Energía Previa";
+                labels.srcName.innerText = "Fuente Voltaje (Vs)";
+                document.getElementById('initialConditionsControls').classList.remove('hidden');
+                document.documentElement.style.setProperty('--accent', '#f87171'); // Red
+                toggle.checked = true; // Forzar Laplace en Nivel 3 porque es su fuerte
+            }
+            
+            svgContainer.innerHTML = svgs[lvl];
+            updateToggleColors();
+            updateSim();
+        }
+
+        function updateToggleColors() {
+            const isLaplace = toggle.checked;
+            document.getElementById('lblTime').className = `text-xs font-bold ${!isLaplace ? 'text-white' : 'text-slate-500'}`;
+            document.getElementById('lblLaplace').className = `text-xs font-bold ${isLaplace ? 'text-white' : 'text-slate-500'}`;
+        }
+
+        // Motor Matemático y UI
+        function updateSim() {
+            updateToggleColors();
+
+            // 1. Leer Valores
+            const src = parseFloat(inputs.src.value);
+            const R = parseFloat(inputs.r.value);
+            const L = parseFloat(inputs.l.value) * 1e-3; // H
+            const C = parseFloat(inputs.c.value) * 1e-6; // F
+            const V0 = currentLevel === 3 ? parseFloat(inputs.v0.value) : 0;
+            const I0 = currentLevel === 3 ? parseFloat(inputs.i0.value) : 0;
+
+            // Actualizar Etiquetas UI
+            labels.src.innerText = src + (currentLevel === 2 ? ' A' : ' V');
+            labels.r.innerText = R + ' Ω';
+            labels.l.innerText = inputs.l.value + ' mH';
+            labels.c.innerText = inputs.c.value + ' μF';
+            labels.v0.innerText = V0 + ' V';
+            labels.i0.innerText = I0 + ' A';
+
+            // 2. Cálculos Físicos
+            let alpha, w0, wd, type, s1, s2;
+            w0 = 1 / Math.sqrt(L * C);
+
+            if (currentLevel === 1 || currentLevel === 3) {
+                alpha = R / (2 * L); // Serie
+            } else {
+                alpha = 1 / (2 * R * C); // Paralelo
+            }
+
+            const isLaplace = toggle.checked;
+            let explanationHTML = "";
+
+            // --- GENERADOR DE EXPLICACIONES ---
+            if (currentLevel === 1) {
+                // RLC SERIE BASICO
+                if (!isLaplace) {
+                    explanationHTML = `
+                        <div class="text-indigo-300 font-bold mb-2">1. Ecuación Integro-Diferencial (LCK):</div>
+                        \\[ L\\frac{di}{dt} + Ri + \\frac{1}{C}\\int i dt = V_s \\]
+                        <div class="text-indigo-300 font-bold mt-4 mb-2">2. Parámetros Críticos:</div>
+                        \\[ \\alpha = \\frac{R}{2L} = \\frac{${R}}{2(${L})} = ${alpha.toFixed(1)} \\text{ rad/s} \\]
+                        \\[ \\omega_0 = \\frac{1}{\\sqrt{LC}} = ${w0.toFixed(1)} \\text{ rad/s} \\]
+                        <div class="text-emerald-300 font-bold mt-4 mb-2">3. Diagnóstico:</div>
+                        ${alpha > w0 ? `\\[ \\alpha > \\omega_0 \\implies \\text{Sobreamortiguado} \\]` : (Math.abs(alpha-w0)<0.1 ? `\\[ \\alpha = \\omega_0 \\implies \\text{Crítico} \\]` : `\\[ \\alpha < \\omega_0 \\implies \\text{Subamortiguado} \\]`)}
+                    `;
+                } else {
+                    explanationHTML = `
+                        <div class="text-indigo-300 font-bold mb-2">1. Circuito en el Dominio 's':</div>
+                        Transformamos la fuente al escalón \( V_s \\to V_s/s \) y los componentes a impedancias:
+                        \\[ Z(s) = R + sL + \\frac{1}{sC} \\]
+                        <div class="text-indigo-300 font-bold mt-4 mb-2">2. Ley de Ohm en 's':</div>
+                        \\[ I(s) = \\frac{V_s/s}{Z(s)} = \\frac{${src}/s}{${R} + ${L}s + \\frac{1}{${C}s}} \\]
+                        <div class="text-emerald-300 font-bold mt-4 mb-2">3. Voltaje en el Capacitor (Salida):</div>
+                        \\[ V_c(s) = I(s) \\cdot Z_c(s) = \\frac{${src}/(LC)}{s(s^2 + \\frac{R}{L}s + \\frac{1}{LC})} \\]
+                        Polos de la ecuación característica: \( s^2 + ${2*alpha}s + ${Math.pow(w0,2).toFixed(0)} = 0 \)
+                    `;
+                }
+            } 
+            else if (currentLevel === 2) {
+                // RLC PARALELO
+                if (!isLaplace) {
+                    explanationHTML = `
+                        <div class="text-yellow-300 font-bold mb-2">1. Ecuación Integro-Diferencial (LVK):</div>
+                        \\[ C\\frac{dv}{dt} + \\frac{v}{R} + \\frac{1}{L}\\int v dt = I_s \\]
+                        <div class="text-yellow-300 font-bold mt-4 mb-2">2. Parámetros Críticos (Nota la diferencia de \\(\\alpha\\)):</div>
+                        \\[ \\alpha = \\frac{1}{2RC} = \\frac{1}{2(${R})(${C})} = ${alpha.toFixed(1)} \\text{ rad/s} \\]
+                        \\[ \\omega_0 = \\frac{1}{\\sqrt{LC}} = ${w0.toFixed(1)} \\text{ rad/s} \\]
+                    `;
+                } else {
+                    explanationHTML = `
+                        <div class="text-yellow-300 font-bold mb-2">1. Admitancia Equivalente Y(s):</div>
+                        \\[ Y(s) = \\frac{1}{R} + \\frac{1}{sL} + sC = \\frac{1}{${R}} + \\frac{1}{${L}s} + ${C}s \\]
+                        <div class="text-yellow-300 font-bold mt-4 mb-2">2. Voltaje del Nodo:</div>
+                        \\[ V(s) = \\frac{I_s/s}{Y(s)} = \\frac{${src}/C}{s^2 + \\frac{1}{RC}s + \\frac{1}{LC}} \\]
+                        Polos: \( s^2 + ${2*alpha}s + ${Math.pow(w0,2).toFixed(0)} = 0 \)
+                    `;
+                }
+            }
+            else if (currentLevel === 3) {
+                // RLC SERIE CON CONDICIONES INICIALES
+                if (!isLaplace) {
+                    explanationHTML = `
+                        <div class="text-red-300 font-bold mb-2">Advertencia:</div>
+                        Resolver este circuito en el dominio del tiempo usando ecuaciones diferenciales clásicas es muy tedioso porque las constantes de integración dependen de \\(v_C(0)\\) e \\(i_L(0)\\) simultáneamente.<br><br>
+                        ¡Cambia el interruptor a "Laplace (s)" para ver la magia!
+                    `;
+                } else {
+                    explanationHTML = `
+                        <div class="text-red-300 font-bold mb-2">1. Modelos de Laplace con C.I.:</div>
+                        El Inductor se modela como \(sL\) en serie con una fuente \(-Li(0)\).<br>
+                        El Capacitor se modela como \(1/(sC)\) en serie con \(-v(0)/s\).
+                        <div class="text-red-300 font-bold mt-4 mb-2">2. LVK en Dominio 's':</div>
+                        \\[ \\frac{V_s}{s} = I(s)\\left(R + sL + \\frac{1}{sC}\\right) - L\\cdot i(0) - \\frac{v(0)}{s} \\]
+                        <div class="text-red-300 font-bold mt-4 mb-2">3. Despejando I(s):</div>
+                        \\[ I(s) = \\frac{\\frac{${src}}{s} + (${L})(${I0}) - \\frac{${V0}}{s}}{${R} + ${L}s + \\frac{1}{${C}s}} \\]
+                        Agrupando términos, Laplace maneja automáticamente la energía preexistente del circuito.
+                    `;
+                }
+            }
+
+            mathPanel.innerHTML = explanationHTML;
+            if (window.MathJax) MathJax.typesetPromise([mathPanel]);
+
+            // --- GENERADOR DE GRÁFICA (Aproximación Numérica para robustez universal) ---
+            const data = [];
+            const chartLabels = [];
+            const dt = 0.0001; // Paso de simulación pequeño
+            const steps = 600; 
+            
+            // Limitamos el tiempo de visualización basado en la dinámica
+            let tMax = 5 / Math.min(alpha, w0);
+            if(tMax > 1) tMax = 1; 
+            if(tMax < 0.01) tMax = 0.01;
+            const stepSize = tMax / steps;
+
+            let vc = currentLevel === 3 ? V0 : 0;
+            let il = currentLevel === 3 ? I0 : 0;
+            let valY;
+            let yLabel = currentLevel === 2 ? 'Voltaje Nodo (V)' : 'Voltaje Capacitor (V)';
+
+            for (let i = 0; i <= steps; i++) {
+                let t = i * stepSize;
+                chartLabels.push((t*1000).toFixed(1)); // ms
+
+                // Euler Method for RLC
+                if (currentLevel === 1 || currentLevel === 3) {
+                    // Serie: di/dt = (Vs - vc - R*il)/L ; dvc/dt = il/C
+                    let dil = (src - vc - R * il) / L;
+                    let dvc = il / C;
+                    il += dil * stepSize;
+                    vc += dvc * stepSize;
+                    valY = vc;
+                } else {
+                    // Paralelo: dvc/dt = (Is - il - vc/R)/C ; dil/dt = vc/L
+                    let dvc = (src - il - vc / R) / C;
+                    let dil = vc / L;
+                    vc += dvc * stepSize;
+                    il += dil * stepSize;
+                    valY = vc; 
+                }
+                data.push(valY);
+            }
+
+            drawChart(chartLabels, data, yLabel);
+        }
+
+        function drawChart(chartLabels, data, yLabel) {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            let color = currentLevel === 1 ? '#4ade80' : (currentLevel === 2 ? '#facc15' : '#f87171');
+            
+            const ctx = document.getElementById('responseChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: yLabel,
+                        data: data,
+                        borderColor: color,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Tiempo (ms)', color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', maxTicksLimit: 8 }
+                        },
+                        y: { 
+                            title: { display: true, text: yLabel, color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Inicializar
+        window.addEventListener('load', () => {
+            setLevel(1);
+        });
+
+    </script>
+</body>
+</html>

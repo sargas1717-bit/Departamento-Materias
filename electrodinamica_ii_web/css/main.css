@@ -1,0 +1,190 @@
+:root {
+    --primary-bg: #0b0e14;
+    --accent: #06b6d4; /* Cyan 500 */
+    --accent-glow: #06b6d444;
+    --secondary-accent: #a855f7; /* Purple */
+    --text-main: #e0e0e0;
+    --text-dim: #a0a0a0;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--primary-bg);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+.dashboard-body {
+    overflow-y: auto;
+    min-height: 100vh;
+}
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(rgba(11, 14, 20, 0.85), rgba(11, 14, 20, 0.85)), 
+                url('../assets/bg.png') no-repeat center center/cover;
+    background-attachment: fixed;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 2.5rem;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.logo-large {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.logo-large i {
+    font-size: 4rem;
+    color: var(--accent);
+    filter: drop-shadow(0 0 15px var(--accent-glow));
+}
+
+.logo-large h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #fff, var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+}
+
+.dashboard-header p {
+    color: var(--text-dim);
+    font-size: 1.25rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.dash-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(15px);
+    border-radius: 28px;
+    padding: 3rem 2.5rem;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.dash-card i {
+    font-size: 3.5rem;
+    color: var(--accent);
+    transition: 0.4s;
+}
+
+.dash-card h3 {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.dash-card p {
+    color: var(--text-dim);
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.dash-card:hover {
+    transform: translateY(-12px);
+    border-color: var(--accent);
+    background: rgba(6, 182, 212, 0.05); /* Cyan tint */
+    box-shadow: 0 25px 50px -12px rgba(6, 182, 212, 0.2);
+}
+
+.dash-card:hover i {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 0 12px var(--accent));
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem 1.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    color: var(--text-main);
+    text-decoration: none;
+    transition: 0.3s;
+    margin-bottom: 2.5rem;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 3rem;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+footer {
+    margin-top: 5rem;
+    padding: 4rem 0;
+    border-top: 1px solid var(--glass-border);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.footer-hub-info {
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 800;
+    margin-bottom: 1rem;
+}

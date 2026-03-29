@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidad III: Parámetros de Onda - Electrodinámica II</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax para Fórmulas -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Three.js para gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Chart.js para gráficas 2D -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #10b981; /* Emerald */
+            --accent-e: #10b981; /* Emerald for E Field */
+            --accent-h: #0ea5e9; /* Cyan for H Field */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(16, 185, 129, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.15), transparent 40%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+        .app-container { max-width: 1500px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .theory-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            height: 100%;
+        }
+        .theory-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; height: 16px; width: 16px;
+            border-radius: 50%; background: #fff; cursor: pointer;
+            margin-top: -6px; box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.2); border-radius: 2px;
+        }
+
+        .math-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 5px; }
+        .math-scroll::-webkit-scrollbar { height: 6px; }
+        .math-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        .view-container { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 0.3s; }
+        .legend-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+        
+        .toggle-btn { transition: all 0.2s ease; }
+        .toggle-btn.active { background-color: rgba(16, 185, 129, 0.2); color: #34d399; border-color: #10b981; }
+
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+        </a>
+
+        <header class="mb-10 text-center md:text-left">
+            <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-full uppercase tracking-widest">
+                Electrodinámica II - Unidad III
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Medios Materiales y Atenuación</h1>
+            <p class="text-slate-400 text-lg max-w-3xl">Estudio de cómo las propiedades de la materia (conductividad \(\sigma\), permitividad \(\epsilon\)) modifican la propagación, velocidad y absorción de las ondas electromagnéticas.</p>
+        </header>
+
+        <!-- Sección Teórica -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="theory-card">
+                <h3 class="text-lg font-bold mb-3 text-emerald-300 flex items-center gap-2">
+                    <i data-lucide="binary"></i> Constante de Propagación
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">La constante compleja \(\gamma\) define cómo viaja la onda en el medio. Su parte real \(\alpha\) es la atenuación y \(\beta\) es la fase.</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll">
+                    \[ \gamma = \alpha + j\beta = \sqrt{j\omega\mu(\sigma + j\omega\epsilon)} \]
+                </div>
+            </div>
+
+            <div class="theory-card">
+                <h3 class="text-lg font-bold mb-3 text-cyan-300 flex items-center gap-2">
+                    <i data-lucide="waves"></i> Impedancia Intrínseca (\(\eta\))
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">Relación entre los campos \(\vec{E}\) y \(\vec{H}\). En medios con pérdidas, se vuelve un número complejo, causando un desfase entre los campos.</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll text-sm">
+                    \[ \eta = |\eta| \angle \theta_\eta = \sqrt{\frac{j\omega\mu}{\sigma + j\omega\epsilon}} \]
+                </div>
+            </div>
+
+            <div class="theory-card border-t-2 border-t-rose-500">
+                <h3 class="text-lg font-bold mb-3 text-rose-300 flex items-center gap-2">
+                    <i data-lucide="shield-alert"></i> Efecto Pelicular (\(\delta\))
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">Conocido como Skin Depth. Es la distancia que penetra la onda hasta que su amplitud decae al 36.8% (\(e^{-1}\)) de su valor inicial.</p>
+                <div class="bg-black/40 p-3 rounded-lg border border-white/5 text-center math-scroll text-sm text-rose-200">
+                    \[ \delta = \frac{1}{\alpha} \]
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulador 3D/2D Interactivo -->
+        <section class="glass-panel">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-white/10 pb-4">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <i data-lucide="box-select" class="text-emerald-400"></i> Laboratorio de Materiales
+                </h2>
+                
+                <!-- Toggle 2D / 3D -->
+                <div class="flex bg-black/40 p-1 rounded-lg border border-white/10">
+                    <button id="btn3D" onclick="setView('3D')" class="toggle-btn active px-4 py-1.5 text-xs font-bold rounded uppercase tracking-wider border border-transparent">
+                        <i data-lucide="box" class="w-3 h-3 inline mr-1"></i> Interfase 3D
+                    </button>
+                    <button id="btn2D" onclick="setView('2D')" class="toggle-btn px-4 py-1.5 text-xs font-bold rounded uppercase tracking-wider text-slate-400 border border-transparent hover:text-slate-200">
+                        <i data-lucide="activity" class="w-3 h-3 inline mr-1"></i> Perfil de Decaimiento 2D
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[650px]">
+                
+                <!-- Controles Izquierda -->
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                    <div class="bg-black/30 p-6 rounded-2xl border border-white/5 flex-1 flex flex-col">
+                        
+                        <div class="mb-6">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Material del Medio (\(z > 0\))</label>
+                            <select id="presetSelect" class="w-full bg-slate-800 border border-slate-600 text-white p-3 rounded-xl outline-none focus:border-emerald-500 font-bold transition-colors">
+                                <option value="vacuum">Vacío / Aire (Atenuación Nula)</option>
+                                <option value="dielectric">Vidrio (Dieléctrico sin pérdidas)</option>
+                                <option value="seawater">Agua de Mar (Medio con pérdidas)</option>
+                                <option value="copper">Cobre (Buen Conductor)</option>
+                                <option value="custom">Personalizado</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Frecuencia Logarítmica -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-white/5">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Frecuencia (\(f\))
+                                    <span id="freqVal" class="text-emerald-300 font-mono">1 MHz</span>
+                                </label>
+                                <!-- Exponente: 10^x Hz. De 0 (1 Hz) a 10 (10 GHz) -->
+                                <input type="range" id="freqRange" min="0" max="10" step="0.1" value="6">
+                            </div>
+
+                            <!-- Conductividad Logarítmica -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-white/5">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Conductividad (\(\sigma\))
+                                    <span id="sigmaVal" class="text-emerald-300 font-mono">0 S/m</span>
+                                </label>
+                                <!-- Exponente: 10^x S/m. De -15 a 8 -->
+                                <input type="range" id="sigmaRange" min="-15" max="8" step="0.1" value="-15">
+                            </div>
+
+                            <!-- Permitividad Lineal -->
+                            <div class="p-3 bg-black/20 rounded-lg border border-white/5">
+                                <label class="flex justify-between text-xs font-bold text-slate-300 mb-3 uppercase">
+                                    Permitividad Rel. (\(\epsilon_r\))
+                                    <span id="epsVal" class="text-emerald-300 font-mono">1.0</span>
+                                </label>
+                                <input type="range" id="epsRange" min="1" max="100" step="1" value="1">
+                            </div>
+                        </div>
+
+                        <!-- Resultados Dinámicos Calculados -->
+                        <div class="mt-auto pt-6 border-t border-white/10">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-black/40 p-3 rounded-lg border border-rose-500/20 text-center">
+                                    <p class="text-[9px] uppercase font-black text-rose-500 mb-1">Skin Depth (\(\delta\))</p>
+                                    <p id="resDelta" class="text-sm font-mono text-white font-bold">∞</p>
+                                </div>
+                                <div class="bg-black/40 p-3 rounded-lg border border-cyan-500/20 text-center">
+                                    <p class="text-[9px] uppercase font-black text-cyan-500 mb-1">Impedancia (|\(\eta\)|)</p>
+                                    <p id="resEta" class="text-sm font-mono text-white font-bold">377 Ω</p>
+                                </div>
+                                <div class="bg-black/40 p-3 rounded-lg border border-emerald-500/20 text-center">
+                                    <p class="text-[9px] uppercase font-black text-emerald-500 mb-1">Atenuación (\(\alpha\))</p>
+                                    <p id="resAlpha" class="text-sm font-mono text-white font-bold">0 Np/m</p>
+                                </div>
+                                <div class="bg-black/40 p-3 rounded-lg border border-emerald-500/20 text-center">
+                                    <p class="text-[9px] uppercase font-black text-emerald-500 mb-1">Const. Fase (\(\beta\))</p>
+                                    <p id="resBeta" class="text-sm font-mono text-white font-bold">0.02 rad/m</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visores (3D y 2D superpuestos) -->
+                <div class="lg:col-span-8 bg-black/40 rounded-3xl border border-white/5 relative overflow-hidden h-[450px] lg:h-full">
+                    
+                    <!-- LEYENDA -->
+                    <div class="absolute top-4 left-4 z-20 pointer-events-none">
+                        <div class="bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
+                            <div class="space-y-2">
+                                <div class="legend-badge text-emerald-400"><div class="legend-color bg-emerald-500"></div> \(\vec{E}\) (Campo Eléctrico)</div>
+                                <div class="legend-badge text-cyan-400"><div class="legend-color bg-cyan-500"></div> \(\vec{H}\) (Campo Magnético)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOTA AUTO-ESCALADO -->
+                    <div class="absolute top-4 right-4 z-20 pointer-events-none">
+                        <div class="bg-amber-500/10 backdrop-blur-md border border-amber-500/30 p-2 rounded-lg shadow-xl text-center">
+                            <p class="text-[10px] uppercase font-black text-amber-400 mb-1">Ventana Física Mostrada</p>
+                            <p id="scaleInfo" class="text-xs font-mono text-white font-bold">Longitud: 300 m</p>
+                        </div>
+                    </div>
+
+                    <!-- VISTA 3D -->
+                    <div id="view3D" class="view-container z-10 opacity-100">
+                        <div class="absolute bottom-4 right-4 z-20 pointer-events-none text-right">
+                            <div class="bg-black/60 backdrop-blur-sm border border-white/10 p-2 rounded-lg shadow-xl inline-block text-xs text-slate-300">
+                                <i data-lucide="mouse" class="w-3 h-3 inline"></i> Arrastrar: Rotar | Scroll: Zoom
+                            </div>
+                        </div>
+                        <div id="canvas3D-container" class="w-full h-full"></div>
+                    </div>
+
+                    <!-- VISTA 2D (Gráfica) -->
+                    <div id="view2D" class="view-container z-0 opacity-0 pointer-events-none p-6 pt-24 pb-10 bg-[#020617]">
+                        <canvas id="waveChart"></canvas>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --------------------------------------------------------
+        // FORMATTING UTILITIES
+        // --------------------------------------------------------
+        function formatScientific(num, digits = 2) {
+            if (num === 0) return "0";
+            if (num === Infinity) return "∞";
+            if (num >= 0.01 && num < 10000) return num.toFixed(digits);
+            return num.toExponential(digits).replace('e+', 'e').replace('e', ' x 10^');
+        }
+
+        function formatDistance(meters) {
+            if (meters === Infinity) return "∞";
+            if (meters >= 1000) return (meters / 1000).toFixed(2) + " km";
+            if (meters >= 1) return meters.toFixed(2) + " m";
+            if (meters >= 1e-3) return (meters * 1e3).toFixed(2) + " mm";
+            if (meters >= 1e-6) return (meters * 1e6).toFixed(2) + " μm";
+            return (meters * 1e9).toFixed(2) + " nm";
+        }
+
+        function formatFrequency(hz) {
+            if (hz >= 1e9) return (hz / 1e9).toFixed(1) + " GHz";
+            if (hz >= 1e6) return (hz / 1e6).toFixed(1) + " MHz";
+            if (hz >= 1e3) return (hz / 1e3).toFixed(1) + " kHz";
+            return hz.toFixed(0) + " Hz";
+        }
+
+        // --------------------------------------------------------
+        // TOGGLE VIEWS (2D / 3D)
+        // --------------------------------------------------------
+        let activeView = '3D';
+        function setView(view) {
+            activeView = view;
+            const btn3D = document.getElementById('btn3D');
+            const btn2D = document.getElementById('btn2D');
+            const view3D = document.getElementById('view3D');
+            const view2D = document.getElementById('view2D');
+
+            if (view === '3D') {
+                btn3D.classList.add('active', 'text-emerald-400');
+                btn3D.classList.remove('text-slate-400');
+                btn2D.classList.remove('active', 'text-emerald-400');
+                btn2D.classList.add('text-slate-400');
+                
+                view3D.style.opacity = '1';
+                view3D.style.zIndex = '10';
+                view3D.style.pointerEvents = 'auto';
+                
+                view2D.style.opacity = '0';
+                view2D.style.zIndex = '0';
+                view2D.style.pointerEvents = 'none';
+            } else {
+                btn2D.classList.add('active', 'text-emerald-400');
+                btn2D.classList.remove('text-slate-400');
+                btn3D.classList.remove('active', 'text-emerald-400');
+                btn3D.classList.add('text-slate-400');
+                
+                view2D.style.opacity = '1';
+                view2D.style.zIndex = '10';
+                view2D.style.pointerEvents = 'auto';
+                
+                view3D.style.opacity = '0';
+                view3D.style.zIndex = '0';
+                view3D.style.pointerEvents = 'none';
+                
+                updateChart(); // Force update
+            }
+        }
+
+        // --------------------------------------------------------
+        // CHART.JS 2D SETUP
+        // --------------------------------------------------------
+        const ctxChart = document.getElementById('waveChart').getContext('2d');
+        const numPoints2D = 200;
+
+        const waveChart = new Chart(ctxChart, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: numPoints2D}, () => ''),
+                datasets: [
+                    {
+                        label: 'Envolvente (+)',
+                        borderColor: 'rgba(244, 63, 94, 0.4)', // Rose dotted
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        data: [],
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'Envolvente (-)',
+                        borderColor: 'rgba(244, 63, 94, 0.4)', // Rose dotted
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        data: [],
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'E(z,t)',
+                        borderColor: '#10b981', // Emerald
+                        borderWidth: 3,
+                        data: [],
+                        pointRadius: 0,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 }, 
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Distancia Física Z', color: '#94a3b8' },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b', maxTicksLimit: 10 }
+                    },
+                    y: { 
+                        title: { display: true, text: 'Amplitud E', color: '#94a3b8' },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#64748b' },
+                        min: -1.2,
+                        max: 1.2
+                    }
+                },
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+
+        // --------------------------------------------------------
+        // THREE.JS SCENE SETUP
+        // --------------------------------------------------------
+        const container = document.getElementById('canvas3D-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020617, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(25, 15, 25); 
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(10, 0, 0); // Focus slightly towards the material
+
+        // Visual Assets
+        const colorE = 0x10b981; // Emerald
+        const colorH = 0x0ea5e9; // Cyan
+        const visualZStart = -10; // Vacuum section
+        const visualZEnd = 30;    // Material section
+
+        // Central Axis
+        const zAxisMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, linewidth: 2 });
+        const zAxisGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, visualZStart), new THREE.Vector3(0, 0, visualZEnd)]);
+        scene.add(new THREE.Line(zAxisGeo, zAxisMat));
+
+        // Material Block (Starts at Z=0)
+        const blockGeo = new THREE.BoxGeometry(10, 10, visualZEnd);
+        // We will change the color of this block based on the material
+        const blockMat = new THREE.MeshPhysicalMaterial({
+            color: 0x334155, transparent: true, opacity: 0.15,
+            metalness: 0.1, roughness: 0.5, side: THREE.DoubleSide
+        });
+        const materialBlock = new THREE.Mesh(blockGeo, blockMat);
+        materialBlock.position.set(0, 0, visualZEnd / 2);
+        scene.add(materialBlock);
+
+        // Border for the interface at Z=0
+        const interfaceGeo = new THREE.PlaneGeometry(10, 10);
+        const interfaceMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false });
+        const interfacePlane = new THREE.Mesh(interfaceGeo, interfaceMat);
+        scene.add(interfacePlane);
+
+        // Envelopes and Arrows
+        const numVectors = 120;
+        const zStep = (visualZEnd - visualZStart) / numVectors;
+        
+        const envGeoE = new THREE.BufferGeometry();
+        const envMatE = new THREE.LineBasicMaterial({ color: colorE, linewidth: 3 });
+        const envLineE = new THREE.Line(envGeoE, envMatE);
+        scene.add(envLineE);
+
+        const envGeoH = new THREE.BufferGeometry();
+        const envMatH = new THREE.LineBasicMaterial({ color: colorH, linewidth: 3 });
+        const envLineH = new THREE.Line(envGeoH, envMatH);
+        scene.add(envLineH);
+
+        const eArrows = [];
+        const hArrows = [];
+
+        for (let i = 0; i <= numVectors; i++) {
+            let visZ = visualZStart + (i * zStep);
+            let eArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, visZ), 0, colorE, 0.4, 0.3);
+            let hArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, visZ), 0, colorH, 0.4, 0.3);
+            scene.add(eArrow);
+            scene.add(hArrow);
+            eArrows.push({ arrow: eArrow, visZ: visZ });
+            hArrows.push({ arrow: hArrow, visZ: visZ });
+        }
+
+        // --------------------------------------------------------
+        // PHYSICS LOGIC & PRESETS
+        // --------------------------------------------------------
+        let time = 0;
+        const inputs = {
+            preset: document.getElementById('presetSelect'),
+            freq: document.getElementById('freqRange'),
+            sigma: document.getElementById('sigmaRange'),
+            eps: document.getElementById('epsRange')
+        };
+        const displays = {
+            freq: document.getElementById('freqVal'),
+            sigma: document.getElementById('sigmaVal'),
+            eps: document.getElementById('epsVal'),
+            delta: document.getElementById('resDelta'),
+            eta: document.getElementById('resEta'),
+            alpha: document.getElementById('resAlpha'),
+            beta: document.getElementById('resBeta'),
+            scale: document.getElementById('scaleInfo')
+        };
+
+        const presets = {
+            vacuum:     { sigmaLog: -15, eps: 1 },
+            dielectric: { sigmaLog: -12, eps: 4 }, // Example glass
+            seawater:   { sigmaLog: 0.6, eps: 80 }, // 10^0.6 approx 4 S/m
+            copper:     { sigmaLog: 7.76, eps: 1 }  // 10^7.76 approx 5.8e7 S/m
+        };
+
+        inputs.preset.addEventListener('change', () => {
+            const val = inputs.preset.value;
+            if (val !== 'custom') {
+                inputs.sigma.value = presets[val].sigmaLog;
+                inputs.eps.value = presets[val].eps;
+                updateParameters();
+            }
+        });
+
+        // Global Physical Variables
+        let phys_f, phys_w, phys_sigma, phys_epsR, phys_eps;
+        let phys_alpha, phys_beta, phys_etaMag, phys_etaPhase, phys_delta;
+        let phys_beta0; // Vacuum beta
+        let phys_windowLength; // Physical length corresponding to visual length [0, visualZEnd]
+
+        const mu0 = 4 * Math.PI * 1e-7;
+        const eps0 = 8.854e-12;
+
+        function updateParameters() {
+            // Check if user moved sliders manually to set 'custom'
+            if(document.activeElement === inputs.sigma || document.activeElement === inputs.eps) {
+                inputs.preset.value = 'custom';
+            }
+
+            // 1. Read Inputs
+            let fLog = parseFloat(inputs.freq.value);
+            phys_f = Math.pow(10, fLog);
+            phys_w = 2 * Math.PI * phys_f;
+
+            let sLog = parseFloat(inputs.sigma.value);
+            phys_sigma = Math.pow(10, sLog);
+
+            phys_epsR = parseFloat(inputs.eps.value);
+            phys_eps = phys_epsR * eps0;
+
+            // 2. Update UI Sliders Text
+            displays.freq.innerText = formatFrequency(phys_f);
+            displays.sigma.innerText = formatScientific(phys_sigma) + ' S/m';
+            displays.eps.innerText = phys_epsR.toFixed(1);
+
+            // 3. Calculate Electrodynamic Parameters
+            // Loss tangent: p = sigma / (w * eps)
+            let p = phys_sigma / (phys_w * phys_eps);
+            
+            // Gamma = sqrt(jw*mu*(sigma + jw*eps))
+            // Exact real and imaginary parts:
+            let term = Math.sqrt(1 + p*p);
+            let factor = phys_w * Math.sqrt((mu0 * phys_eps) / 2);
+            
+            phys_alpha = factor * Math.sqrt(term - 1);
+            phys_beta  = factor * Math.sqrt(term + 1);
+            phys_delta = phys_alpha > 1e-15 ? 1 / phys_alpha : Infinity;
+
+            // Impedance Eta
+            // |eta| = sqrt(mu/eps) / (1+p^2)^(1/4)
+            phys_etaMag = Math.sqrt(mu0 / phys_eps) / Math.pow(1 + p*p, 0.25);
+            phys_etaPhase = 0.5 * Math.atan2(phys_sigma, phys_w * phys_eps);
+
+            // Vacuum beta for the Z < 0 region
+            phys_beta0 = phys_w * Math.sqrt(mu0 * eps0);
+
+            // 4. Update UI Results
+            displays.alpha.innerText = formatScientific(phys_alpha) + " Np/m";
+            displays.beta.innerText  = formatScientific(phys_beta) + " rad/m";
+            displays.delta.innerText = formatDistance(phys_delta);
+            displays.eta.innerText   = `${phys_etaMag.toFixed(1)} Ω ∠${(phys_etaPhase * 180/Math.PI).toFixed(1)}°`;
+
+            // 5. Determine Visual Scale Window
+            // We want the visual 3D block (Z=0 to 30) to represent a meaningful physical distance.
+            // If delta is infinite (vacuum/dielectric), show 3 wavelengths.
+            // If delta is small (copper), show 5 deltas so the exponential decay is fully visible.
+            let lambda_medium = 2 * Math.PI / phys_beta;
+            
+            if (phys_delta === Infinity || phys_delta > lambda_medium * 5) {
+                phys_windowLength = lambda_medium * 3;
+            } else {
+                phys_windowLength = phys_delta * 5;
+            }
+            
+            displays.scale.innerText = "Longitud 3D: " + formatDistance(phys_windowLength);
+
+            // Change block color based on conductivity
+            if (phys_sigma > 1e6) {
+                blockMat.color.setHex(0xb45309); // Amber/Copper
+                blockMat.opacity = 0.8; // Opaque metal
+            } else if (phys_sigma > 1) {
+                blockMat.color.setHex(0x0369a1); // Blue/Sea
+                blockMat.opacity = 0.4;
+            } else if (phys_epsR > 1) {
+                blockMat.color.setHex(0x0f766e); // Teal/Glass
+                blockMat.opacity = 0.2;
+            } else {
+                blockMat.color.setHex(0x334155); // Slate/Vacuum
+                blockMat.opacity = 0.05;
+            }
+
+            // Force Chart update
+            if (activeView === '2D') updateChart();
+        }
+
+        // Add listeners
+        Object.values(inputs).forEach(input => {
+            if(input !== inputs.preset) {
+                input.addEventListener('input', updateParameters);
+                input.addEventListener('change', updateParameters);
+            }
+        });
+
+        // --------------------------------------------------------
+        // UPDATE 2D CHART
+        // --------------------------------------------------------
+        function updateChart() {
+            const eData = [];
+            const envPos = [];
+            const envNeg = [];
+            const labels = [];
+            
+            // X axis will represent physical Z from 0 to phys_windowLength
+            for (let i = 0; i <= numPoints2D; i++) {
+                let z_phys = (i / numPoints2D) * phys_windowLength;
+                
+                // Format label nicely
+                if (i % 20 === 0) labels.push(formatDistance(z_phys));
+                else labels.push('');
+
+                let atten = Math.exp(-phys_alpha * z_phys);
+                let phaseE = phys_w * time - phys_beta * z_phys;
+                let valE = Math.cos(phaseE) * atten;
+
+                eData.push(valE);
+                envPos.push(atten);
+                envNeg.push(-atten);
+            }
+
+            waveChart.data.labels = labels;
+            waveChart.data.datasets[0].data = envPos;
+            waveChart.data.datasets[1].data = envNeg;
+            waveChart.data.datasets[2].data = eData;
+            waveChart.update('none');
+        }
+
+        // --------------------------------------------------------
+        // ANIMATION LOOP (3D & 2D)
+        // --------------------------------------------------------
+        // We use a normalized visual time to keep the animation speed pleasant
+        // regardless of if we are at 1 Hz or 10 GHz.
+        let visualTime = 0; 
+        const visualOmega = 5.0; // Fixed visual animation speed
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            visualTime += 0.01 * visualOmega;
+            // Map visual time to physical time for formulas
+            time = visualTime / phys_w; 
+
+            if (activeView === '2D') {
+                updateChart();
+            }
+
+            if (activeView === '3D') {
+                const ePoints = [];
+                const hPoints = [];
+
+                for (let i = 0; i <= numVectors; i++) {
+                    let itemE = eArrows[i];
+                    let itemH = hArrows[i];
+                    let visZ = itemE.visZ; // from -10 to +30
+                    
+                    let z_phys;
+                    let valE, valH;
+
+                    if (visZ < 0) {
+                        // Vacuum Region (Z < 0)
+                        // We map visZ to physical distance using the same scale so wavelengths match at the boundary
+                        z_phys = (visZ / visualZEnd) * phys_windowLength; 
+                        
+                        // Incident + Reflected wave logic can be complex. 
+                        // To keep it clean and educational, we just show the incident wave arriving in vacuum.
+                        let phaseE = phys_w * time - phys_beta0 * z_phys;
+                        valE = Math.cos(phaseE);
+                        valH = Math.cos(phaseE); // Normalized H in vacuum
+                    } else {
+                        // Material Region (Z >= 0)
+                        z_phys = (visZ / visualZEnd) * phys_windowLength;
+                        let atten = Math.exp(-phys_alpha * z_phys);
+                        let phaseE = phys_w * time - phys_beta * z_phys;
+                        
+                        valE = Math.cos(phaseE) * atten;
+                        
+                        // H has a phase delay theta_eta
+                        valH = Math.cos(phaseE - phys_etaPhase) * atten;
+                        
+                        // H magnitude is scaled by 1/|eta|. For visual purposes, we normalize so it's visible.
+                        // We scale it so H is 1.0 at Z=0.
+                        // valH *= (377 / phys_etaMag); -> Can be too large. Let's keep it visually 1:1 with E at boundary.
+                    }
+
+                    // Visual scaling (Amplitude = 3 units in 3D space)
+                    const visualScale = 3;
+                    valE *= visualScale;
+                    valH *= visualScale;
+
+                    // E Field (Y Axis)
+                    let dirE = valE >= 0 ? 1 : -1;
+                    itemE.arrow.setDirection(new THREE.Vector3(0, dirE, 0));
+                    let lenE = Math.abs(valE);
+                    if (lenE < 0.01) lenE = 0.01;
+                    itemE.arrow.setLength(lenE, 0.4, 0.3);
+                    ePoints.push(new THREE.Vector3(0, valE, visZ));
+
+                    // H Field (X Axis)
+                    let dirH = valH >= 0 ? 1 : -1;
+                    itemH.arrow.setDirection(new THREE.Vector3(dirH, 0, 0));
+                    let lenH = Math.abs(valH);
+                    if (lenH < 0.01) lenH = 0.01;
+                    itemH.arrow.setLength(lenH, 0.4, 0.3);
+                    hPoints.push(new THREE.Vector3(valH, 0, visZ));
+                }
+
+                envGeoE.setFromPoints(ePoints);
+                envGeoH.setFromPoints(hPoints);
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            if (activeView === '2D') waveChart.resize();
+        });
+
+        // Initialize
+        updateParameters();
+        animate();
+    </script>
+</body>
+</html>

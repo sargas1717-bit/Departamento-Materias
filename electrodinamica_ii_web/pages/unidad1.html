@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidad I: Ecuaciones de Maxwell - Electrodinámica II</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax para Fórmulas -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Three.js para gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Chart.js para gráficas 2D -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-e: #f43f5e; /* Rose for E Field */
+            --accent-h: #06b6d4; /* Cyan for H Field */
+        }
+        body.dashboard-body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at top right, rgba(6, 182, 212, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(244, 63, 94, 0.15), transparent 40%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+        .app-container { max-width: 1500px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .equation-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .equation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+        }
+        .math-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; height: 16px; width: 16px;
+            border-radius: 50%; background: #fff; cursor: pointer;
+            margin-top: -6px; box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.2); border-radius: 2px;
+        }
+
+        .view-container { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 0.3s; }
+        .legend-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+        
+        .toggle-btn { transition: all 0.2s ease; }
+        .toggle-btn.active { background-color: rgba(6, 182, 212, 0.2); color: #22d3ee; border-color: #06b6d4; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <a href="../index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i> Menú Principal
+        </a>
+
+        <header class="mb-10">
+            <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-full uppercase tracking-widest">
+                Ingeniería Eléctrica - Electrodinámica II
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Ecuaciones de Maxwell</h1>
+            <p class="text-slate-400 text-lg max-w-3xl">El pilar de la teoría electromagnética. Describe cómo los campos eléctricos y magnéticos se generan, interactúan y se propagan en el espacio.</p>
+        </header>
+
+        <!-- Sección de Teoría: 4 Ecuaciones -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+            <div class="equation-card hover:border-emerald-500/50 hover:bg-emerald-500/5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400"><i data-lucide="circle-dot"></i></div>
+                    <h3 class="text-lg font-bold text-emerald-100">Ley de Gauss (E)</h3>
+                </div>
+                <p class="text-xs text-slate-400">Las cargas eléctricas son las fuentes o sumideros del campo eléctrico.</p>
+                <div class="math-box text-emerald-300">\[ \nabla \cdot \mathbf{D} = \rho_v \]</div>
+            </div>
+
+            <div class="equation-card hover:border-purple-500/50 hover:bg-purple-500/5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-purple-500/20 rounded-lg text-purple-400"><i data-lucide="magnet"></i></div>
+                    <h3 class="text-lg font-bold text-purple-100">Ley de Gauss (M)</h3>
+                </div>
+                <p class="text-xs text-slate-400">No existen monopolos magnéticos. Las líneas de campo siempre se cierran.</p>
+                <div class="math-box text-purple-300">\[ \nabla \cdot \mathbf{B} = 0 \]</div>
+            </div>
+
+            <div class="equation-card hover:border-amber-500/50 hover:bg-amber-500/5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-amber-500/20 rounded-lg text-amber-400"><i data-lucide="rotate-cw"></i></div>
+                    <h3 class="text-lg font-bold text-amber-100">Ley de Faraday</h3>
+                </div>
+                <p class="text-xs text-slate-400">Un campo magnético variable en el tiempo induce un campo eléctrico circulante.</p>
+                <div class="math-box text-amber-300">\[ \nabla \times \mathbf{E} = -\frac{\partial \mathbf{B}}{\partial t} \]</div>
+            </div>
+
+            <div class="equation-card border-cyan-500/30 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.1)] hover:border-cyan-400">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400"><i data-lucide="zap"></i></div>
+                    <h3 class="text-lg font-bold text-cyan-100">Ampere-Maxwell</h3>
+                </div>
+                <p class="text-xs text-slate-400">Corrientes y campos eléctricos variables generan campos magnéticos.</p>
+                <div class="math-box text-cyan-300">\[ \nabla \times \mathbf{H} = \mathbf{J} + \frac{\partial \mathbf{D}}{\partial t} \]</div>
+            </div>
+        </div>
+
+        <!-- Simulador 3D/2D Interactivo -->
+        <section class="glass-panel">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-white/10 pb-4">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <i data-lucide="box" class="text-cyan-400"></i> Simulación: Corriente de Desplazamiento
+                </h2>
+                
+                <!-- Toggle 2D / 3D -->
+                <div class="flex bg-black/40 p-1 rounded-lg border border-white/10">
+                    <button id="btn3D" onclick="setView('3D')" class="toggle-btn active px-4 py-1.5 text-xs font-bold rounded uppercase tracking-wider border border-transparent">
+                        <i data-lucide="box" class="w-3 h-3 inline mr-1"></i> Vista 3D
+                    </button>
+                    <button id="btn2D" onclick="setView('2D')" class="toggle-btn px-4 py-1.5 text-xs font-bold rounded uppercase tracking-wider text-slate-400 border border-transparent hover:text-slate-200">
+                        <i data-lucide="activity" class="w-3 h-3 inline mr-1"></i> Gráfica 2D
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[600px]">
+                
+                <!-- Controles Izquierda -->
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                    <div class="bg-black/30 p-6 rounded-2xl border border-white/5 flex-1 flex flex-col">
+                        <p class="text-sm text-slate-400 mb-6 leading-relaxed">
+                            Observa un capacitor de placas paralelas. Al aplicar un voltaje alterno, el campo eléctrico (\(\vec{E}\)) varía en el tiempo. Esta variación genera un campo magnético (\(\vec{H}\)) circulante, <strong>desfasado 90°</strong>. ¡Este es el término \(\frac{\partial \mathbf{D}}{\partial t}\) de Maxwell!
+                        </p>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="flex justify-between text-xs font-bold text-slate-400 mb-2 uppercase">
+                                    Frecuencia Angular (\(\omega\))
+                                    <span id="freqVal" class="text-cyan-300 font-mono">1.0 rad/s</span>
+                                </label>
+                                <input type="range" id="freqRange" min="0.1" max="5" step="0.1" value="1.0">
+                            </div>
+
+                            <div>
+                                <label class="flex justify-between text-xs font-bold text-slate-400 mb-2 uppercase">
+                                    Permitividad Relativa (\(\epsilon_r\))
+                                    <span id="epsVal" class="text-cyan-300 font-mono">1.0</span>
+                                </label>
+                                <input type="range" id="epsRange" min="1" max="10" step="0.1" value="1.0">
+                            </div>
+
+                            <div>
+                                <label class="flex justify-between text-xs font-bold text-slate-400 mb-2 uppercase">
+                                    Amplitud del Campo (\(E_0\))
+                                    <span id="eVal" class="text-cyan-300 font-mono">1.0 V/m</span>
+                                </label>
+                                <input type="range" id="eRange" min="0.1" max="3" step="0.1" value="1.0">
+                            </div>
+                        </div>
+
+                        <div class="mt-auto pt-6">
+                            <div class="p-4 bg-cyan-500/5 rounded-xl border border-cyan-500/20 text-center">
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-widest mb-2">Relación Fase / Magnitud</p>
+                                <div id="mathLive" class="text-sm font-mono text-white overflow-x-auto">
+                                    <!-- Generado Dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visores (3D y 2D superpuestos y controlados por Z-index/Opacity) -->
+                <div class="lg:col-span-8 bg-black/40 rounded-3xl border border-white/5 relative overflow-hidden h-[400px] lg:h-full">
+                    
+                    <!-- LEYENDA COMPARTIDA -->
+                    <div class="absolute top-4 left-4 z-20 pointer-events-none">
+                        <div class="bg-black/60 backdrop-blur-sm border border-white/10 p-3 rounded-lg shadow-xl">
+                            <div class="space-y-2">
+                                <div class="legend-badge text-rose-400"><div class="legend-color bg-rose-500"></div> Campo Eléctrico \(\vec{E}(t)\)</div>
+                                <div class="legend-badge text-cyan-400"><div class="legend-color bg-cyan-500"></div> Corriente Desp. \(\vec{J}_d(t) \to \vec{H}\)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VISTA 3D -->
+                    <div id="view3D" class="view-container z-10 opacity-100">
+                        <div class="absolute bottom-4 right-4 z-20 pointer-events-none text-right">
+                            <div class="bg-black/60 backdrop-blur-sm border border-white/10 p-2 rounded-lg shadow-xl inline-block text-xs text-slate-300">
+                                <i data-lucide="mouse" class="w-3 h-3 inline"></i> Arrastrar para rotar | Scroll zoom
+                            </div>
+                        </div>
+                        <div id="canvas3D-container" class="w-full h-full"></div>
+                    </div>
+
+                    <!-- VISTA 2D (Gráfica) -->
+                    <div id="view2D" class="view-container z-0 opacity-0 pointer-events-none p-6 pt-24 pb-10">
+                        <canvas id="maxwellChart"></canvas>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --------------------------------------------------------
+        // TOGGLE VIEWS (2D / 3D)
+        // --------------------------------------------------------
+        let activeView = '3D';
+        function setView(view) {
+            activeView = view;
+            const btn3D = document.getElementById('btn3D');
+            const btn2D = document.getElementById('btn2D');
+            const view3D = document.getElementById('view3D');
+            const view2D = document.getElementById('view2D');
+
+            if (view === '3D') {
+                btn3D.classList.add('active', 'text-cyan-400');
+                btn3D.classList.remove('text-slate-400');
+                btn2D.classList.remove('active', 'text-cyan-400');
+                btn2D.classList.add('text-slate-400');
+                
+                view3D.style.opacity = '1';
+                view3D.style.zIndex = '10';
+                view3D.style.pointerEvents = 'auto';
+                
+                view2D.style.opacity = '0';
+                view2D.style.zIndex = '0';
+                view2D.style.pointerEvents = 'none';
+            } else {
+                btn2D.classList.add('active', 'text-cyan-400');
+                btn2D.classList.remove('text-slate-400');
+                btn3D.classList.remove('active', 'text-cyan-400');
+                btn3D.classList.add('text-slate-400');
+                
+                view2D.style.opacity = '1';
+                view2D.style.zIndex = '10';
+                view2D.style.pointerEvents = 'auto';
+                
+                view3D.style.opacity = '0';
+                view3D.style.zIndex = '0';
+                view3D.style.pointerEvents = 'none';
+                
+                updateChart(); // Force update when switching to 2D
+            }
+        }
+
+        // --------------------------------------------------------
+        // CHART.JS 2D SETUP
+        // --------------------------------------------------------
+        const ctxChart = document.getElementById('maxwellChart').getContext('2d');
+        const maxwellChart = new Chart(ctxChart, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Campo Eléctrico E(t)',
+                        borderColor: '#f43f5e', // Rose
+                        borderWidth: 3,
+                        data: [],
+                        pointRadius: 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Corr. Desplazamiento Jd(t)',
+                        borderColor: '#06b6d4', // Cyan
+                        borderWidth: 3,
+                        borderDash: [5, 5],
+                        data: [],
+                        pointRadius: 0,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Tiempo (t)', color: '#94a3b8' },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b', maxTicksLimit: 10 }
+                    },
+                    y: { 
+                        title: { display: true, text: 'Magnitud Normalizada', color: '#94a3b8' },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#64748b' },
+                        min: -1.2,
+                        max: 1.2
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // --------------------------------------------------------
+        // THREE.JS SCENE SETUP
+        // --------------------------------------------------------
+        const container = document.getElementById('canvas3D-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020617, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(15, 10, 15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 5;
+        controls.maxDistance = 50;
+
+        // SCENE ELEMENTS: Capacitor Plates
+        const plateRadius = 6;
+        const plateDistance = 5;
+        
+        const plateMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x94a3b8,
+            metalness: 0.2,
+            roughness: 0.1,
+            transmission: 0.8,
+            transparent: true,
+            opacity: 0.4,
+            side: THREE.DoubleSide
+        });
+
+        const plateGeometry = new THREE.CylinderGeometry(plateRadius, plateRadius, 0.2, 32);
+        
+        const topPlate = new THREE.Mesh(plateGeometry, plateMaterial);
+        topPlate.position.y = plateDistance / 2;
+        scene.add(topPlate);
+
+        const bottomPlate = new THREE.Mesh(plateGeometry, plateMaterial);
+        bottomPlate.position.y = -plateDistance / 2;
+        scene.add(bottomPlate);
+
+        // Add subtle wireframe
+        const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.3 });
+        const topWireframe = new THREE.LineSegments(new THREE.WireframeGeometry(plateGeometry), wireframeMaterial);
+        topPlate.add(topWireframe);
+        const bottomWireframe = new THREE.LineSegments(new THREE.WireframeGeometry(plateGeometry), wireframeMaterial);
+        bottomPlate.add(bottomWireframe);
+
+        // SCENE ELEMENTS: Fields (Arrows)
+        const eArrows = [];
+        const hArrows = [];
+        
+        const colorE = 0xf43f5e; // Rose
+        const colorH = 0x06b6d4; // Cyan
+
+        // Generate E-field arrows (grid inside plates)
+        const gridSteps = 3;
+        for(let x = -gridSteps; x <= gridSteps; x += 1.5) {
+            for(let z = -gridSteps; z <= gridSteps; z += 1.5) {
+                if(x*x + z*z <= (plateRadius-1)*(plateRadius-1)) {
+                    let arrow = new THREE.ArrowHelper(
+                        new THREE.Vector3(0, 1, 0),
+                        new THREE.Vector3(x, 0, z),
+                        1, colorE, 0.6, 0.4
+                    );
+                    scene.add(arrow);
+                    eArrows.push(arrow);
+                }
+            }
+        }
+
+        // Generate H-field arrows (circulating around the center)
+        const numHArrows = 12;
+        const hRadius = 4;
+        for(let i = 0; i < numHArrows; i++) {
+            const angle = (i / numHArrows) * Math.PI * 2;
+            const x = hRadius * Math.cos(angle);
+            const z = hRadius * Math.sin(angle);
+            
+            const dirX = -Math.sin(angle);
+            const dirZ = Math.cos(angle);
+            
+            let arrow = new THREE.ArrowHelper(
+                new THREE.Vector3(dirX, 0, dirZ).normalize(),
+                new THREE.Vector3(x, 0, z),
+                1, colorH, 0.6, 0.4
+            );
+            scene.add(arrow);
+            hArrows.push({ arrow: arrow, baseDirX: dirX, baseDirZ: dirZ });
+        }
+
+        // --------------------------------------------------------
+        // PHYSICS LOGIC
+        // --------------------------------------------------------
+        let time = 0;
+        const inputs = {
+            freq: document.getElementById('freqRange'),
+            eps: document.getElementById('epsRange'),
+            e0: document.getElementById('eRange')
+        };
+        const displays = {
+            freq: document.getElementById('freqVal'),
+            eps: document.getElementById('epsVal'),
+            e0: document.getElementById('eVal'),
+            math: document.getElementById('mathLive')
+        };
+
+        let omega = 1.0;
+        let epsilon = 1.0;
+        let E0 = 1.0;
+
+        function updateChart() {
+            // Update 2D Chart Data
+            // We plot normalized values E(t)/E0 and Jd(t)/(eps*w*E0) to clearly show the 90deg phase shift
+            const labels = [];
+            const eData = [];
+            const jdData = [];
+            const points = 100;
+            const tMax = (2 * Math.PI / omega) * 2; // 2 periods
+
+            for (let i = 0; i <= points; i++) {
+                let t = (i / points) * tMax;
+                labels.push(t.toFixed(2));
+                
+                // E(t) = E0 * sin(wt)
+                // Jd(t) = dD/dt = eps * w * E0 * cos(wt)
+                let eNorm = Math.sin(omega * t); 
+                let jdNorm = Math.cos(omega * t); 
+                
+                eData.push(eNorm);
+                jdData.push(jdNorm);
+            }
+
+            maxwellChart.data.labels = labels;
+            maxwellChart.data.datasets[0].data = eData;
+            maxwellChart.data.datasets[1].data = jdData;
+            maxwellChart.update();
+        }
+
+        function updateParameters() {
+            omega = parseFloat(inputs.freq.value);
+            epsilon = parseFloat(inputs.eps.value);
+            E0 = parseFloat(inputs.e0.value);
+
+            displays.freq.innerText = omega.toFixed(1) + ' rad/s';
+            displays.eps.innerText = epsilon.toFixed(1);
+            displays.e0.innerText = E0.toFixed(1) + ' V/m';
+
+            const wStr = omega.toFixed(1);
+            const eStr = E0.toFixed(1);
+            const h0 = (epsilon * omega * E0).toFixed(1);
+
+            displays.math.innerHTML = `
+                <div class="text-rose-300 mb-2">\\( E_y(t) = ${eStr} \\sin(${wStr} t) \\)</div>
+                <div class="text-cyan-300">\\( J_{d}(t) = \\epsilon \\frac{\\partial E}{\\partial t} = ${h0} \\cos(${wStr} t) \\)</div>
+            `;
+            if(window.MathJax) MathJax.typesetPromise([displays.math]);
+
+            if (activeView === '2D') {
+                updateChart();
+            }
+        }
+
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updateParameters);
+            input.addEventListener('change', updateParameters);
+        });
+
+        // --------------------------------------------------------
+        // ANIMATION LOOP (3D & Shared Time)
+        // --------------------------------------------------------
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Time progression
+            time += 0.02 * omega;
+
+            // Only update 3D meshes if 3D view is active to save resources
+            if (activeView === '3D') {
+                const eMagRaw = E0 * Math.sin(time);
+                const hMagRaw = epsilon * omega * E0 * Math.cos(time);
+
+                const maxArrowLen = plateDistance - 0.2; 
+                const eLen = Math.abs(eMagRaw) * 2; 
+                const hLen = Math.abs(hMagRaw) * 0.8; 
+
+                // Update E Arrows
+                eArrows.forEach(arrow => {
+                    let dirY = eMagRaw >= 0 ? 1 : -1;
+                    arrow.setDirection(new THREE.Vector3(0, dirY, 0));
+                    
+                    let length = Math.min(eLen, maxArrowLen);
+                    if (length < 0.1) length = 0.1;
+                    
+                    arrow.position.y = (-length / 2) * dirY;
+                    arrow.setLength(length, 0.4, 0.3);
+                });
+
+                // Update H Arrows
+                hArrows.forEach(item => {
+                    let sign = hMagRaw >= 0 ? 1 : -1;
+                    arrowDir = new THREE.Vector3(item.baseDirX * sign, 0, item.baseDirZ * sign);
+                    item.arrow.setDirection(arrowDir);
+                    
+                    let length = hLen;
+                    if (length < 0.1) length = 0.1;
+                    
+                    item.arrow.position.x = (hRadius * Math.cos(Math.atan2(item.baseDirZ, -item.baseDirX))) - (arrowDir.x * length/2);
+                    item.arrow.position.z = (hRadius * Math.sin(Math.atan2(item.baseDirZ, -item.baseDirX))) - (arrowDir.z * length/2);
+
+                    item.arrow.setLength(length, 0.4, 0.3);
+                });
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            if (activeView === '2D') maxwellChart.resize();
+        });
+
+        // Initialize
+        updateParameters();
+        animate();
+    </script>
+</body>
+</html>
