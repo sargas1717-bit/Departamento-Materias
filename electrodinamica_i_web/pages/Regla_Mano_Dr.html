@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ley de la Mano Derecha - Electromagnetismo</title>
+    <style>
+        :root {
+            --primary: #38bdf8;
+            --bg-panel: rgba(15, 23, 42, 0.75);
+            --border: rgba(56, 189, 248, 0.3);
+            --text: #f8fafc;
+        }
+
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background-color: #020617; 
+            color: var(--text); 
+        }
+        
+        #canvas-container { width: 100vw; height: 100vh; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        .panel {
+            position: absolute;
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        #ui-panel {
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            padding: 24px;
+        }
+
+        h1 { 
+            font-size: 1.25rem; 
+            margin: 0 0 20px 0; 
+            color: var(--primary); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            padding-bottom: 12px; 
+            font-weight: 600;
+        }
+        
+        .control-group { margin-bottom: 20px; }
+        label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 8px; color: #cbd5e1; font-weight: 500;}
+        
+        input[type="range"] { 
+            width: 100%; 
+            cursor: pointer; 
+            accent-color: var(--primary); 
+            height: 6px;
+            background: #334155;
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .toggle-btn {
+            background: rgba(51, 65, 85, 0.6);
+            border: 1px solid #475569;
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .toggle-btn.active { 
+            background: rgba(56, 189, 248, 0.2); 
+            color: var(--primary); 
+            border-color: var(--primary); 
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        }
+        
+        .toggle-btn:hover:not(.active) { background: #475569; }
+
+        .legend { margin-top: 25px; font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;}
+        .legend-item { display: flex; align-items: center; margin-bottom: 8px; }
+        .legend-item:last-child { margin-bottom: 0; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 8px currentColor; }
+        .dot-current { background: #f59e0b; color: #f59e0b; }
+        .dot-field { background: #10b981; color: #10b981; }
+        .dot-hand { background: #ec4899; color: #ec4899; }
+
+        #info-box {
+            bottom: 20px;
+            right: 20px;
+            padding: 20px;
+            max-width: 320px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .badge {
+            display: inline-block;
+            background: var(--primary);
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #020617;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: var(--primary);
+            font-size: 1.5rem;
+            transition: opacity 0.5s;
+        }
+    </style>
+    <!-- Import Map for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="loader">Cargando Simulación...</div>
+
+    <div id="ui-panel" class="panel">
+        <h1>Simulación Mano Derecha</h1>
+        
+        <div class="control-group">
+            <label><span>Dirección de Corriente (I)</span> <span id="dir-label">+Y</span></label>
+            <button id="btn-direction" class="toggle-btn active">Alternar Dirección</button>
+        </div>
+
+        <div class="control-group">
+            <label><span>Intensidad de Corriente</span> <span id="val-intensity">1.0 A</span></label>
+            <input type="range" id="slider-intensity" min="0.5" max="3.0" step="0.1" value="1.0">
+        </div>
+
+        <div class="control-group">
+            <label>Opciones de Visualización</label>
+            <button id="btn-hand" class="toggle-btn active" style="margin-bottom: 8px;">Mostrar Mano Derecha</button>
+            <button id="btn-vectors" class="toggle-btn active">Mostrar Vectores B</button>
+        </div>
+
+        <div class="control-group">
+            <button id="btn-reset-view" class="toggle-btn" style="border-color: var(--primary); color: var(--primary);">Restaurar Vista 📷</button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item"><div class="dot dot-current"></div>Corriente (I) / Electrones</div>
+            <div class="legend-item"><div class="dot dot-field"></div>Campo Magnético (B)</div>
+            <div class="legend-item"><div class="dot dot-hand"></div>Mano Guía</div>
+        </div>
+    </div>
+
+    <div id="info-box" class="panel">
+        <div class="badge">Regla Mnemotécnica</div><br>
+        Si el <strong>pulgar</strong> de tu mano derecha apunta en la dirección de la corriente (I), tus <strong>dedos se curvan</strong> en la dirección geométrica del campo magnético (B).
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Configuración Inicial ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020617, 0.03);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(12, 8, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimización
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = 30;
+        controls.minDistance = 5;
+
+        // --- Iluminación ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const spotLight = new THREE.SpotLight(0xffffff, 50);
+        spotLight.position.set(10, 20, 10);
+        spotLight.angle = Math.PI / 4;
+        spotLight.penumbra = 0.5;
+        scene.add(spotLight);
+
+        const fillLight = new THREE.PointLight(0x38bdf8, 20, 20);
+        fillLight.position.set(-5, 0, -5);
+        scene.add(fillLight);
+
+        // Grid de fondo para orientacion
+        const gridHelper = new THREE.GridHelper(30, 30, 0x334155, 0x1e293b);
+        gridHelper.position.y = -6;
+        scene.add(gridHelper);
+
+        // --- Grupos Principales ---
+        const mainGroup = new THREE.Group();
+        scene.add(mainGroup);
+
+        // 1. El Alambre (Eje Y)
+        const wireHeight = 16;
+        const wireGeometry = new THREE.CylinderGeometry(0.3, 0.3, wireHeight, 32);
+        const wireMaterial = new THREE.MeshPhysicalMaterial({ 
+            color: 0x94a3b8, 
+            roughness: 0.2, 
+            metalness: 0.9,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1
+        });
+        const wire = new THREE.Mesh(wireGeometry, wireMaterial);
+        mainGroup.add(wire);
+
+        // Partículas fluyendo en el cable (Simulación de cargas/corriente)
+        const particlesGroup = new THREE.Group();
+        const particleCount = 40;
+        const particleGeo = new THREE.SphereGeometry(0.08, 8, 8);
+        const particleMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+        
+        for(let i = 0; i < particleCount; i++) {
+            const p = new THREE.Mesh(particleGeo, particleMat);
+            // Distribuir a lo largo del cable y ligeramente descentrados
+            p.position.set(
+                (Math.random() - 0.5) * 0.4,
+                (Math.random() - 0.5) * wireHeight,
+                (Math.random() - 0.5) * 0.4
+            );
+            // Velocidad aleatoria base
+            p.userData.speed = Math.random() * 0.05 + 0.05;
+            particlesGroup.add(p);
+        }
+        mainGroup.add(particlesGroup);
+
+        // 2. Flecha Indicadora de Corriente (I) Gigante
+        const currentArrowGroup = new THREE.Group();
+        const arrowBodyGeo = new THREE.CylinderGeometry(0.15, 0.15, 2, 16);
+        const arrowHeadGeo = new THREE.ConeGeometry(0.5, 1, 16);
+        const arrowMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+        
+        const arrowBody = new THREE.Mesh(arrowBodyGeo, arrowMat);
+        const arrowHead = new THREE.Mesh(arrowHeadGeo, arrowMat);
+        arrowHead.position.y = 1.5;
+        
+        currentArrowGroup.add(arrowBody);
+        currentArrowGroup.add(arrowHead);
+        // Desplazar a un lado para no tapar el cable
+        currentArrowGroup.position.set(2, 0, 0); 
+        mainGroup.add(currentArrowGroup);
+
+        // 3. Líneas de Campo Magnético (B)
+        const fieldLinesGroup = new THREE.Group();
+        const numRings = 4;
+        const radiusBase = 2.0;
+        const gap = 1.5;
+        const arrowHelpers = []; // Para actualizar sus direcciones
+
+        for (let i = 0; i < numRings; i++) {
+            const r = radiusBase + (i * gap);
+            
+            // Anillo visual (Torus transparente)
+            const ringGeo = new THREE.TorusGeometry(r, 0.02, 8, 64);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.5 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2; // Acostar en el plano XZ
+            
+            // Añadir flechas vectoriales en el anillo
+            const arrowCount = 6;
+            for(let k = 0; k < arrowCount; k++) {
+                const angle = (k / arrowCount) * Math.PI * 2;
+                // Dirección inicial asumiendo corriente hacia arriba (+Y) -> Campo Anti-horario
+                const dir = new THREE.Vector3(-Math.sin(angle), 0, Math.cos(angle)).normalize();
+                const origin = new THREE.Vector3(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+                
+                const tangentArrow = new THREE.ArrowHelper(
+                    dir, origin, 1.2, 0x10b981, 0.4, 0.3
+                );
+                
+                // Guardamos la dirección base matemática para no perderla en los toggles
+                tangentArrow.userData.baseDirection = dir.clone();
+                
+                ring.add(tangentArrow);
+                arrowHelpers.push(tangentArrow);
+            }
+
+            fieldLinesGroup.add(ring);
+        }
+        mainGroup.add(fieldLinesGroup);
+
+        // 4. Construcción Procedural de la Mano Derecha (Corregida - Verdadera Mano Derecha Frontal)
+        const handGroup = new THREE.Group();
+        
+        // Materiales de la mano (Piel holográfica y articulaciones brillantes)
+        const handShellMat = new THREE.MeshPhysicalMaterial({
+            color: 0xec4899,
+            transparent: true,
+            opacity: 0.35,
+            roughness: 0.2,
+            transmission: 0.9,
+            thickness: 0.8,
+            side: THREE.DoubleSide
+        });
+        
+        const jointMat = new THREE.MeshStandardMaterial({
+            color: 0xfbcfe8,
+            emissive: 0xec4899,
+            emissiveIntensity: 0.6,
+            roughness: 0.1,
+            metalness: 0.5
+        });
+
+        // Palma (Ubicada al frente del cable)
+        const palmGeo = new THREE.SphereGeometry(0.85, 32, 32);
+        const palm = new THREE.Mesh(palmGeo, handShellMat);
+        palm.scale.set(0.7, 1.1, 0.25); // Forma ovalada y plana
+        palm.position.set(0.3, -0.1, 1.3); // Frente al cable, ligeramente a la derecha
+        palm.rotation.y = -Math.PI / 8; // Inclinación natural de la muñeca
+        handGroup.add(palm);
+
+        // Dedos (Envuelven desde el frente hacia la parte posterior izquierda)
+        const fingerOffsetsY = [0.7, 0.2, -0.3, -0.7]; // Índice, Medio, Anular, Meñique
+        const fingerRadii = [0.14, 0.15, 0.14, 0.12];
+
+        fingerOffsetsY.forEach((y, i) => {
+            const points = [
+                new THREE.Vector3(0.1, y, 1.3),        // Nudillo en la palma
+                new THREE.Vector3(-0.7, y, 0.8),       // Falange proximal (curvando a la izquierda)
+                new THREE.Vector3(-0.85, y, 0.0),      // Falange media (lado izquierdo del cable)
+                new THREE.Vector3(-0.35, y, -0.65)     // Punta del dedo (detrás del cable)
+            ];
+            
+            // Ajustar longitudes para dar más realismo
+            if (i === 3) points[3].set(-0.5, y, -0.4); // Meñique más corto
+            if (i === 1) points[3].set(-0.25, y, -0.75); // Medio más largo
+            
+            const curve = new THREE.CatmullRomCurve3(points);
+            const tubeGeo = new THREE.TubeGeometry(curve, 24, fingerRadii[i], 12, false);
+            const finger = new THREE.Mesh(tubeGeo, handShellMat);
+            handGroup.add(finger);
+            
+            // Añadir esferas en las articulaciones
+            points.forEach(p => {
+                const joint = new THREE.Mesh(new THREE.SphereGeometry(fingerRadii[i] * 1.15, 16, 16), jointMat);
+                joint.position.copy(p);
+                handGroup.add(joint);
+            });
+        });
+
+        // Pulgar (Anatómicamente en el lado derecho de la mano, apuntando arriba)
+        const thumbPoints = [
+            new THREE.Vector3(0.7, -0.3, 1.2),      // Base en la muñeca (Derecha)
+            new THREE.Vector3(1.0, 0.4, 1.0),       // Nudillo medio (Hacia afuera y arriba)
+            new THREE.Vector3(0.8, 1.5, 0.9)        // Punta del pulgar (Arriba y paralelo al cable)
+        ];
+        
+        const thumbCurve = new THREE.CatmullRomCurve3(thumbPoints);
+        const thumbGeo = new THREE.TubeGeometry(thumbCurve, 24, 0.18, 12, false);
+        const thumb = new THREE.Mesh(thumbGeo, handShellMat);
+        handGroup.add(thumb);
+        
+        // Articulaciones del pulgar
+        thumbPoints.forEach((p, index) => {
+            const radius = index === 2 ? 0.14 : 0.22; 
+            const joint = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 16), jointMat);
+            joint.position.copy(p);
+            handGroup.add(joint);
+        });
+
+        // Efecto visual: Brillo interno de la mano (Core)
+        const coreGeo = new THREE.SphereGeometry(0.4, 16, 16);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0xec4899, transparent: true, opacity: 0.15 });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        core.scale.set(0.7, 1.5, 0.2);
+        core.position.set(0.3, -0.1, 1.3);
+        core.rotation.y = -Math.PI / 8;
+        handGroup.add(core);
+
+        mainGroup.add(handGroup);
+
+        // --- Variables de Estado ---
+        let currentDirection = 1; // 1 = +Y (Arriba), -1 = -Y (Abajo)
+        let currentIntensity = 1.0;
+        let showHand = true;
+        let showVectors = true;
+
+        // --- Función Lógica Principal ---
+        function updateSimulationState() {
+            // 1. Flecha de Corriente
+            const targetY = currentDirection === 1 ? 2 : -2;
+            const targetRot = currentDirection === 1 ? 0 : Math.PI;
+            
+            currentArrowGroup.position.y = targetY;
+            currentArrowGroup.rotation.x = targetRot; // Apuntar arriba o abajo
+            
+            const intensityColor = new THREE.Color().setHSL(0.1 * currentIntensity, 1, 0.5);
+            arrowMat.color = intensityColor;
+
+            // 2. Campo Magnético Vectores
+            // En vez de multiplicar iterativamente, usamos la dirección base absoluta calculada al inicio
+            arrowHelpers.forEach(arrow => {
+                const absoluteDir = arrow.userData.baseDirection.clone().multiplyScalar(currentDirection);
+                arrow.setDirection(absoluteDir);
+                
+                // Escalar flecha según intensidad
+                const scale = 0.5 + (currentIntensity * 0.5);
+                arrow.scale.set(scale, scale, scale);
+            });
+            
+            fieldLinesGroup.visible = showVectors;
+
+            // 3. Mano Derecha
+            handGroup.visible = showHand;
+            // Al estar al frente, usamos rotación en Z para que la mano gire manteniéndose visible adelante
+            handGroup.rotation.z = currentDirection === 1 ? 0 : Math.PI;
+        }
+
+        // --- Eventos de UI ---
+        document.getElementById('btn-direction').addEventListener('click', (e) => {
+            currentDirection *= -1;
+            document.getElementById('dir-label').textContent = currentDirection === 1 ? '+Y (Arriba)' : '-Y (Abajo)';
+            e.target.classList.toggle('active');
+            updateSimulationState();
+        });
+
+        document.getElementById('slider-intensity').addEventListener('input', (e) => {
+            currentIntensity = parseFloat(e.target.value);
+            document.getElementById('val-intensity').textContent = currentIntensity.toFixed(1) + ' A';
+            updateSimulationState();
+        });
+
+        document.getElementById('btn-hand').addEventListener('click', (e) => {
+            showHand = !showHand;
+            e.target.classList.toggle('active');
+            updateSimulationState();
+        });
+
+        document.getElementById('btn-vectors').addEventListener('click', (e) => {
+            showVectors = !showVectors;
+            e.target.classList.toggle('active');
+            updateSimulationState();
+        });
+
+        document.getElementById('btn-reset-view').addEventListener('click', () => {
+            // Restaurar posición inicial de la cámara
+            camera.position.set(12, 8, 12);
+            // Restaurar el punto de enfoque (centro)
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+
+        // --- Loop de Animación ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+
+            controls.update();
+
+            // Animación de Electrones/Partículas
+            particlesGroup.children.forEach(p => {
+                // Mover en la dirección de la corriente
+                p.position.y += p.userData.speed * currentIntensity * currentDirection * 60 * delta;
+                
+                // Reciclar posición si salen del cable
+                if (p.position.y > wireHeight/2) p.position.y = -wireHeight/2;
+                if (p.position.y < -wireHeight/2) p.position.y = wireHeight/2;
+            });
+
+            // Animación del flujo del Campo Magnético (Rotación suave)
+            if(showVectors) {
+                // Rota en el eje Y. Dirección depende de la corriente.
+                const rotSpeed = 0.5 * currentIntensity * currentDirection * delta;
+                fieldLinesGroup.rotation.y += rotSpeed;
+            }
+
+            // Animación flotante de la mano para dar efecto vivo
+            if(showHand) {
+                handGroup.position.y = Math.sin(clock.elapsedTime * 2) * 0.1;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // --- Manejo de redimensionamiento ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Iniciar
+        setTimeout(() => {
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            updateSimulationState();
+            animate();
+        }, 800);
+
+    </script>
+</body>
+</html>
